@@ -69,7 +69,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                         Intent intent = new Intent();
                         intent.putExtra("passenger_name", ci.passenger_name);
                         intent.putExtra("passenger_phone", ci.passenger_phone);
-                        intent.putExtra("status", ci.status);
+                        intent.putExtra("status", "on the way");
 //                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
                         intent.putExtra("pickup_longitude", ci.pickup[0]);
                         intent.putExtra("pickup_latitude", ci.pickup[1]);

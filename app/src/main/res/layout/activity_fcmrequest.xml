@@ -80,7 +80,7 @@
                 android:textStyle="normal"/>
         </RelativeLayout>
         <TextView
-            android:id="@+id/textView_timerview_time"
+            android:id="@+id/fcmrequest_reject"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_marginStart="25dp"

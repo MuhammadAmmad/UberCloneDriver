@@ -392,7 +392,7 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra("passenger_name","George Washington");
         intent.putExtra("passenger_phone","0999999999");
         intent.putExtra("notes","Don't smoke! Don't drive while texting!");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
 
         //noinspection SimplifiableIfStatement

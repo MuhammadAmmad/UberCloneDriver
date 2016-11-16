@@ -56,9 +56,17 @@ public class FCMRequest extends AppCompatActivity {
                 Toast.makeText(getBaseContext(),"You have accepted this request " +
                         "You can now view it in the ongoing requests tab", Toast.LENGTH_LONG).show();
 
-                Intent intent = new Intent(getBaseContext(), MainActivity.class);
+//                Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 OngoingRequestsActivity.addRequest(request);
-                startActivity(intent);
+  //              startActivity(intent);
+                FCMRequest.super.finish();
+            }
+        });
+
+        ((TextView) findViewById(R.id.fcmrequest_reject)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FCMRequest.super.finish();
             }
         });
 

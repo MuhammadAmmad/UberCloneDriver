@@ -63,6 +63,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // Check if message contains a data payload.
         String pickup = "you didn't tell me where !!";
+        String dest = "you didn't tell me where !!";
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             Map<String, String> request = remoteMessage.getData();
@@ -74,9 +75,17 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     received.price = field.getValue();
                 if(field.getKey().equals("time"))
                     received.time = field.getValue();
+                if(field.getKey().equals("notes"))
+                    received.notes = field.getValue();
+                if(field.getKey().equals("passenger_phone"))
+                    received.passenger_phone = field.getValue();
+                if(field.getKey().equals("passenger_name"))
+                    received.passenger_name = field.getValue();
                 if(field.getKey().equals("pickup")) {
                     pickup = field.getValue();
-
+                }
+                if(field.getKey().equals("dest")) {
+                    dest = field.getValue();
                 }
             }
             Intent intent = new Intent(this, FCMRequest.class);
@@ -85,6 +94,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             intent.putExtra("pickup",pickup);
             intent.putExtra("time",received.time);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("dest",dest);
+            intent.putExtra("time",received.time);
+            intent.putExtra("passenger_name",received.passenger_name);
+            intent.putExtra("passenger_phone",received.passenger_phone);
+            intent.putExtra("notes",received.notes);
             startActivity(intent);
             Log.d(TAG, "The recieved request has the content:" + received);
         }
