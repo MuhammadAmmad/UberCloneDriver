@@ -62,6 +62,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
 
         // Check if message contains a data payload.
+        String pickup = "you didn't tell me where !!";
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             Map<String, String> request = remoteMessage.getData();
@@ -74,14 +75,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 if(field.getKey().equals("time"))
                     received.time = field.getValue();
                 if(field.getKey().equals("pickup")) {
-                    received.pickup[0] = Double.parseDouble(field.getValue().split(",")[0]);
-                    received.pickup[1] = Double.parseDouble(field.getValue().split(",")[1]);
+                    pickup = field.getValue();
+
                 }
             }
             Intent intent = new Intent(this, FCMRequest.class);
             intent.putExtra("request_id",received.request_id);
             intent.putExtra("price",received.price);
-            intent.putExtra("pickup",received.pickup);
+            intent.putExtra("pickup",pickup);
             intent.putExtra("time",received.time);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);

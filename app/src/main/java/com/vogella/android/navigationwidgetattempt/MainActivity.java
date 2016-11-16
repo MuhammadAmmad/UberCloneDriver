@@ -383,6 +383,17 @@ public class MainActivity extends AppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        Intent intent = new Intent(this, FCMRequest.class);
+        intent.putExtra("request_id","13213");
+        intent.putExtra("price","33");
+        intent.putExtra("pickup","15.6023428, 32.5873593");
+        intent.putExtra("dest","15.5023428, 32.3873593");
+        intent.putExtra("time","25/10/16 4:33");
+        intent.putExtra("passenger_name","George Washington");
+        intent.putExtra("passenger_phone","0999999999");
+        intent.putExtra("notes","Don't smoke! Don't drive while texting!");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {

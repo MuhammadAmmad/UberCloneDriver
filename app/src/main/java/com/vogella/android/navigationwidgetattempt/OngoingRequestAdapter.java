@@ -26,6 +26,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
     private Context context;
 
     public OngoingRequestAdapter(List<request> RequestList, Context context) {
+//    public OngoingRequestAdapter(Context context) {
         this.RequestList = RequestList;
         this.context = context;
     }
@@ -35,6 +36,8 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
     public int getItemCount() {
         return RequestList.size();
     }
+
+    public boolean addRequest(request request){RequestList.add(getItemCount(), request); return true;}
 
     @Override
     public void onBindViewHolder(final com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder RequestViewHolder, int i) {

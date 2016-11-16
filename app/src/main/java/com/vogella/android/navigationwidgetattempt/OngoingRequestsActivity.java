@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class OngoingRequestsActivity extends AppCompatActivity{
@@ -29,7 +30,13 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     private RecyclerView previous_requests;
     private RecyclerView.Adapter RVadapter;
     private RecyclerView.LayoutManager layoutManager;
-
+    private  OngoingRequestAdapter ca;
+    private static List<request> requestList = new ArrayList<request>(){
+        {
+//            add(new request());
+        }
+    };
+    private static boolean initialized = false;
 //    @Override
 //    public void recyclerViewListClicked(View v, int position){
 //        Toast.makeText(this,"Everything is awesome", Toast.LENGTH_SHORT).show();
@@ -43,8 +50,12 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         previous_requests.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         previous_requests.setLayoutManager(layoutManager);
-  //      OngoingRequestAdapter ca = new OngoingRequestAdapter(this, recyclerViewListClicked, createList(5));
-        OngoingRequestAdapter ca = new OngoingRequestAdapter(createList(5), this);
+//        OngoingRequestAdapter ca = new OngoingRequestAdapter(this, recyclerViewListClicked, createList(5));
+//        if(!initialized) {
+//            requestList.addAll(createList(5));
+            ca = new OngoingRequestAdapter(requestList, this);
+//            initialized = true;
+//        }
         previous_requests.setAdapter(ca);
 //        ca.setOnItemClickListener(this.setOnItemClick);
 
@@ -69,6 +80,16 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         }
 
         return result;
+    }
+
+    public static boolean addRequest(request request){
+        requestList.add(requestList.size(),request);
+//        if(!initialized) {
+//            ca = new OngoingRequestAdapter(this);
+//            initialized = true;
+//        }
+//        ca.addRequest(request);
+        return true;
     }
 
 
