@@ -26,26 +26,27 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.akexorcist.googledirection.util.DirectionConverter;
 import com.akexorcist.googledirection.DirectionCallback;
 import com.akexorcist.googledirection.GoogleDirection;
 import com.akexorcist.googledirection.model.Direction;
 import com.akexorcist.googledirection.model.Info;
 import com.akexorcist.googledirection.model.Leg;
 import com.akexorcist.googledirection.model.Route;
-import com.akexorcist.googledirection.util.DirectionConverter;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-/*
+
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-*/
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -57,6 +58,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -64,10 +66,13 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        OnMapReadyCallback{
+        OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener {
 
     private GoogleMap mMap;
-//    private LocationRequest mLocationRequest;
+    private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     public Location mLastLocation;
     private Location mCurrentLocation;
@@ -390,6 +395,12 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
+        String token = FirebaseInstanceId.getInstance().getToken();
+
+        // Log and toast
+        String msg = getString(R.string.msg_token_fmt, token);
+        Log.d(TAG, msg);
+
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -432,7 +443,6 @@ public class MainActivity extends AppCompatActivity
         LatLng khartoum = new LatLng(15.5838046, 32.5543825);
 //        mMap.addMarker(new MarkerOptions().position(khartoum).title("Marker in Khartoum"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(khartoum, 14 ));
-/*
 
         // ==================== To get location ================
 
@@ -491,13 +501,11 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-*/
     }
 
 
 
 
-/*
     @Override
     public void onConnected(Bundle bundle) {
 
@@ -558,7 +566,6 @@ public class MainActivity extends AppCompatActivity
 //        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
 
     }
-*/
 
     private void showRoute() {
         Log.d(TAG, "showRoute: Called");
