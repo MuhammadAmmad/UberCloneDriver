@@ -69,9 +69,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
 
+    private PrefManager prefManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        prefManager = new PrefManager(this);
         setContentView(R.layout.activity_login);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -102,12 +105,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
     @Override
     public void finish(){
-        Intent userData = new Intent();
-        userData.putExtra("email",driver.email);
-        userData.putExtra("username",driver.username);
-        userData.putExtra("phone",driver.phone);
-        userData.putExtra("gender",driver.gender);
-        setResult(RESULT_OK, userData);
+        Intent map = new Intent(this,MainActivity.class );
+//        userData.putExtra("email",driver.email);
+//        userData.putExtra("username",driver.username);
+//        userData.putExtra("phone",driver.phone);
+//        userData.putExtra("gender",driver.gender);
+        //setResult(RESULT_OK, userData);
+        prefManager.setDriver(driver);
+        prefManager.setIsLoggedIn(true);
+        startActivity(map);
         super.finish();
     }
 

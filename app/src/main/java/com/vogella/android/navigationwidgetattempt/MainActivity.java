@@ -115,6 +115,8 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = "UbDriver";
     private static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
 
+    private PrefManager prefManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -246,11 +248,16 @@ public class MainActivity extends AppCompatActivity
 //        layoutManager = new LinearLayoutManager(this);
 //        previous_requests.setLayoutManager(layoutManager);
 
-        if (driver.username == null) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivityForResult(intent, LOGIN_REQUEST_CODE);
-//            finish();
-        }
+        prefManager = new PrefManager(this);
+        driver = prefManager.getDriver();
+        ((TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
+                            .findViewById(R.id.show_username)).setText(driver.getUsername());
+
+//        if (driver.username == null) {
+//            Intent intent = new Intent(this, LoginActivity.class);
+//            startActivityForResult(intent, LOGIN_REQUEST_CODE);
+////            finish();
+//        }
 
     }
 
@@ -281,21 +288,21 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == LOGIN_REQUEST_CODE && resultCode == RESULT_OK) {
-            if (data.hasExtra("username")) {
-                String name = data.getExtras().getString("username");
-                if (name != null && name.length() > 0) {
-                    menuState = 1;
-                    invalidateOptionsMenu();
-                    driver.username = name;
-//                    TextView username = (TextView) findViewById(R.id.show_username);
-                    NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-                    TextView username = (TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
-                            .findViewById(R.id.show_username);
-                    username.setText(name);
-                }
-            }
-        }
+//        if (requestCode == LOGIN_REQUEST_CODE && resultCode == RESULT_OK) {
+//            if (data.hasExtra("username")) {
+//                String name = data.getExtras().getString("username");
+//                if (name != null && name.length() > 0) {
+//                    menuState = 1;
+//                    invalidateOptionsMenu();
+//                    driver.username = name;
+////                    TextView username = (TextView) findViewById(R.id.show_username);
+//                    NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+//                    TextView username = (TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
+//                            .findViewById(R.id.show_username);
+//                    username.setText(name);
+//                }
+//            }
+//        }
         if (requestCode == ONGOING_REQUESTS_CODE && resultCode == RESULT_OK) {
 //            Toast.makeText(this,data.getExtras().getString("passenger_name"), Toast.LENGTH_LONG).show();
             if (data.hasExtra("request_id")) {
