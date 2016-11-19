@@ -32,6 +32,7 @@ public class FCMRequest extends AppCompatActivity {
         request.request_id = data.getExtras().getString("request_id");
         request.pickup[0] = Double.parseDouble(data.getStringExtra("pickup").split(",")[0]);
         request.pickup[1] = Double.parseDouble(data.getStringExtra("pickup").split(",")[1]);
+//        request.pickup = data.getStringExtra("pickup");
         request.dest[0] = Double.parseDouble(data.getStringExtra("dest").split(",")[0]);
         request.dest[1] = Double.parseDouble(data.getStringExtra("dest").split(",")[1]);
 

@@ -20,6 +20,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,8 +33,17 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.Wisam.POJO.LoginResponse;
+import com.Wisam.POJO.User;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -55,6 +66,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     };
     private static final driver DUMMY_DRIVER = new driver("Michael Schumacher",
             "foo@example.com:hello", "male", "00249912345678");
+    private static final String TAG ="UbDriver" ;
 
     private static String user_email = null;
     private static driver driver = new driver();
@@ -105,15 +117,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
     @Override
     public void finish(){
-        Intent map = new Intent(this,MainActivity.class );
-//        userData.putExtra("email",driver.email);
-//        userData.putExtra("username",driver.username);
-//        userData.putExtra("phone",driver.phone);
-//        userData.putExtra("gender",driver.gender);
-        //setResult(RESULT_OK, userData);
-        prefManager.setDriver(driver);
-        prefManager.setIsLoggedIn(true);
-        startActivity(map);
+//        Intent map = new Intent(this,MainActivity.class );
+////        userData.putExtra("email",driver.email);
+////        userData.putExtra("username",driver.username);
+////        userData.putExtra("phone",driver.phone);
+////        userData.putExtra("gender",driver.gender);
+//        //setResult(RESULT_OK, userData);
+//        prefManager.setDriver(driver);
+//        prefManager.setIsLoggedIn(true);
+//        startActivity(map);
         super.finish();
     }
 
@@ -212,11 +224,66 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+
+            loginRequest(email, password);
+
+//            showProgress(true);
+//            mAuthTask = new UserLoginTask(email, password);
+//            mAuthTask.execute((Void) null);
+
+
         }
     }
+
+
+    private void loginRequest(final String email, final String password) {
+        showProgress(true);
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        RestService service = retrofit.create(RestService.class);
+        Call<LoginResponse> call = service.login("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+             //   if (response.isSuccessful()){
+                if (response.isSuccess()){
+                    driver driver = response.body().getdriver();
+                    //user.setPassword(password);
+                    driver.setEmail(email);
+                    prefManager.setIsLoggedIn(true);
+                    prefManager.setDriver(driver);
+
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(intent);
+//                showProgress(false);
+                    finish();
+                } else if (response.code() == 401){
+                    mPasswordView.setError(getString(R.string.error_incorrect_password));
+                    mPasswordView.requestFocus();
+                    Toast.makeText(LoginActivity.this, "Authentication failure", Toast.LENGTH_SHORT).show();
+                    showProgress(false);
+                } else {
+                    Toast.makeText(LoginActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    showProgress(false);
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+
+                Toast.makeText(LoginActivity.this, "Failed to connect to the server", Toast.LENGTH_SHORT).show();
+                showProgress(false);
+            }
+        });
+
+    }
+
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic

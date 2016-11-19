@@ -2,6 +2,8 @@ package com.vogella.android.navigationwidgetattempt;
 
 import android.util.Log;
 
+import com.google.gson.annotations.SerializedName;
+
 import static android.content.ContentValues.TAG;
 
 /**
@@ -9,14 +11,23 @@ import static android.content.ContentValues.TAG;
  */
 
 public class request {
+    @SerializedName(value = "request_id")
     public String request_id;
+    @SerializedName(value = "pickup")
     public double pickup[] = new double[2];
+    @SerializedName(value = "dest")
     public double dest[] = new double[2];
+    @SerializedName(value = "time")
     public String time;
+    @SerializedName(value = "price")
     public String price;
+    @SerializedName(value = "status")
     public String status;
+    @SerializedName(value = "notes")
     public String notes;
+    @SerializedName(value = "passenger_name")
     public String passenger_name;
+    @SerializedName(value = "passenger_phone")
     public String passenger_phone;
 
     public request(){

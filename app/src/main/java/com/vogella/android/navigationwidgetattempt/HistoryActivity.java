@@ -57,6 +57,7 @@ public class HistoryActivity extends AppCompatActivity {
             ci.dest[1] = Double.parseDouble(DUMMY_DEST.split(",")[1]);
             ci.pickup[0] = Double.parseDouble(DUMMY_PICKUP.split(",")[0]);
             ci.pickup[1] = Double.parseDouble(DUMMY_PICKUP.split(",")[1]);
+//            ci.pickup = DUMMY_PICKUP;
             ci.price = DUMMY_PRICE + i;
 
             result.add(ci);

@@ -1,15 +1,26 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import com.Wisam.POJO.RequestsResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class OngoingRequestsActivity extends AppCompatActivity{
 
@@ -24,6 +35,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     private static final String DUMMY_NOTES = "Drive slowly";
     private static final String DUMMY_PRICE = "43";
     private static final String DUMMY_TIME = "06/11/2016 ; 15:45";
+    private static final String TAG = "UbDriver";
     //    private static request current_request = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,
 //            DUMMY_PASSENGER_NAME, DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES,
 //            DUMMY_STATUS);
@@ -37,6 +49,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         }
     };
     private static boolean initialized = false;
+    private PrefManager prefManager;
 //    @Override
 //    public void recyclerViewListClicked(View v, int position){
 //        Toast.makeText(this,"Everything is awesome", Toast.LENGTH_SHORT).show();
@@ -59,7 +72,54 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         previous_requests.setAdapter(ca);
 //        ca.setOnItemClickListener(this.setOnItemClick);
 
+        prefManager = new PrefManager(this);
+
+        // Server request
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        String email = "";
+        String password = "";
+        RestService service = retrofit.create(RestService.class);
+        Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
+        call.enqueue(new Callback<RequestsResponse>() {
+            @Override
+            public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null){
+                    OngoingRequestsActivity.this.setRequestsList(response.body().getRides());
+                } else if (response.code() == 401){
+                    Toast.makeText(OngoingRequestsActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "onCreate: User not logged in");
+                    prefManager.setIsLoggedIn(false);
+                    Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                } else {
+//                    clearHistoryEntries();
+                    Toast.makeText(OngoingRequestsActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<RequestsResponse> call, Throwable t) {
+
+            }
+        });
     }
+
+    private void setRequestsList(List<request> rides) {
+        if (requestList.isEmpty()){
+            requestList = rides;
+            ca.updateRequestsList(requestList);
+            ca.notifyDataSetChanged();
+        }
+    }
+
+
 
     private List<request> createList(int size) {
 

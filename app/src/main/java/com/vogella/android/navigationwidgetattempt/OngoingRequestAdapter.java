@@ -107,6 +107,10 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         return new com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder(itemView);
     }
 
+    public void updateRequestsList(List<request> requestList) {
+        this.RequestList = requestList;
+    }
+
     public static class OngoingRequestViewHolder extends RecyclerView.ViewHolder{
 
         protected TextView price;

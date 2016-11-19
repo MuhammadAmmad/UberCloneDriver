@@ -204,6 +204,7 @@ public class MainActivity extends AppCompatActivity
                 ((TextView)findViewById(R.id.cr_status)).setText(current_request.status);
                 ((TextView)findViewById(R.id.cr_notes)).setText(current_request.notes);
                 ((TextView)findViewById(R.id.cr_pickup)).
+//                        setText(current_request.pickup);
                         setText(String.valueOf(current_request.pickup[0]) + " , " +
                                 String.valueOf(current_request.pickup[1]));
                 ((TextView)findViewById(R.id.cr_dest)).
@@ -306,12 +307,15 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == ONGOING_REQUESTS_CODE && resultCode == RESULT_OK) {
 //            Toast.makeText(this,data.getExtras().getString("passenger_name"), Toast.LENGTH_LONG).show();
             if (data.hasExtra("request_id")) {
+                double pickup[] = new double[2];
                 //set the data
                 current_request.passenger_name = data.getExtras().getString("passenger_name");
                 current_request.passenger_phone = data.getExtras().getString("passenger_phone");
                 current_request.status = data.getExtras().getString("status");
                 current_request.pickup[0] = data.getExtras().getDouble("pickup_longitude");
                 current_request.pickup[1] = data.getExtras().getDouble("pickup_latitude");
+//                pickup[0] = data.getExtras().getDouble("pickup_latitude");
+//                pickup[1] = data.getExtras().getDouble("pickup_latitude");
                 current_request.dest[0] = data.getExtras().getDouble("dest_longitude");
                 current_request.dest[1] = data.getExtras().getDouble("dest_latitude");
                 current_request.time = data.getExtras().getString("time");
@@ -319,6 +323,7 @@ public class MainActivity extends AppCompatActivity
                 current_request.price = data.getExtras().getString("price");
                 current_request.request_id = data.getExtras().getString("request_id");
 
+//                pickupPoint = new LatLng(pickup[0], pickup[1]);
                 pickupPoint = new LatLng(current_request.pickup[0], current_request.pickup[1]);
                 destPoint = new LatLng(current_request.dest[0], current_request.dest[1]);
 
