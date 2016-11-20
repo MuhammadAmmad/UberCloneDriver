@@ -20,6 +20,9 @@ public interface RestService {
     @GET("driver_api/requests")
     Call<RequestsResponse> requests(@Header("Authorization") String authorization );
 
+    @GET("driver_api/history")
+    Call<RequestsResponse> history(@Header("Authorization") String authorization );
+
 //    @GET("passenger_api/register")
 //    Call<SimpleResponse> register(
 //            @Query("email") String email,

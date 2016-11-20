@@ -75,13 +75,15 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         prefManager = new PrefManager(this);
 
         // Server request
+        serverRequest("", "");
+    }
+
+    private void serverRequest(String email,String password ) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        String email = "";
-        String password = "";
         RestService service = retrofit.create(RestService.class);
         Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
         call.enqueue(new Callback<RequestsResponse>() {

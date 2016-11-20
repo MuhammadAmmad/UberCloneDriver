@@ -46,6 +46,8 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
         return new RequestViewHolder(itemView);
     }
 
+    public void updateRequestsList(List<request> history) {this.RequestList = history;}
+
     public static class RequestViewHolder extends RecyclerView.ViewHolder{
         protected TextView price;
         protected TextView date;

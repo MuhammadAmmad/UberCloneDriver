@@ -1,14 +1,26 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
+
+import com.Wisam.POJO.RequestsResponse;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HistoryActivity extends AppCompatActivity {
 
@@ -21,6 +33,14 @@ public class HistoryActivity extends AppCompatActivity {
     private static final String DUMMY_NOTES = "Drive slowly";
     private static final String DUMMY_PRICE = "43";
     private static final String DUMMY_TIME = "06/11/2016 - 15:45";
+    private static final String TAG = "UbDriver";
+    private PrefManager prefManager;
+    private RequestAdapter ca;
+
+    private List<request> History = new ArrayList<request>(){
+        {
+        }
+    };
 //    private static request current_request = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,
 //            DUMMY_PASSENGER_NAME, DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES,
 //            DUMMY_STATUS);
@@ -36,8 +56,10 @@ public class HistoryActivity extends AppCompatActivity {
         previous_requests.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         previous_requests.setLayoutManager(layoutManager);
-        RequestAdapter ca = new RequestAdapter(createList(30));
+//        RequestAdapter ca = new RequestAdapter(createList(30));
+        ca = new RequestAdapter(History);
         previous_requests.setAdapter(ca);
+        serverRequest("", "");
 //        RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.ongoing_request);
 //        relativeLayout.setVisibility(View.INVISIBLE);
 
@@ -67,4 +89,47 @@ public class HistoryActivity extends AppCompatActivity {
         return result;
     }
 
+
+    private void serverRequest(String email,String password ) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        RestService service = retrofit.create(RestService.class);
+        Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
+        call.enqueue(new Callback<RequestsResponse>() {
+            @Override
+            public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null){
+                    HistoryActivity.this.setRequestsList(response.body().getRides());
+                } else if (response.code() == 401){
+                    Toast.makeText(HistoryActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "onCreate: User not logged in");
+                    prefManager.setIsLoggedIn(false);
+                    Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                } else {
+//                    clearHistoryEntries();
+                    Toast.makeText(HistoryActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<RequestsResponse> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void setRequestsList(List<request> rides) {
+        if (History.isEmpty()){
+            History = rides;
+            ca.updateRequestsList(History);
+            ca.notifyDataSetChanged();
+        }
+    }
 }
