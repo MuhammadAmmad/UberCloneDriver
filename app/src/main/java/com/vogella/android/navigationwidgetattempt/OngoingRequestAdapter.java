@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +16,16 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.Wisam.POJO.AcceptResponse;
+import com.Wisam.POJO.RequestsResponse;
+
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by nezuma on 10/27/16.
@@ -22,8 +33,10 @@ import java.util.List;
 
 public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder> {
 
+    private static final String TAG = "UbDriver";
     private List<request> RequestList;
     private Context context;
+    private PrefManager prefManager;
 
     public OngoingRequestAdapter(List<request> RequestList, Context context) {
 //    public OngoingRequestAdapter(Context context) {
@@ -57,6 +70,8 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         RequestViewHolder.dest.setText(String.valueOf(ci.dest[0]) + "," + String.valueOf(ci.dest[1]));
         RequestViewHolder.request_time.setText(ci.time);
 */
+
+        prefManager = new PrefManager(context);
 
         RequestViewHolder.card.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -1,11 +1,15 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import com.Wisam.POJO.AcceptResponse;
 import com.Wisam.POJO.LoginResponse;
 import com.Wisam.POJO.RequestsResponse;
 
 import retrofit2.Call;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 /**
@@ -22,6 +26,10 @@ public interface RestService {
 
     @GET("driver_api/history")
     Call<RequestsResponse> history(@Header("Authorization") String authorization );
+
+    @FormUrlEncoded
+    @POST("driver_api/accept")
+    Call<AcceptResponse> accept(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("accepted") boolean accepted);
 
 //    @GET("passenger_api/register")
 //    Call<SimpleResponse> register(
