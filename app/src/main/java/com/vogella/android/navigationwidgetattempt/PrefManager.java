@@ -26,6 +26,7 @@ public class PrefManager {
 
     private static final String IS_FIRST_TIME_LAUNCHED = "IsFirstTimeLaunch";
     private static final String IS_LOGGED_IN = "IsLoggedIn";
+    private static final String DOING_REQUEST = "DOING_REQUEST";
 
     // User data
     private static final String USER_FULLNAME = "UserName";
@@ -61,6 +62,15 @@ public class PrefManager {
 
     public boolean isLoggedIn() {
         return pref.getBoolean(IS_LOGGED_IN, false);
+    }
+
+    public void setDoingRequest(boolean DoingRequest) {
+        editor.putBoolean(DOING_REQUEST, DoingRequest);
+        editor.apply();
+    }
+
+    public boolean isDoingRequest() {
+        return pref.getBoolean(DOING_REQUEST, false);
     }
 
     public void setUser(User user){

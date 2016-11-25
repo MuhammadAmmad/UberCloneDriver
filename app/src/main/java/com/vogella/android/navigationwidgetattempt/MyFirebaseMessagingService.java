@@ -25,8 +25,13 @@ package com.vogella.android.navigationwidgetattempt;
         import android.support.v4.app.NotificationCompat;
         import android.util.Log;
 
+        import com.Wisam.Events.DriverLoggedout;
+        import com.Wisam.Events.PassengerArrived;
+        import com.Wisam.Events.PassengerCanceled;
         import com.google.firebase.messaging.FirebaseMessagingService;
         import com.google.firebase.messaging.RemoteMessage;
+
+        import org.greenrobot.eventbus.EventBus;
 
         import java.util.Map;
         import java.util.Objects;
@@ -64,45 +69,78 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Check if message contains a data payload.
         String pickup = "you didn't tell me where !!";
         String dest = "you didn't tell me where !!";
+        String status = "-1";
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             Map<String, String> request = remoteMessage.getData();
-            for(Map.Entry<String, String> field: request.entrySet()){
+            for (Map.Entry<String, String> field : request.entrySet()) {
                 Log.d(TAG, field.getKey() + "  :  " + field.getValue());
-                if(field.getKey().equals("request_id"))
+                if (field.getKey().equals("request_id"))
                     received.request_id = field.getValue();
-                if(field.getKey().equals("price"))
+                if (field.getKey().equals("price"))
                     received.price = field.getValue();
-                if(field.getKey().equals("time"))
+                if (field.getKey().equals("time"))
                     received.time = field.getValue();
-                if(field.getKey().equals("notes"))
+                if (field.getKey().equals("notes"))
                     received.notes = field.getValue();
-                if(field.getKey().equals("passenger_phone"))
+                if (field.getKey().equals("passenger_phone"))
                     received.passenger_phone = field.getValue();
-                if(field.getKey().equals("passenger_name"))
+                if (field.getKey().equals("passenger_name"))
                     received.passenger_name = field.getValue();
-                if(field.getKey().equals("pickup")) {
+                if (field.getKey().equals("pickup")) {
                     pickup = field.getValue();
                 }
-                if(field.getKey().equals("dest")) {
+                if (field.getKey().equals("dest")) {
                     dest = field.getValue();
                 }
+                if (field.getKey().equals("status")) {
+                    status = field.getValue();
+                }
             }
-            Intent intent = new Intent(this, FCMRequest.class);
-            intent.putExtra("request_id",received.request_id);
-            intent.putExtra("price",received.price);
-            intent.putExtra("pickup",pickup);
-            intent.putExtra("time",received.time);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.putExtra("dest",dest);
-            intent.putExtra("time",received.time);
-            intent.putExtra("passenger_name",received.passenger_name);
-            intent.putExtra("passenger_phone",received.passenger_phone);
-            intent.putExtra("notes",received.notes);
-            startActivity(intent);
-            Log.d(TAG, "The recieved request has the content:" + received);
+            if (status.equals("-1")) {
+                Log.d(TAG, "This request has no status.. it is impossible to determine which API is this");
+            }
+            else if(status.equals("0")){
+                Intent intent = new Intent(this, FCMRequest.class);
+                intent.putExtra("request_id", received.request_id);
+                intent.putExtra("price", received.price);
+                intent.putExtra("pickup", pickup);
+                intent.putExtra("time", received.time);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("dest", dest);
+                intent.putExtra("time", received.time);
+                intent.putExtra("passenger_name", received.passenger_name);
+                intent.putExtra("passenger_phone", received.passenger_phone);
+                intent.putExtra("notes", received.notes);
+                startActivity(intent);
+                Log.d(TAG, "The recieved request has the content:" + received);
+            }
+            else if (status.equals("1")){ // Passenger Canceled
+                for (Map.Entry<String, String> field : request.entrySet()) {
+                    if (field.getKey().equals("request_id")) {
+                        EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
+                        OngoingRequestsActivity.removeRequest(field.getValue());
+                        sendNotification("The passenger Canceled the request no." + field.getValue());
+                        break;
+                    }
+                }
+            }
+            else if (status.equals("2")){ // Passenger Arrived
+                for (Map.Entry<String, String> field : request.entrySet()) {
+                    if (field.getKey().equals("request_id")) {
+                        sendNotification("The request has been completed");
+                        EventBus.getDefault().post(new PassengerArrived(field.getValue()));
+                        OngoingRequestsActivity.removeRequest(field.getValue());
+                       // break;
+                    }
+                }
+            }
+            else if (status.equals("3")){ // Driver logged out
+                sendNotification("You are logged out of this device." +
+                        "Note that you can be loggedin on one device only");
+                EventBus.getDefault().post(new DriverLoggedout());
+            }
         }
-
         // Check if message contains a notification payload.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());

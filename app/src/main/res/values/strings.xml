@@ -6,11 +6,18 @@
 
     <string name="action_settings">Settings</string>
 
-    <string-array name="driverStatusArray">
-        <item>Available</item>
-        <item>On The Way</item>
-        <item> Carrying Passengers</item>
-    </string-array>
+    <!--<string-array name="driverStatusArray">-->
+        <!--<item>Available</item>-->
+        <!--<item>On The Way</item>-->
+        <!--<item> Carrying Passengers</item>-->
+    <!--</string-array>-->
+
+    <string name="on_the_way">On The Way</string>
+    <string name="arrived_pickup">Arrived At The Pickup Point</string>
+    <string name="passenger_onboard">Passenger On Board</string>
+    <string name="arrived_dest">Arrived At The Destination</string>
+    <string name="completed">Completed</string>
+
     <string name="title_activity_login">Sign in</string>
 
     <!-- Strings related to login -->

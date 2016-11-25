@@ -9,7 +9,7 @@ import java.util.List;
  * Created by nezuma on 11/21/16.
  */
 
-public class AcceptResponse {
+public class StatusResponse {
     @SerializedName(value = "status")
     private int status;
 //for testing purposes .. will be removed later

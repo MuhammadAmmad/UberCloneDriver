@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -26,6 +27,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.Wisam.Events.DriverLoggedout;
+import com.Wisam.Events.PassengerArrived;
+import com.Wisam.Events.PassengerCanceled;
+import com.Wisam.POJO.StatusResponse;
 import com.akexorcist.googledirection.util.DirectionConverter;
 import com.akexorcist.googledirection.DirectionCallback;
 import com.akexorcist.googledirection.GoogleDirection;
@@ -59,10 +64,21 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.gson.Gson;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -96,7 +112,7 @@ public class MainActivity extends AppCompatActivity
     private static final double DUMMY_DEST[] = {15.5551185, 32.5543017};
     private static final String DUMMY_PASSENGER_NAME = "John Green";
     private static final String DUMMY_PASSENGER_PHONE = "0123456789";
-    private static final String DUMMY_STATUS = "on the way";
+    private static final String DUMMY_STATUS = "on_the_way";
     private static final String DUMMY_NOTES = "Drive slowly";
     private static final String DUMMY_PRICE = "43";
     private static final String DUMMY_TIME = "06/11/2016 ; 15:45";
@@ -112,7 +128,7 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.LayoutManager layoutManager;
 //    private Dialog myDialog;
 
-    private static final String TAG = "UbDriver";
+    private static final String TAG = "MainActivity";
     private static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
 
     private PrefManager prefManager;
@@ -150,10 +166,13 @@ public class MainActivity extends AppCompatActivity
         changeDriverStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (changeDriverStatus.getText().toString().equals("available"))
+                if (changeDriverStatus.getText().toString().equals("available")) {
                     changeDriverStatus.setText("away");
-                else if (changeDriverStatus.getText().toString().equals("away"))
+                    sendActive(false, "15.6023428, 32.5873593");
+                } else if (changeDriverStatus.getText().toString().equals("away")){
                     changeDriverStatus.setText("available");
+                    sendActive(true, "15.6023428, 32.5873593");
+                }
             }
         });
 
@@ -166,7 +185,7 @@ public class MainActivity extends AppCompatActivity
                 alerBuilder.setPositiveButton("Yes, cancel the request", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        endRequest(REQUEST_CANCELLED);
+                        sendCancel(current_request.request_id);
                     }
                 });
                 alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -185,6 +204,7 @@ public class MainActivity extends AppCompatActivity
                 TextView current = (TextView) findViewById(R.id.current_status);
                 current.setText(nextState.getText().toString());
                 current_request.nextStatus();
+                sendStatus(current_request.request_id, current_request.status);
                 if (current_request.status.equals("completed")) {
                     endRequest(REQUEST_SUCCESS);
                 } else
@@ -271,6 +291,7 @@ public class MainActivity extends AppCompatActivity
         else if(res == REQUEST_CANCELLED)
             Toast.makeText(MainActivity.this, "The request has been canceled",
                     Toast.LENGTH_LONG).show();
+        OngoingRequestsActivity.removeRequest(current_request.request_id);
         current_request = new request();
         if (pickupMarker != null) {
             pickupMarker.remove();
@@ -284,7 +305,120 @@ public class MainActivity extends AppCompatActivity
         if (routePolyline != null) {
             routePolyline.remove();
         }
+        prefManager.setDoingRequest(false);
+    }
 
+    private void sendStatus(String request_id, final String status ) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = "";
+        String password = "";
+
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.status("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
+                request_id,status);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null){
+                    Log.d(TAG, "The status has been sent successfully");
+                } else if (response.code() == 401){
+                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "onCreate: User not logged in");
+                    prefManager.setIsLoggedIn(false);
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    MainActivity.this.startActivity(intent);
+                    MainActivity.super.finish();
+                } else {
+//                    clearHistoryEntries();
+                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+
+            }
+        });
+    }
+    private void sendActive (boolean active, final String location ) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = "";
+        String password = "";
+
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.active("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
+                active, location);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null){
+                    Log.d(TAG, "The status has been changed successfully");
+                } else if (response.code() == 401){
+                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "onCreate: User not logged in");
+                    prefManager.setIsLoggedIn(false);
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    MainActivity.this.startActivity(intent);
+                    MainActivity.super.finish();
+                } else {
+//                    clearHistoryEntries();
+                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+
+            }
+        });
+    }
+    private void sendCancel (final String request_id ) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = "";
+        String password = "";
+
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.cancel("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
+                request_id);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null){
+                    endRequest(REQUEST_CANCELLED);
+                    Log.d(TAG, "The request has been cancelled successfully");
+                } else if (response.code() == 401){
+                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "onCreate: User not logged in");
+                    prefManager.setIsLoggedIn(false);
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    MainActivity.this.startActivity(intent);
+                    MainActivity.super.finish();
+                } else {
+//                    clearHistoryEntries();
+                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+
+            }
+        });
     }
 
     @Override
@@ -322,53 +456,60 @@ public class MainActivity extends AppCompatActivity
                 current_request.notes = data.getExtras().getString("notes");
                 current_request.price = data.getExtras().getString("price");
                 current_request.request_id = data.getExtras().getString("request_id");
+                startRequest();
 
-//                pickupPoint = new LatLng(pickup[0], pickup[1]);
-                pickupPoint = new LatLng(current_request.pickup[0], current_request.pickup[1]);
-                destPoint = new LatLng(current_request.dest[0], current_request.dest[1]);
-
-                // Setting marker
-                if (pickupMarker != null) {
-                    pickupMarker.remove();
-                }
-                pickupMarker = mMap.addMarker(new MarkerOptions()
-                        .position(pickupPoint)
-                        .title("Pickup")
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.start_loc_smaller))
-                );
-
-
-                // Setting marker
-                if (destMarker != null) {
-                    destMarker.remove();
-                }
-
-                destMarker = mMap.addMarker(new MarkerOptions()
-                        .position(destPoint)
-                        .title("Destination")
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
-                );
-
-
-                showRoute();
-
-                // For zooming automatically to the location of the marker
-                CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-                //set values for the different views
-                LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
-                Button nextState = (Button) findViewById(R.id.next_state);
-                TextView current = (TextView) findViewById(R.id.current_status);
-                current.setText(current_request.status);
-                String temp = current_request.status;
-                current_request.nextStatus();
-                nextState.setText(current_request.status);
-                current_request.status = temp;
-                linearLayout.setVisibility(View.VISIBLE);
 
             }
         }
+    }
+
+    private void startRequest() {
+        //                pickupPoint = new LatLng(pickup[0], pickup[1]);
+
+        prefManager.setDoingRequest(true);
+
+        pickupPoint = new LatLng(current_request.pickup[0], current_request.pickup[1]);
+        destPoint = new LatLng(current_request.dest[0], current_request.dest[1]);
+
+        // Setting marker
+        if (pickupMarker != null) {
+            pickupMarker.remove();
+        }
+        pickupMarker = mMap.addMarker(new MarkerOptions()
+                .position(pickupPoint)
+                .title("Pickup")
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.start_loc_smaller))
+        );
+
+
+        // Setting marker
+        if (destMarker != null) {
+            destMarker.remove();
+        }
+
+        destMarker = mMap.addMarker(new MarkerOptions()
+                .position(destPoint)
+                .title("Destination")
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
+        );
+
+
+        showRoute();
+
+        // For zooming automatically to the location of the marker
+        CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+        //set values for the different views
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
+        Button nextState = (Button) findViewById(R.id.next_state);
+        TextView current = (TextView) findViewById(R.id.current_status);
+        current.setText(current_request.status);
+        String temp = current_request.status;
+        current_request.nextStatus();
+        nextState.setText(current_request.status);
+        current_request.status = temp;
+        linearLayout.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -388,7 +529,57 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+//        if(prefManager.isDoingRequest()){
+//            Gson gson = new Gson();
+//            String json = gson.toJson(current_request);
+//            prefManager.editor.putString("current_request", json);
+//        }
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+//        if(prefManager.isDoingRequest()){
+//            Gson gson = new Gson();
+//            String json = prefManager.pref.getString("current_request","");
+//            current_request = gson.fromJson(json, request.class);
+//            startRequest();
+//        }
+    }
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onPassengerCancelled(PassengerCanceled event) {
+        endRequest(REQUEST_CANCELLED);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDriverLoggedout(DriverLoggedout event) {
+        prefManager.setIsLoggedIn(false);
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        MainActivity.this.startActivity(intent);
+        MainActivity.super.finish();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onPassngerArrived(PassengerArrived event) {
+        endRequest(REQUEST_SUCCESS);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -400,7 +591,9 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra("price","33");
         intent.putExtra("pickup","15.6023428, 32.5873593");
         intent.putExtra("dest","15.5023428, 32.3873593");
-        intent.putExtra("time","25/10/16 4:33");
+//        intent.putExtra("time","25/10/16 4:33");
+        //intent.putExtra("time","1479935269");
+        intent.putExtra("time","now");
         intent.putExtra("passenger_name","George Washington");
         intent.putExtra("passenger_phone","0999999999");
         intent.putExtra("notes","Don't smoke! Don't drive while texting!");

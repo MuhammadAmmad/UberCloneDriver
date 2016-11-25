@@ -7,25 +7,12 @@ import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.Wisam.POJO.AcceptResponse;
-import com.Wisam.POJO.RequestsResponse;
 
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by nezuma on 10/27/16.
@@ -84,7 +71,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                         Intent intent = new Intent();
                         intent.putExtra("passenger_name", ci.passenger_name);
                         intent.putExtra("passenger_phone", ci.passenger_phone);
-                        intent.putExtra("status", "on the way");
+                        intent.putExtra("status", "on_the_way");
 //                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
                         intent.putExtra("pickup_longitude", ci.pickup[0]);
                         intent.putExtra("pickup_latitude", ci.pickup[1]);

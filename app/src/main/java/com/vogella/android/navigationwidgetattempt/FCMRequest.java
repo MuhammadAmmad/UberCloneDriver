@@ -1,6 +1,5 @@
 package com.vogella.android.navigationwidgetattempt;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
@@ -8,13 +7,15 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.RotateAnimation;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.Wisam.POJO.AcceptResponse;
+import com.Wisam.POJO.StatusResponse;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,70 +26,81 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class FCMRequest extends AppCompatActivity {
 
     private static final String TAG = "FCMRequest";
+    private static final int NOT_TIMEOUT = 0;
     request request = new request();
     private PrefManager prefManager;
+    private static final int TIMEOUT = 1;
+    private static int reason = TIMEOUT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent data = getIntent();
         setContentView(R.layout.activity_fcmrequest);
         final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressbar_timerview);
 //        Animation an = new RotateAnimation(0.0f, 90.0f, 250f, 273f);
 //        an.setFillAfter(true);
 //        progressBar.startAnimation(an);
 
-        prefManager = new PrefManager(this);
-
-        Intent data = getIntent();
-        request.passenger_name = data.getStringExtra("passenger_name");
-        request.passenger_phone = data.getStringExtra("passenger_phone");
-        request.status = "Accepted";
-        request.time = data.getStringExtra("time");
-        request.notes = data.getStringExtra("notes");
-        request.price = data.getStringExtra("price");
-        request.request_id = data.getExtras().getString("request_id");
-        request.pickup[0] = Double.parseDouble(data.getStringExtra("pickup").split(",")[0]);
-        request.pickup[1] = Double.parseDouble(data.getStringExtra("pickup").split(",")[1]);
+                prefManager = new PrefManager(this);
+                request.passenger_name = data.getStringExtra("passenger_name");
+                request.passenger_phone = data.getStringExtra("passenger_phone");
+                request.status = "Accepted";
+                request.time = data.getStringExtra("time");
+                request.notes = data.getStringExtra("notes");
+                request.price = data.getStringExtra("price");
+                request.request_id = data.getExtras().getString("request_id");
+                request.pickup[0] = Double.parseDouble(data.getStringExtra("pickup").split(",")[0]);
+                request.pickup[1] = Double.parseDouble(data.getStringExtra("pickup").split(",")[1]);
 //        request.pickup = data.getStringExtra("pickup");
-        request.dest[0] = Double.parseDouble(data.getStringExtra("dest").split(",")[0]);
-        request.dest[1] = Double.parseDouble(data.getStringExtra("dest").split(",")[1]);
+                request.dest[0] = Double.parseDouble(data.getStringExtra("dest").split(",")[0]);
+                request.dest[1] = Double.parseDouble(data.getStringExtra("dest").split(",")[1]);
+                long unixTime;
+                if(request.time.equals("now"))
+                    unixTime = System.currentTimeMillis();
+                else
+                    unixTime = Long.valueOf(request.time) * 1000;
+                Date df = new java.util.Date(unixTime);
+                SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
+                sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
+                request.time = sdf.format(df);
 
-        ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(data.getStringExtra("pickup"));
-        ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.price);
-        ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.time);
-        CountDownTimer countDownTimer = new CountDownTimer(20 * 1000, 500) {
-            @Override
-            public void onTick(long l) {
-                long seconds = l / 1000;
-                progressBar.setProgress((int)seconds);
-            }
+                ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(data.getStringExtra("pickup"));
+                ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.price);
+                ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.time);
+                CountDownTimer countDownTimer = new CountDownTimer(20 * 1000, 500) {
+                    @Override
+                    public void onTick(long l) {
+                        long seconds = l / 1000;
+                        progressBar.setProgress((int) seconds);
+                    }
 
-            @Override
-            public void onFinish() {
-                Toast.makeText(getBaseContext(),"You didn't accept", Toast.LENGTH_LONG).show();
-            }
-        }.start();
-        progressBar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                serverRequest("11111", true);
-
+                    @Override
+                    public void onFinish() {
+                        if(reason == TIMEOUT)
+                            Toast.makeText(getBaseContext(), "You didn't accept", Toast.LENGTH_LONG).show();
+                    }
+                }.start();
+                progressBar.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        serverAccept("11111", true);
+                        FCMRequest.super.finish();
 //                Intent intent = new Intent(getBaseContext(), MainActivity.class);
-  //              startActivity(intent);
-                FCMRequest.super.finish();
-            }
-        });
+                        //              startActivity(intent);
+                    }
+                });
 
-        ((TextView) findViewById(R.id.fcmrequest_reject)).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                serverRequest("11111", false);
-                FCMRequest.super.finish();
-            }
-        });
-
+                ((TextView) findViewById(R.id.fcmrequest_reject)).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        serverAccept("11111", false);
+                        FCMRequest.super.finish();
+                    }
+                });
     }
-    private void serverRequest(String request_id, final boolean accepted ) {
+
+    private void serverAccept(String request_id, final boolean accepted ) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -97,11 +109,11 @@ public class FCMRequest extends AppCompatActivity {
         String password = "";
 
         RestService service = retrofit.create(RestService.class);
-        Call<AcceptResponse> call = service.accept("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
+        Call<StatusResponse> call = service.accept("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
                                                     request_id,accepted);
-        call.enqueue(new Callback<AcceptResponse>() {
+        call.enqueue(new Callback<StatusResponse>() {
             @Override
-            public void onResponse(Call<AcceptResponse> call, Response<AcceptResponse> response) {
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null){
                     if(accepted) {
@@ -110,10 +122,12 @@ public class FCMRequest extends AppCompatActivity {
                                     "You can now view it in the ongoing requests tab", Toast.LENGTH_LONG).show();
                             Log.d(TAG, "You have accepted the request");
                             OngoingRequestsActivity.addRequest(request);
+                            FCMRequest.super.finish();
                         }
                         else if(response.body().getStatus() == 3){
                              Toast.makeText(getBaseContext(), "Another driver has alread accepted this request",
                                      Toast.LENGTH_LONG).show();
+                            FCMRequest.super.finish();
                         }
                     }
                     else {
@@ -130,11 +144,11 @@ public class FCMRequest extends AppCompatActivity {
 //                    clearHistoryEntries();
                     Toast.makeText(FCMRequest.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
                 }
-
+                reason = NOT_TIMEOUT;
             }
 
             @Override
-            public void onFailure(Call<AcceptResponse> call, Throwable t) {
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
 
             }
         });

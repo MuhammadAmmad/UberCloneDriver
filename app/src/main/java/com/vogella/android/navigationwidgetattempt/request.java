@@ -112,16 +112,16 @@ public class request {
 
     public void nextStatus() {
         switch (this.status) {
-            case "on the way":
-                this.status = "arrived at pickup point";
+            case "on_the_way":
+                this.status = "arrived_pickup";
                 break;
-            case "arrived at pickup point":
-                this.status = "passenger picked up";
+            case "arrived_pickup":
+                this.status = "passenger_onboard";
                 break;
-            case "passenger picked up":
-                this.status = "arrived at destination";
+            case "passenger_onboard":
+                this.status = "arrived_dest";
                 break;
-            case "arrived at destination":
+            case "arrived_dest":
                 this.status = "completed";
                 break;
         }
@@ -130,13 +130,13 @@ public class request {
 
     public String getNextStatus(){
         switch (this.status) {
-            case "on the way":
-                return "arrived at pickup point";
-            case "arrived at pickup point":
-                return "passenger picked up";
-            case "passenger picked up":
-                return "arrived at destination";
-            case "arrived at destination":
+            case "on_the_way":
+                return "arrived_pickup";
+            case "arrived_pickup":
+                return "passenger_onboard";
+            case "passenger_onboard":
+                return "arrived_dest";
+            case "arrived_dest":
                 return "completed";
             default:
                 return "error";

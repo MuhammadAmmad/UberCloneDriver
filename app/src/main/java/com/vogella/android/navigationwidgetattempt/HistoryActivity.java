@@ -11,7 +11,12 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.Wisam.Events.DriverLoggedout;
 import com.Wisam.POJO.RequestsResponse;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +34,7 @@ public class HistoryActivity extends AppCompatActivity {
     private static final String DUMMY_DEST = "15.8838046, 32.6543825";
     private static final String DUMMY_PASSENGER_NAME = "John Green";
     private static final String DUMMY_PASSENGER_PHONE = "0123456789";
-    private static final String DUMMY_STATUS = "on the way";
+    private static final String DUMMY_STATUS = "on_the_way";
     private static final String DUMMY_NOTES = "Drive slowly";
     private static final String DUMMY_PRICE = "43";
     private static final String DUMMY_TIME = "06/11/2016 - 15:45";
@@ -132,4 +137,26 @@ public class HistoryActivity extends AppCompatActivity {
             ca.notifyDataSetChanged();
         }
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDriverLoggedout(DriverLoggedout event) {
+        prefManager.setIsLoggedIn(false);
+        Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
+        HistoryActivity.this.startActivity(intent);
+        HistoryActivity.super.finish();
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+
 }

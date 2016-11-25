@@ -17,15 +17,26 @@
 package com.vogella.android.navigationwidgetattempt;
 
 
+        import android.content.Intent;
+        import android.util.Base64;
         import android.util.Log;
+        import android.widget.Toast;
 
+        import com.Wisam.POJO.StatusResponse;
         import com.google.firebase.iid.FirebaseInstanceId;
         import com.google.firebase.iid.FirebaseInstanceIdService;
+
+        import retrofit2.Call;
+        import retrofit2.Callback;
+        import retrofit2.Response;
+        import retrofit2.Retrofit;
+        import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
 
     private static final String TAG = "MyFirebaseIIDService";
+    private PrefManager prefManager;
 
     /**
      * Called if InstanceID token is updated. This may occur if the security of
@@ -38,7 +49,7 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
         // Get updated InstanceID token.
         String refreshedToken = FirebaseInstanceId.getInstance().getToken();
         Log.d(TAG, "Refreshed token: " + refreshedToken);
-
+        prefManager = new PrefManager(this);
         // If you want to send messages to this application instance or
         // manage this apps subscriptions on the server side, send the
         // Instance ID token to your app server.
@@ -55,6 +66,40 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
      * @param token The new token.
      */
     private void sendRegistrationToServer(String token) {
-        // TODO: Implement this method to send token to your app server.
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = "";
+        String password = "";
+//TODO: check the use of getBaseContext in this code.
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.token("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP), token);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null){
+                    Log.d(TAG, "The token has been sent successfully");
+                } else if (response.code() == 401){
+                    Toast.makeText(getBaseContext(), "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "onCreate: User not logged in");
+                    prefManager.setIsLoggedIn(false);
+                    Intent intent = new Intent(getBaseContext(), LoginActivity.class);
+                    getBaseContext().startActivity(intent);
+                    //getBaseContext().finish();
+                } else {
+//                    clearHistoryEntries();
+                    Toast.makeText(getBaseContext(), "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+
+            }
+        });
     }
+
 }

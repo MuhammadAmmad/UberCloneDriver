@@ -10,7 +10,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.Wisam.Events.DriverLoggedout;
 import com.Wisam.POJO.RequestsResponse;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +36,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     private static final double DUMMY_DEST[] = {15.5551185, 32.5543017};
     private static final String DUMMY_PASSENGER_NAME = "John Green";
     private static final String DUMMY_PASSENGER_PHONE = "0123456789";
-    private static final String DUMMY_STATUS = "on the way";
+    private static final String DUMMY_STATUS = "on_the_way";
     private static final String DUMMY_NOTES = "Drive slowly";
     private static final String DUMMY_PRICE = "43";
     private static final String DUMMY_TIME = "06/11/2016 ; 15:45";
@@ -152,6 +157,37 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 //        }
 //        ca.addRequest(request);
         return true;
+    }
+    public static boolean removeRequest(String request_id){
+        int i;
+        for (i = 0; i < requestList.size(); i++) {
+            if (requestList.get(i).request_id.equals(request_id)) {
+                requestList.remove(requestList.get(i));
+                Log.d(TAG, "The request " + request_id + " has been removed");
+                break;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDriverLoggedout(DriverLoggedout event) {
+        prefManager.setIsLoggedIn(false);
+        Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
+        OngoingRequestsActivity.this.startActivity(intent);
+        OngoingRequestsActivity.super.finish();
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
     }
 
 

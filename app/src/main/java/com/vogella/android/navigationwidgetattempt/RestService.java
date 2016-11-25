@@ -1,6 +1,6 @@
 package com.vogella.android.navigationwidgetattempt;
 
-import com.Wisam.POJO.AcceptResponse;
+import com.Wisam.POJO.StatusResponse;
 import com.Wisam.POJO.LoginResponse;
 import com.Wisam.POJO.RequestsResponse;
 
@@ -19,7 +19,7 @@ public interface RestService {
 //    @GET("passenger_api/login")
 //    Call<LoginResponse> login(@Header("Authorization") String authorization );
     @GET("driver_api/login")
-    Call<LoginResponse> login(@Header("Authorization") String authorization );
+    Call<LoginResponse> login(@Header("Authorization") String authorization, @Query("registration_token") String registration_token);
 
     @GET("driver_api/requests")
     Call<RequestsResponse> requests(@Header("Authorization") String authorization );
@@ -29,30 +29,26 @@ public interface RestService {
 
     @FormUrlEncoded
     @POST("driver_api/accept")
-    Call<AcceptResponse> accept(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("accepted") boolean accepted);
+    Call<StatusResponse> accept(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("accepted") boolean accepted);
 
-//    @GET("passenger_api/register")
-//    Call<SimpleResponse> register(
-//            @Query("email") String email,
-//            @Query("fullname") String fullname,
-//            @Query("password") String password,
-//            @Query("phone") String phone,
-//            @Query("gender") String gender
-//    );
-//
-//    @GET("passenger_api/get_drivers")
-//    Call<DriversResponse> getDrivers(@Query("location") String location);
-//
-//
-//    @GET("passenger_api/get_drivers")
-//    Call<DriverResponse> getDriver(
-//            @Query("pickup") String pickup,
-//            @Query("dest") String dest,
-//            @Query("time") String time,
-//            @Query("female_driver") Boolean female_driver,
-//            @Query("notes") String notes,
-//            @Query("price") String price,
-//            @Query("request_id") String request_id
-//
-//    );
+    @FormUrlEncoded
+    @POST("driver_api/active")
+    Call<StatusResponse> active(@Header("Authorization") String authorization, @Field("active") boolean active, @Field("location")String location);
+
+    @FormUrlEncoded
+    @POST("driver_api/status")
+    Call<StatusResponse> status(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("status") String status);
+
+    @FormUrlEncoded
+    @POST("driver_api/cancel")
+    Call<StatusResponse> cancel(@Header("Authorization") String authorization, @Field("request_id")String request_id);
+
+    @FormUrlEncoded
+    @POST("driver_api/location")
+    Call<StatusResponse> location(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("location")String location);
+
+    @FormUrlEncoded
+    @POST("driver_api/token")
+    Call<StatusResponse> token(@Header("Authorization") String authorization, @Field("registration_token")String registration_token);
+
 }

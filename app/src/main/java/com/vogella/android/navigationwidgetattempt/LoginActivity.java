@@ -35,6 +35,7 @@ import android.widget.Toast;
 
 import com.Wisam.POJO.LoginResponse;
 import com.Wisam.POJO.User;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +88,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         prefManager = new PrefManager(this);
+        if(prefManager.isLoggedIn()){
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
         setContentView(R.layout.activity_login);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -245,7 +251,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 .build();
 
         RestService service = retrofit.create(RestService.class);
-        Call<LoginResponse> call = service.login("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
+        Call<LoginResponse> call = service.login("Basic "+ Base64.encodeToString((email + ":" + password).getBytes()
+                ,Base64.NO_WRAP), FirebaseInstanceId.getInstance().getToken());
         call.enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
