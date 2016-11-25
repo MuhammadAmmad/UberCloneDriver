@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final long UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
     private static final long UPDATE_WHILE_IDLE = 30 * 1000;
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2445;
     private GoogleMap mMap;
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
@@ -107,7 +108,8 @@ public class MainActivity extends AppCompatActivity
     private Marker destMarker;
     private LatLng currentLocationPoint;
     private Marker currentLocationMarker;
-    private Polyline routePolyline;
+    private Polyline pickupToDestRoute;
+    private Polyline driverToPickupRoute;
 
     private int menuState = 0; //the user is signed out
 
@@ -126,7 +128,7 @@ public class MainActivity extends AppCompatActivity
     private static request current_request = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,
             DUMMY_PASSENGER_NAME, DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES,
             DUMMY_STATUS);
-//    private static request current_request = new request();
+    //    private static request current_request = new request();
     private static final int REQUEST_SUCCESS = 1;
     private static final int REQUEST_CANCELLED = 0;
 
@@ -150,7 +152,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -182,7 +183,7 @@ public class MainActivity extends AppCompatActivity
                 if (changeDriverStatus.getText().toString().equals("available")) {
                     changeDriverStatus.setText("away");
                     sendActive(false, "15.6023428, 32.5873593");
-                } else if (changeDriverStatus.getText().toString().equals("away")){
+                } else if (changeDriverStatus.getText().toString().equals("away")) {
                     changeDriverStatus.setText("available");
                     sendActive(true, "15.6023428, 32.5873593");
                 }
@@ -230,20 +231,20 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 findViewById(R.id.current_request_view).setVisibility(View.VISIBLE);
-                ((TextView)findViewById(R.id.cr_time)).setText(current_request.getTime());
-                ((TextView)findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
-                ((TextView)findViewById(R.id.cr_passenger_phone)).setText(current_request.getPassenger_phone());
-                ((TextView)findViewById(R.id.cr_price)).setText(current_request.getPrice());
-                ((TextView)findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus()));
-                ((TextView)findViewById(R.id.cr_notes)).setText(current_request.getNotes());
-                ((TextView)findViewById(R.id.cr_pickup)).
+                ((TextView) findViewById(R.id.cr_time)).setText(current_request.getTime());
+                ((TextView) findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
+                ((TextView) findViewById(R.id.cr_passenger_phone)).setText(current_request.getPassenger_phone());
+                ((TextView) findViewById(R.id.cr_price)).setText(current_request.getPrice());
+                ((TextView) findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus()));
+                ((TextView) findViewById(R.id.cr_notes)).setText(current_request.getNotes());
+                ((TextView) findViewById(R.id.cr_pickup)).
 //                        setText(current_request.pickup);
-                        setText(String.valueOf(current_request.getPickup()[0]) + " , " +
-                                String.valueOf(current_request.getPickup()[1]));
-                ((TextView)findViewById(R.id.cr_dest)).
+        setText(String.valueOf(current_request.getPickup()[0]) + " , " +
+        String.valueOf(current_request.getPickup()[1]));
+                ((TextView) findViewById(R.id.cr_dest)).
                         setText(String.valueOf(current_request.getDest()[0]) + " , " +
                                 String.valueOf(current_request.getDest()[1]));
-                ((TextView)findViewById(R.id.cr_time)).setText(current_request.getTime());
+                ((TextView) findViewById(R.id.cr_time)).setText(current_request.getTime());
 
                 Button hide_request = (Button) findViewById(R.id.cr_close);
                 hide_request.setOnClickListener(new View.OnClickListener() {
@@ -272,7 +273,8 @@ public class MainActivity extends AppCompatActivity
 
                             }
                         });
-                        alerBuilder.show();                    }
+                        alerBuilder.show();
+                    }
                 });
 
             }
@@ -285,38 +287,38 @@ public class MainActivity extends AppCompatActivity
         prefManager = new PrefManager(this);
         driver = prefManager.getDriver();
         ((TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
-                            .findViewById(R.id.show_username)).setText(driver.getUsername());
+                .findViewById(R.id.show_username)).setText(driver.getUsername());
 
         prefManager.setCurrentLocation(DUMMY_DRIVER_LOCATION);
 
         alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         Intent intent = new Intent(this, UpdateLocation.class);
-        boolean flag = (PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_NO_CREATE)==null);
+        boolean flag = (PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_NO_CREATE) == null);
 /*Register alarm if not registered already*/
 //        if(flag){
         alarmIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 /* Setting alarm for every one hour from the current time.*/
-            int intervalTimeMillis;
-            if(prefManager.isDoingRequest())
-                intervalTimeMillis = 20 * 1000;
-            else
-                intervalTimeMillis = 30 * 1000;//30 * 60 * 1000; // 30 minutes
-            alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime(), intervalTimeMillis,
-                    alarmIntent);
+        int intervalTimeMillis;
+        if (prefManager.isDoingRequest())
+            intervalTimeMillis = 20 * 1000;
+        else
+            intervalTimeMillis = 30 * 1000;//30 * 60 * 1000; // 30 minutes
+        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime(), intervalTimeMillis,
+                alarmIntent);
 //        }
 
     }
 
-    void endRequest(int res){
+    void endRequest(int res) {
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
         linearLayout.setVisibility(View.INVISIBLE);
         if (res == REQUEST_SUCCESS)
             Toast.makeText(MainActivity.this, "Thank you for your efforts! The request is complete",
                     Toast.LENGTH_LONG).show();
-        else if(res == REQUEST_CANCELLED)
+        else if (res == REQUEST_CANCELLED)
             Toast.makeText(MainActivity.this, "The request has been canceled",
                     Toast.LENGTH_LONG).show();
         OngoingRequestsActivity.removeRequest(current_request.getRequest_id());
@@ -330,8 +332,8 @@ public class MainActivity extends AppCompatActivity
         if (currentLocationMarker != null) {
             currentLocationMarker.remove();
         }
-        if (routePolyline != null) {
-            routePolyline.remove();
+        if (pickupToDestRoute != null) {
+            pickupToDestRoute.remove();
         }
         prefManager.setRequestId("");
         prefManager.setDoingRequest(false);
@@ -341,24 +343,24 @@ public class MainActivity extends AppCompatActivity
                 alarmIntent);
     }
 
-    private void sendStatus(String request_id, final String status ) {
+    private void sendStatus(String request_id, final String status) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = prefManager.pref.getString("USER_EMAIL","");
-        String password = prefManager.pref.getString("USER_PASSWORD","");
+        String email = prefManager.pref.getString("USER_EMAIL", "");
+        String password = prefManager.pref.getString("USER_PASSWORD", "");
 
         RestService service = retrofit.create(RestService.class);
-        Call<StatusResponse> call = service.status("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
-                request_id,status);
+        Call<StatusResponse> call = service.status("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
+                request_id, status);
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
-                if (response.isSuccess() && response.body() != null){
+                if (response.isSuccess() && response.body() != null) {
                     Log.d(TAG, "The status has been sent successfully");
-                } else if (response.code() == 401){
+                } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
@@ -378,24 +380,25 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
-    private void sendActive (boolean active, final String location ) {
+
+    private void sendActive(boolean active, final String location) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = prefManager.pref.getString("USER_EMAIL","");
-        String password = prefManager.pref.getString("USER_PASSWORD","");
+        String email = prefManager.pref.getString("USER_EMAIL", "");
+        String password = prefManager.pref.getString("USER_PASSWORD", "");
 
         RestService service = retrofit.create(RestService.class);
-        Call<StatusResponse> call = service.active("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
+        Call<StatusResponse> call = service.active("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
                 active, location);
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
-                if (response.isSuccess() && response.body() != null){
+                if (response.isSuccess() && response.body() != null) {
                     Log.d(TAG, "The status has been changed successfully");
-                } else if (response.code() == 401){
+                } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
@@ -415,25 +418,26 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
-    private void sendCancel (final String request_id ) {
+
+    private void sendCancel(final String request_id) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = prefManager.pref.getString("USER_EMAIL","");
-        String password = prefManager.pref.getString("USER_PASSWORD","");
+        String email = prefManager.pref.getString("USER_EMAIL", "");
+        String password = prefManager.pref.getString("USER_PASSWORD", "");
 
         RestService service = retrofit.create(RestService.class);
-        Call<StatusResponse> call = service.cancel("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
+        Call<StatusResponse> call = service.cancel("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
                 request_id);
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
-                if (response.isSuccess() && response.body() != null){
+                if (response.isSuccess() && response.body() != null) {
                     endRequest(REQUEST_CANCELLED);
                     Log.d(TAG, "The request has been cancelled successfully");
-                } else if (response.code() == 401){
+                } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
@@ -478,6 +482,10 @@ public class MainActivity extends AppCompatActivity
                 current_request.setPrice(data.getExtras().getString("price"));
                 current_request.setRequest_id(data.getExtras().getString("request_id"));
                 startRequest();
+//                Gson gson = new Gson();
+//                String json = gson.toJson(current_request);
+//                prefManager.editor.putString("current_request", json);
+//                prefManager.setDoingRequest(true);
 
 
             }
@@ -606,6 +614,7 @@ public class MainActivity extends AppCompatActivity
         EventBus.getDefault().unregister(this);
         super.onStop();
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -613,16 +622,16 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         Intent intent = new Intent(this, FCMRequest.class);
-        intent.putExtra("request_id","13213");
-        intent.putExtra("price","33");
-        intent.putExtra("pickup","15.6023428, 32.5873593");
-        intent.putExtra("dest","15.5023428, 32.3873593");
+        intent.putExtra("request_id", "13213");
+        intent.putExtra("price", "33");
+        intent.putExtra("pickup", "15.6023428, 32.5873593");
+        intent.putExtra("dest", "15.5023428, 32.3873593");
 //        intent.putExtra("time","25/10/16 4:33");
         //intent.putExtra("time","1479935269");
-        intent.putExtra("time","now");
-        intent.putExtra("passenger_name","George Washington");
-        intent.putExtra("passenger_phone","0999999999");
-        intent.putExtra("notes","Don't smoke! Don't drive while texting!");
+        intent.putExtra("time", "now");
+        intent.putExtra("passenger_name", "George Washington");
+        intent.putExtra("passenger_phone", "0999999999");
+        intent.putExtra("notes", "Don't smoke! Don't drive while texting!");
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
 
@@ -678,76 +687,140 @@ public class MainActivity extends AppCompatActivity
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-            return;
+
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                Toast.makeText(MainActivity.this, "This permission is necessary for us to know your location", Toast.LENGTH_SHORT).show();
+
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+
+//            return;
         }
-        mMap.setMyLocationEnabled(true);
+
 
         // Add a marker in Sydney and move the camera
         LatLng khartoum = new LatLng(15.5838046, 32.5543825);
 //        mMap.addMarker(new MarkerOptions().position(khartoum).title("Marker in Khartoum"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(khartoum, 14 ));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(khartoum, 12));
 
-        // ==================== To get location ================
-
-        // Google API Client
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        // Location Request
-        mLocationRequest = new LocationRequest();
-        // Use high accuracy
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        // Set the update interval to 5 seconds
-        mLocationRequest.setInterval(5000);
-        // Set the fastest update interval to 1 second
-        mLocationRequest.setFastestInterval(1000);
-
-
-        // Check device location settings
-        LocationSettingsRequest.Builder locationSettingsReqBuilder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(mLocationRequest);
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
-                        locationSettingsReqBuilder.build());
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-            @Override
-            public void onResult(LocationSettingsResult result) {
-                final Status status = result.getStatus();
-//                final LocationSettingsStates = result.getLocationSettingsStates();
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-                        // All location settings are satisfied. The client can
-                        // initialize location requests here.
-
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied, but this can be fixed
-                        // by showing the user a dialog.
-                        try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
-                            status.startResolutionForResult(
-                                    MainActivity.this,
-                                    0x1);
-                        } catch (IntentSender.SendIntentException e) {
-                            // Ignore the error.
-                        }
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        // Location settings are not satisfied. However, we have no way
-                        // to fix the settings so we won't show the dialog.
-
-                        break;
-                }
-            }
-        });
 
     }
 
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "ACCESS FINE LOCATION permission granted");
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    mMap.setMyLocationEnabled(true);
+                    // ==================== To get location ================
 
+                    // Google API Client
+                    mGoogleApiClient = new GoogleApiClient.Builder(this)
+                            .addConnectionCallbacks(this)
+                            .addOnConnectionFailedListener(this)
+                            .addApi(LocationServices.API)
+                            .build();
+                    // Location Request
+                    mLocationRequest = new LocationRequest();
+                    // Use high accuracy
+                    mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                    // Set the update interval to 5 seconds
+                    mLocationRequest.setInterval(5000);
+                    // Set the fastest update interval to 1 second
+                    mLocationRequest.setFastestInterval(1000);
+
+
+                    // Check device location settings
+                    LocationSettingsRequest.Builder locationSettingsReqBuilder = new LocationSettingsRequest.Builder()
+                            .addLocationRequest(mLocationRequest);
+                    PendingResult<LocationSettingsResult> result =
+                            LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
+                                    locationSettingsReqBuilder.build());
+                    result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                        @Override
+                        public void onResult(LocationSettingsResult result) {
+                            final Status status = result.getStatus();
+//                final LocationSettingsStates = result.getLocationSettingsStates();
+                            switch (status.getStatusCode()) {
+                                case LocationSettingsStatusCodes.SUCCESS:
+                                    // All location settings are satisfied. The client can
+                                    // initialize location requests here.
+
+                                    break;
+                                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                    // Location settings are not satisfied, but this can be fixed
+                                    // by showing the user a dialog.
+                                    try {
+                                        // Show the dialog by calling startResolutionForResult(),
+                                        // and check the result in onActivityResult().
+                                        status.startResolutionForResult(
+                                                MainActivity.this,
+                                                0x1);
+                                    } catch (IntentSender.SendIntentException e) {
+                                        // Ignore the error.
+                                    }
+                                    break;
+                                case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                    // Location settings are not satisfied. However, we have no way
+                                    // to fix the settings so we won't show the dialog.
+
+                                    break;
+                            }
+                        }
+                    });
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+                    Log.d(TAG,"ACCESS FINE LOCATION permission denied");
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
 
     @Override
     public void onConnected(Bundle bundle) {
@@ -804,6 +877,10 @@ public class MainActivity extends AppCompatActivity
                 .position(currentLocationPoint)
                 .title("Current Location")
         );
+        Toast.makeText(MainActivity.this, "Current Location : " + mCurrentLocation.toString(), Toast.LENGTH_LONG).show();
+        Log.d(TAG,"Current Location : " + mCurrentLocation.toString());
+        prefManager.setCurrentLocation(mCurrentLocation.toString());
+
 
 //        if(null!= mCurrentLocation)
 //        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
@@ -825,7 +902,7 @@ public class MainActivity extends AppCompatActivity
                     public void onDirectionSuccess(Direction direction, String rawBody) {
                         // Do something here
 //                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "showRoute: Route successfully computed ");
+                        Log.d(TAG, "showRoute:Pickup to Destination Route successfully computed ");
 
                         if(direction.isOK()) {
                             // Do
@@ -840,10 +917,10 @@ public class MainActivity extends AppCompatActivity
 
                             ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
                             PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
-                            if (routePolyline != null) {
-                                routePolyline.remove();
+                            if (pickupToDestRoute != null) {
+                                pickupToDestRoute.remove();
                             }
-                            routePolyline = mMap.addPolyline(polylineOptions);
+                            pickupToDestRoute = mMap.addPolyline(polylineOptions);
 
                         }
 
@@ -852,10 +929,50 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onDirectionFailure(Throwable t) {
                         // Do something here
-                        Toast.makeText(MainActivity.this, "Route Failed ", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "showRoute: Route Failed ");
+                        Toast.makeText(MainActivity.this, "Pickup to Destination Route Failed ", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "showRoute:Pickup to Destination Route Failed ");
                     }
                 });
+
+//        GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
+//                .from(currentLocationPoint)
+//                .to(pickupPoint)
+//                .execute(new DirectionCallback() {
+//                    @Override
+//                    public void onDirectionSuccess(Direction direction, String rawBody) {
+//                        // Do something here
+////                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
+//                        Log.d(TAG, "showRoute:Driver to Pickup Route successfully computed ");
+//
+//                        if(direction.isOK()) {
+//                            // Do
+//                            Route route = direction.getRouteList().get(0);
+//                            Leg leg = route.getLegList().get(0);
+//
+//                            // Distance info
+//                            Info distanceInfo = leg.getDistance();
+//                            Info durationInfo = leg.getDuration();
+//                            String distance = distanceInfo.getText();
+//                            String duration = durationInfo.getText();
+//
+//                            ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+//                            PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
+//                            if (driverToPickupRoute != null) {
+//                                driverToPickupRoute.remove();
+//                            }
+//                            driverToPickupRoute = mMap.addPolyline(polylineOptions);
+//
+//                        }
+//
+//                    }
+//
+//                    @Override
+//                    public void onDirectionFailure(Throwable t) {
+//                        // Do something here
+//                        Toast.makeText(MainActivity.this, "Driver to Pickup Route Failed ", Toast.LENGTH_SHORT).show();
+//                        Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
+//                    }
+//                });
     }
 
 }
