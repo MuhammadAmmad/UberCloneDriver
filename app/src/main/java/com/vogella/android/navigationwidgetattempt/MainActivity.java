@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity
                 alerBuilder.setPositiveButton("Yes, cancel the request", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        sendCancel(current_request.request_id);
+                        sendCancel(current_request.getRequest_id());
                     }
                 });
                 alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -208,8 +208,8 @@ public class MainActivity extends AppCompatActivity
                 TextView current = (TextView) findViewById(R.id.current_status);
                 current.setText(nextState.getText().toString());
                 current_request.nextStatus();
-                sendStatus(current_request.request_id, current_request.status);
-                if (current_request.status.equals("completed")) {
+                sendStatus(current_request.getRequest_id(), current_request.getStatus());
+                if (current_request.getStatus().equals("completed")) {
                     endRequest(REQUEST_SUCCESS);
                 } else
                     nextState.setText(current_request.getNextStatus());
@@ -221,20 +221,20 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 findViewById(R.id.current_request_view).setVisibility(View.VISIBLE);
-                ((TextView)findViewById(R.id.cr_time)).setText(current_request.time);
-                ((TextView)findViewById(R.id.cr_passenger_name)).setText(current_request.passenger_name);
-                ((TextView)findViewById(R.id.cr_passenger_phone)).setText(current_request.passenger_phone);
-                ((TextView)findViewById(R.id.cr_price)).setText(current_request.price);
-                ((TextView)findViewById(R.id.cr_status)).setText(current_request.status);
-                ((TextView)findViewById(R.id.cr_notes)).setText(current_request.notes);
+                ((TextView)findViewById(R.id.cr_time)).setText(current_request.getTime());
+                ((TextView)findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
+                ((TextView)findViewById(R.id.cr_passenger_phone)).setText(current_request.getPassenger_phone());
+                ((TextView)findViewById(R.id.cr_price)).setText(current_request.getPrice());
+                ((TextView)findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus()));
+                ((TextView)findViewById(R.id.cr_notes)).setText(current_request.getNotes());
                 ((TextView)findViewById(R.id.cr_pickup)).
 //                        setText(current_request.pickup);
-                        setText(String.valueOf(current_request.pickup[0]) + " , " +
-                                String.valueOf(current_request.pickup[1]));
+                        setText(String.valueOf(current_request.getPickup()[0]) + " , " +
+                                String.valueOf(current_request.getPickup()[1]));
                 ((TextView)findViewById(R.id.cr_dest)).
-                        setText(String.valueOf(current_request.dest[0]) + " , " +
-                                String.valueOf(current_request.dest[1]));
-                ((TextView)findViewById(R.id.cr_time)).setText(current_request.time);
+                        setText(String.valueOf(current_request.getDest()[0]) + " , " +
+                                String.valueOf(current_request.getDest()[1]));
+                ((TextView)findViewById(R.id.cr_time)).setText(current_request.getTime());
 
                 Button hide_request = (Button) findViewById(R.id.cr_close);
                 hide_request.setOnClickListener(new View.OnClickListener() {
@@ -248,12 +248,12 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(View view) {
                         AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
-                        alerBuilder.setMessage("Do you want to call the number " + current_request.passenger_phone + "?");
+                        alerBuilder.setMessage("Do you want to call the number " + current_request.getPassenger_phone() + "?");
                         alerBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 Intent intent = new Intent(Intent.ACTION_DIAL);
-                                intent.setData(Uri.parse("tel:".concat(current_request.passenger_phone)));
+                                intent.setData(Uri.parse("tel:".concat(current_request.getPassenger_phone())));
                                 startActivity(intent);
                             }
                         });
@@ -306,7 +306,7 @@ public class MainActivity extends AppCompatActivity
         else if(res == REQUEST_CANCELLED)
             Toast.makeText(MainActivity.this, "The request has been canceled",
                     Toast.LENGTH_LONG).show();
-        OngoingRequestsActivity.removeRequest(current_request.request_id);
+        OngoingRequestsActivity.removeRequest(current_request.getRequest_id());
         current_request = new request();
         if (pickupMarker != null) {
             pickupMarker.remove();
@@ -456,21 +456,24 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == ONGOING_REQUESTS_CODE && resultCode == RESULT_OK) {
 //            Toast.makeText(this,data.getExtras().getString("passenger_name"), Toast.LENGTH_LONG).show();
             if (data.hasExtra("request_id")) {
-                double pickup[] = new double[2];
                 //set the data
-                current_request.passenger_name = data.getExtras().getString("passenger_name");
-                current_request.passenger_phone = data.getExtras().getString("passenger_phone");
-                current_request.status = data.getExtras().getString("status");
-                current_request.pickup[0] = data.getExtras().getDouble("pickup_longitude");
-                current_request.pickup[1] = data.getExtras().getDouble("pickup_latitude");
-//                pickup[0] = data.getExtras().getDouble("pickup_latitude");
-//                pickup[1] = data.getExtras().getDouble("pickup_latitude");
-                current_request.dest[0] = data.getExtras().getDouble("dest_longitude");
-                current_request.dest[1] = data.getExtras().getDouble("dest_latitude");
-                current_request.time = data.getExtras().getString("time");
-                current_request.notes = data.getExtras().getString("notes");
-                current_request.price = data.getExtras().getString("price");
-                current_request.request_id = data.getExtras().getString("request_id");
+                //TODO: check if you are already doing a request
+                current_request = new request();
+                current_request.setPassenger_name(data.getExtras().getString("passenger_name"));
+                current_request.setPassenger_phone(data.getExtras().getString("passenger_phone"));
+                current_request.setStatus(data.getExtras().getString("status"));
+                double pickup[] = new double[2];
+                pickup[0] = data.getExtras().getDouble("pickup_longitude");
+                pickup[1] = data.getExtras().getDouble("pickup_latitude");
+                current_request.setPickup(pickup);
+                double dest[] = new double[2];
+                dest[0] = data.getExtras().getDouble("dest_longitude");
+                dest[1] = data.getExtras().getDouble("dest_latitude");
+                current_request.setDest(dest);
+                current_request.setTime(data.getExtras().getString("time"));
+                current_request.setNotes(data.getExtras().getString("notes"));
+                current_request.setPrice(data.getExtras().getString("price"));
+                current_request.setRequest_id(data.getExtras().getString("request_id"));
                 startRequest();
 
 
@@ -483,8 +486,8 @@ public class MainActivity extends AppCompatActivity
 
         prefManager.setDoingRequest(true);
 
-        pickupPoint = new LatLng(current_request.pickup[0], current_request.pickup[1]);
-        destPoint = new LatLng(current_request.dest[0], current_request.dest[1]);
+        pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
+        destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
 
         // Setting marker
         if (pickupMarker != null) {
@@ -519,11 +522,11 @@ public class MainActivity extends AppCompatActivity
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
         Button nextState = (Button) findViewById(R.id.next_state);
         TextView current = (TextView) findViewById(R.id.current_status);
-        current.setText(current_request.status);
-        String temp = current_request.status;
+        current.setText(current_request.getDisplayStatus(current_request.getStatus()));
+        String temp = current_request.getStatus();
         current_request.nextStatus();
-        nextState.setText(current_request.status);
-        current_request.status = temp;
+        nextState.setText(current_request.getDisplayStatus(current_request.getStatus()));
+        current_request.setStatus(temp);
         linearLayout.setVisibility(View.VISIBLE);
     }
 

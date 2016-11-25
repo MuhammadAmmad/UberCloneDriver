@@ -30,17 +30,17 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class OngoingRequestsActivity extends AppCompatActivity{
 
     private static final String DUMMY_REQUEST_ID = "1243";
-    private static final double DUMMY_PICKUP[] = {15.6023428,32.5873593};
-//    private static final String DUMMY_PICKUP = "15.5838046,32.5543825";
-//    private static final String DUMMY_DEST = "15.8838046, 32.6543825";
-    private static final double DUMMY_DEST[] = {15.5551185, 32.5543017};
+//    private static final double DUMMY_PICKUP[] = {15.6023428,32.5873593};
+    private static final String DUMMY_PICKUP = "15.5838046,32.5543825";
+    private static final String DUMMY_DEST = "15.8838046, 32.6543825";
+//    private static final double DUMMY_DEST[] = {15.5551185, 32.5543017};
     private static final String DUMMY_PASSENGER_NAME = "John Green";
     private static final String DUMMY_PASSENGER_PHONE = "0123456789";
     private static final String DUMMY_STATUS = "on_the_way";
     private static final String DUMMY_NOTES = "Drive slowly";
     private static final String DUMMY_PRICE = "43";
     private static final String DUMMY_TIME = "06/11/2016 ; 15:45";
-    private static final String TAG = "UbDriver";
+    private static final String TAG = "OngoingRequestsActivity";
     //    private static request current_request = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,
 //            DUMMY_PASSENGER_NAME, DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES,
 //            DUMMY_STATUS);
@@ -80,14 +80,17 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         prefManager = new PrefManager(this);
 
         // Server request
-        serverRequest("", "");
+        serverRequest();
     }
 
-    private void serverRequest(String email,String password ) {
+    private void serverRequest() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
+
+        String email = prefManager.pref.getString("USER_EMAIL","");
+        String password = prefManager.pref.getString("USER_PASSWORD","");
 
         RestService service = retrofit.create(RestService.class);
         Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
@@ -161,7 +164,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     public static boolean removeRequest(String request_id){
         int i;
         for (i = 0; i < requestList.size(); i++) {
-            if (requestList.get(i).request_id.equals(request_id)) {
+            if (requestList.get(i).getRequest_id().equals(request_id)) {
                 requestList.remove(requestList.get(i));
                 Log.d(TAG, "The request " + request_id + " has been removed");
                 break;

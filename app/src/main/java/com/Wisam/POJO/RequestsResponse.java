@@ -17,6 +17,12 @@ public class RequestsResponse {
     public List<request> rides;
 
     public List<request> getRides() {
+        for (request i : rides) {
+            i.setPickup(new double[]{Double.parseDouble(i.getPickupString().split(",")[0]),
+                                        Double.parseDouble(i.getPickupString().split(",")[1])});
+            i.setDest(new double[]{Double.parseDouble(i.getDestString().split(",")[0]),
+                                        Double.parseDouble(i.getDestString().split(",")[1])});
+        }
         return rides;
     }
 

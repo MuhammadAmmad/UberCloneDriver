@@ -43,31 +43,33 @@ public class FCMRequest extends AppCompatActivity {
 //        progressBar.startAnimation(an);
 
                 prefManager = new PrefManager(this);
-                request.passenger_name = data.getStringExtra("passenger_name");
-                request.passenger_phone = data.getStringExtra("passenger_phone");
-                request.status = "Accepted";
-                request.time = data.getStringExtra("time");
-                request.notes = data.getStringExtra("notes");
-                request.price = data.getStringExtra("price");
-                request.request_id = data.getExtras().getString("request_id");
-                request.pickup[0] = Double.parseDouble(data.getStringExtra("pickup").split(",")[0]);
-                request.pickup[1] = Double.parseDouble(data.getStringExtra("pickup").split(",")[1]);
+                request.setPassenger_name(data.getStringExtra("passenger_name"));
+                request.setPassenger_phone(data.getStringExtra("passenger_phone"));
+                request.setStatus("Accepted");
+                request.setTime(data.getStringExtra("time"));
+                request.setNotes(data.getStringExtra("notes"));
+                request.setPrice(data.getStringExtra("price"));
+                request.setRequest_id(data.getExtras().getString("request_id"));
+                request.setPickupString(data.getStringExtra("pickup"));
+//                request.pickup[0] = Double.parseDouble(data.getStringExtra("pickup").split(",")[0]);
+//                request.pickup[1] = Double.parseDouble(data.getStringExtra("pickup").split(",")[1]);
 //        request.pickup = data.getStringExtra("pickup");
-                request.dest[0] = Double.parseDouble(data.getStringExtra("dest").split(",")[0]);
-                request.dest[1] = Double.parseDouble(data.getStringExtra("dest").split(",")[1]);
+                request.setDestString(data.getStringExtra("dest"));
+//                request.dest[0] = Double.parseDouble(data.getStringExtra("dest").split(",")[0]);
+//                request.dest[1] = Double.parseDouble(data.getStringExtra("dest").split(",")[1]);
                 long unixTime;
-                if(request.time.equals("now"))
+                if(request.getTime().equals("now"))
                     unixTime = System.currentTimeMillis();
                 else
-                    unixTime = Long.valueOf(request.time) * 1000;
+                    unixTime = Long.valueOf(request.getTime()) * 1000;
                 Date df = new java.util.Date(unixTime);
                 SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
                 sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
-                request.time = sdf.format(df);
+                request.setTime(sdf.format(df));
 
                 ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(data.getStringExtra("pickup"));
-                ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.price);
-                ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.time);
+                ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.getPrice());
+                ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.getTime());
                 CountDownTimer countDownTimer = new CountDownTimer(20 * 1000, 500) {
                     @Override
                     public void onTick(long l) {

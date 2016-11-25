@@ -56,6 +56,7 @@ public class HistoryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        prefManager = new PrefManager(this);
         setContentView(R.layout.activity_history);
         previous_requests = (RecyclerView) findViewById(R.id.past_requests);
         previous_requests.setHasFixedSize(true);
@@ -64,7 +65,7 @@ public class HistoryActivity extends AppCompatActivity {
 //        RequestAdapter ca = new RequestAdapter(createList(30));
         ca = new RequestAdapter(History);
         previous_requests.setAdapter(ca);
-        serverRequest("", "");
+        serverRequest();
 //        RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.ongoing_request);
 //        relativeLayout.setVisibility(View.INVISIBLE);
 
@@ -76,16 +77,18 @@ public class HistoryActivity extends AppCompatActivity {
         List<request> result = new ArrayList<request>();
         for (int i=1; i <= size; i++) {
             request ci = new request();
-            ci.passenger_name = DUMMY_PASSENGER_NAME + i;
-            ci.passenger_phone = DUMMY_PASSENGER_PHONE + i;
-            ci.status = DUMMY_STATUS;
-            ci.time = DUMMY_TIME;
-            ci.dest[0] = Double.parseDouble(DUMMY_DEST.split(",")[0]);
-            ci.dest[1] = Double.parseDouble(DUMMY_DEST.split(",")[1]);
-            ci.pickup[0] = Double.parseDouble(DUMMY_PICKUP.split(",")[0]);
-            ci.pickup[1] = Double.parseDouble(DUMMY_PICKUP.split(",")[1]);
+            ci.setPassenger_name(DUMMY_PASSENGER_NAME + i);
+            ci.setPassenger_phone(DUMMY_PASSENGER_PHONE + i);
+            ci.setStatus(DUMMY_STATUS);
+            ci.setTime(DUMMY_TIME);
+            ci.setDestString(DUMMY_DEST);
+//            ci.dest[0] = Double.parseDouble(DUMMY_DEST.split(",")[0]);
+//            ci.dest[1] = Double.parseDouble(DUMMY_DEST.split(",")[1]);
+            ci.setPickupString(DUMMY_PICKUP);
+//            ci.pickup[0] = Double.parseDouble(DUMMY_PICKUP.split(",")[0]);
+//            ci.pickup[1] = Double.parseDouble(DUMMY_PICKUP.split(",")[1]);
 //            ci.pickup = DUMMY_PICKUP;
-            ci.price = DUMMY_PRICE + i;
+            ci.setPrice(DUMMY_PRICE + i);
 
             result.add(ci);
 
@@ -95,11 +98,13 @@ public class HistoryActivity extends AppCompatActivity {
     }
 
 
-    private void serverRequest(String email,String password ) {
+    private void serverRequest() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
+        String email = prefManager.pref.getString("USER_EMAIL","");
+        String password = prefManager.pref.getString("USER_PASSWORD","");
 
         RestService service = retrofit.create(RestService.class);
         Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));

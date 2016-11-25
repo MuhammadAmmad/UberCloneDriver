@@ -43,11 +43,13 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
     public void onBindViewHolder(final com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder RequestViewHolder, int i) {
         final request ci = RequestList.get(i);
 
-        RequestViewHolder.price.setText(ci.price);
-        RequestViewHolder.date.setText(ci.time);
-        RequestViewHolder.status.setText(ci.status);
-        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
-        RequestViewHolder.dest.setText(String.valueOf(ci.dest[0]) + "," + String.valueOf(ci.dest[1]));
+        RequestViewHolder.price.setText(ci.getPrice());
+        RequestViewHolder.date.setText(ci.getTime());
+        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus()));
+        RequestViewHolder.pickup.setText(ci.getPickupString());
+//        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
+        RequestViewHolder.dest.setText(ci.getDestString());
+//        RequestViewHolder.dest.setText(String.valueOf(ci.dest[0]) + "," + String.valueOf(ci.dest[1]));
 
 /*
         RequestViewHolder.passenger_name.setText(ci.passenger_name);
@@ -69,19 +71,19 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Intent intent = new Intent();
-                        intent.putExtra("passenger_name", ci.passenger_name);
-                        intent.putExtra("passenger_phone", ci.passenger_phone);
+                        intent.putExtra("passenger_name", ci.getPassenger_name());
+                        intent.putExtra("passenger_phone", ci.getPassenger_phone());
                         intent.putExtra("status", "on_the_way");
 //                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
-                        intent.putExtra("pickup_longitude", ci.pickup[0]);
-                        intent.putExtra("pickup_latitude", ci.pickup[1]);
+                        intent.putExtra("pickup_longitude", ci.getPickup()[0]);
+                        intent.putExtra("pickup_latitude", ci.getPickup()[1]);
 //                        temp = RequestViewHolder.dest.getText().toString().split(",");
-                        intent.putExtra("dest_longitude", ci.dest[0]);
-                        intent.putExtra("dest_latitude", ci.dest[1]);
-                        intent.putExtra("time", ci.time);
-                        intent.putExtra("price", ci.price);
-                        intent.putExtra("notes", ci.notes);
-                        intent.putExtra("request_id", ci.request_id);
+                        intent.putExtra("dest_longitude", ci.getDest()[0]);
+                        intent.putExtra("dest_latitude", ci.getDest()[1]);
+                        intent.putExtra("time", ci.getTime());
+                        intent.putExtra("price", ci.getPrice());
+                        intent.putExtra("notes", ci.getNotes());
+                        intent.putExtra("request_id", ci.getRequest_id());
 
                         ((Activity)context).setResult(Activity.RESULT_OK, intent);
                         ((Activity)context).finish();

@@ -29,11 +29,13 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
     @Override
     public void onBindViewHolder(RequestViewHolder RequestViewHolder, int i) {
         request ci = RequestList.get(i);
-        RequestViewHolder.price.setText(ci.price);
-        RequestViewHolder.date.setText(ci.time);
-        RequestViewHolder.status.setText(ci.status);
-        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
-        RequestViewHolder.dest.setText(String.valueOf(ci.dest[0]) + "," + String.valueOf(ci.dest[1]));
+        RequestViewHolder.price.setText(ci.getPrice());
+        RequestViewHolder.date.setText(ci.getTime());
+        RequestViewHolder.status.setText(ci.getStatus());
+        RequestViewHolder.pickup.setText(ci.getPickupString());
+        RequestViewHolder.dest.setText(ci.getDestString());
+//        RequestViewHolder.pickup.setText(String.valueOf(ci.getPickup()[0]) + "," + String.valueOf(ci.getPickup()[1]));
+//        RequestViewHolder.dest.setText(String.valueOf(ci.getDest()[0]) + "," + String.valueOf(ci.getDest()[1]));
 //        RequestViewHolder.request_time.setText(ci.time);
     }
 

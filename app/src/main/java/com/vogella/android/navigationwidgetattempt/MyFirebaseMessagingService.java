@@ -76,17 +76,17 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             for (Map.Entry<String, String> field : request.entrySet()) {
                 Log.d(TAG, field.getKey() + "  :  " + field.getValue());
                 if (field.getKey().equals("request_id"))
-                    received.request_id = field.getValue();
+                    received.setRequest_id(field.getValue());
                 if (field.getKey().equals("price"))
-                    received.price = field.getValue();
+                    received.setPrice(field.getValue());
                 if (field.getKey().equals("time"))
-                    received.time = field.getValue();
+                    received.setTime(field.getValue());
                 if (field.getKey().equals("notes"))
-                    received.notes = field.getValue();
+                    received.setNotes(field.getValue());
                 if (field.getKey().equals("passenger_phone"))
-                    received.passenger_phone = field.getValue();
+                    received.setPassenger_phone(field.getValue());
                 if (field.getKey().equals("passenger_name"))
-                    received.passenger_name = field.getValue();
+                    received.setPassenger_name(field.getValue());
                 if (field.getKey().equals("pickup")) {
                     pickup = field.getValue();
                 }
@@ -102,16 +102,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             }
             else if(status.equals("0")){
                 Intent intent = new Intent(this, FCMRequest.class);
-                intent.putExtra("request_id", received.request_id);
-                intent.putExtra("price", received.price);
+                intent.putExtra("request_id", received.getRequest_id());
+                intent.putExtra("price", received.getPrice());
                 intent.putExtra("pickup", pickup);
-                intent.putExtra("time", received.time);
+                intent.putExtra("time", received.getTime());
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("dest", dest);
-                intent.putExtra("time", received.time);
-                intent.putExtra("passenger_name", received.passenger_name);
-                intent.putExtra("passenger_phone", received.passenger_phone);
-                intent.putExtra("notes", received.notes);
+                intent.putExtra("time", received.getTime());
+                intent.putExtra("passenger_name", received.getPassenger_name());
+                intent.putExtra("passenger_phone", received.getPassenger_phone());
+                intent.putExtra("notes", received.getNotes());
                 startActivity(intent);
                 Log.d(TAG, "The recieved request has the content:" + received);
             }
