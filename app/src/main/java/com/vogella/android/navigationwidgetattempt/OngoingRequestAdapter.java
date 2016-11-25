@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -65,39 +66,43 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         RequestViewHolder.card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder alerBuilder = new AlertDialog.Builder(context);
-                alerBuilder.setMessage("Do you want to start this request?");
-                alerBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent();
-                        intent.putExtra("passenger_name", ci.getPassenger_name());
-                        intent.putExtra("passenger_phone", ci.getPassenger_phone());
-                        intent.putExtra("status", "on_the_way");
+                if (prefManager.isDoingRequest())
+                    Toast.makeText(context, "You are already doing a request. Cancel it first and then start this one", Toast.LENGTH_LONG).show();
+                else {
+                    AlertDialog.Builder alerBuilder = new AlertDialog.Builder(context);
+                    alerBuilder.setMessage("Do you want to start this request?");
+                    alerBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent intent = new Intent();
+                            intent.putExtra("passenger_name", ci.getPassenger_name());
+                            intent.putExtra("passenger_phone", ci.getPassenger_phone());
+                            intent.putExtra("status", "on_the_way");
 //                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
-                        intent.putExtra("pickup_longitude", ci.getPickup()[0]);
-                        intent.putExtra("pickup_latitude", ci.getPickup()[1]);
+                            intent.putExtra("pickup_longitude", ci.getPickup()[0]);
+                            intent.putExtra("pickup_latitude", ci.getPickup()[1]);
 //                        temp = RequestViewHolder.dest.getText().toString().split(",");
-                        intent.putExtra("dest_longitude", ci.getDest()[0]);
-                        intent.putExtra("dest_latitude", ci.getDest()[1]);
-                        intent.putExtra("time", ci.getTime());
-                        intent.putExtra("price", ci.getPrice());
-                        intent.putExtra("notes", ci.getNotes());
-                        intent.putExtra("request_id", ci.getRequest_id());
+                            intent.putExtra("dest_longitude", ci.getDest()[0]);
+                            intent.putExtra("dest_latitude", ci.getDest()[1]);
+                            intent.putExtra("time", ci.getTime());
+                            intent.putExtra("price", ci.getPrice());
+                            intent.putExtra("notes", ci.getNotes());
+                            intent.putExtra("request_id", ci.getRequest_id());
 
-                        ((Activity)context).setResult(Activity.RESULT_OK, intent);
-                        ((Activity)context).finish();
+                            ((Activity) context).setResult(Activity.RESULT_OK, intent);
+                            ((Activity) context).finish();
 
-                    }
-                });
-                alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+                    alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                });
-                alerBuilder.show();
+                        }
+                    });
+                    alerBuilder.show();
 
+                }
             }
         });
     }

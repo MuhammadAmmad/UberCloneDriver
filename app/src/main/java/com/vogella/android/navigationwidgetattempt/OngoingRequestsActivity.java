@@ -20,7 +20,9 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -84,10 +86,17 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     }
 
     private void serverRequest() {
+        final OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .readTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .build();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
+                .client(okHttpClient)
                 .build();
+
+        //showProgress()
 
         String email = prefManager.pref.getString("USER_EMAIL","");
         String password = prefManager.pref.getString("USER_PASSWORD","");
@@ -116,7 +125,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
             @Override
             public void onFailure(Call<RequestsResponse> call, Throwable t) {
-
+                    Toast.makeText(OngoingRequestsActivity.this, "Failed to receive", Toast.LENGTH_SHORT).show();
             }
         });
     }

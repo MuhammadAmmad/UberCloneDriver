@@ -28,6 +28,8 @@ public class PrefManager {
     private static final String IS_LOGGED_IN = "IsLoggedIn";
     private static final String DOING_REQUEST = "DOING_REQUEST";
 
+    private static final String REQUEST_ID = "REQUEST_ID";
+
     // User data
     private static final String USER_FULLNAME = "UserName";
     private static final String USER_PASSWORD = "UserPassword";
@@ -35,7 +37,14 @@ public class PrefManager {
     private static final String USER_PHONE = "UserPhone";
     private static final String USER_GENDER = "UserGender";
 
+
     private static final String PLACES_LIST = "PlacesList";
+
+
+
+    private static final String CURRENT_LOCATION = "CurrentLocation";
+
+
 //    private static final String TICKETS_LIST = "TicketsList";
 
     public PrefManager(Context context) {
@@ -53,6 +62,25 @@ public class PrefManager {
 
     public boolean isFirstTimeLaunch() {
         return pref.getBoolean(IS_FIRST_TIME_LAUNCHED, true);
+    }
+
+
+    public void setCurrentLocation(String Location) {
+        editor.putString(CURRENT_LOCATION, Location);
+        editor.apply();
+    }
+
+    public String getCurrentLocation() {
+        return pref.getString(CURRENT_LOCATION, "No data");
+    }
+
+    public void setRequestId(String request_id) {
+        editor.putString(REQUEST_ID, request_id);
+        editor.apply();
+    }
+
+    public String getRequestId() {
+        return pref.getString(REQUEST_ID, "No data");
     }
 
     public void setIsLoggedIn(boolean IsLoggedIn) {

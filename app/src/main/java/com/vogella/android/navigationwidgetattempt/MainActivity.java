@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
@@ -91,6 +92,8 @@ public class MainActivity extends AppCompatActivity
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
+    private static final long UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
+    private static final long UPDATE_WHILE_IDLE = 30 * 1000;
     private GoogleMap mMap;
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
@@ -127,6 +130,8 @@ public class MainActivity extends AppCompatActivity
     private static final int REQUEST_SUCCESS = 1;
     private static final int REQUEST_CANCELLED = 0;
 
+    private static final String DUMMY_DRIVER_LOCATION = "15.6023428, 32.5873593";
+
     private RecyclerView previous_requests;
     private RecyclerView.Adapter RVadapter;
     private RecyclerView.LayoutManager layoutManager;
@@ -136,6 +141,8 @@ public class MainActivity extends AppCompatActivity
     private static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
 
     private PrefManager prefManager;
+    private AlarmManager alarmMgr;
+    private PendingIntent alarmIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,6 +150,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
@@ -212,7 +221,7 @@ public class MainActivity extends AppCompatActivity
                 if (current_request.getStatus().equals("completed")) {
                     endRequest(REQUEST_SUCCESS);
                 } else
-                    nextState.setText(current_request.getNextStatus());
+                    nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
             }
         });
 
@@ -277,22 +286,26 @@ public class MainActivity extends AppCompatActivity
         driver = prefManager.getDriver();
         ((TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
                             .findViewById(R.id.show_username)).setText(driver.getUsername());
-//
-//        AlarmManager alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//
-//        Intent intent = new Intent(this, UpdateLocation.class);
-//        boolean flag = (PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_NO_CREATE)==null);
-///*Register alarm if not registered already*/
+
+        prefManager.setCurrentLocation(DUMMY_DRIVER_LOCATION);
+
+        alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(this, UpdateLocation.class);
+        boolean flag = (PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_NO_CREATE)==null);
+/*Register alarm if not registered already*/
 //        if(flag){
-//            PendingIntent alarmIntent = PendingIntent.getBroadcast(this, 0,                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
-//
-//// Create Calendar obj called calendar
-//            Calendar calendar = Calendar.getInstance();
-///* Setting alarm for every one hour from the current time.*/
-//            int intervalTimeMillis = 1000 * 60 * 60; // 1 hour
-//            alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP,
-//                    calendar.getTimeInMillis(), intervalTimeMillis,
-//                    alarmIntent);
+        alarmIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+/* Setting alarm for every one hour from the current time.*/
+            int intervalTimeMillis;
+            if(prefManager.isDoingRequest())
+                intervalTimeMillis = 20 * 1000;
+            else
+                intervalTimeMillis = 30 * 1000;//30 * 60 * 1000; // 30 minutes
+            alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    SystemClock.elapsedRealtime(), intervalTimeMillis,
+                    alarmIntent);
 //        }
 
     }
@@ -320,7 +333,12 @@ public class MainActivity extends AppCompatActivity
         if (routePolyline != null) {
             routePolyline.remove();
         }
+        prefManager.setRequestId("");
         prefManager.setDoingRequest(false);
+
+        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime(), UPDATE_WHILE_IDLE,
+                alarmIntent);
     }
 
     private void sendStatus(String request_id, final String status ) {
@@ -438,21 +456,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if (requestCode == LOGIN_REQUEST_CODE && resultCode == RESULT_OK) {
-//            if (data.hasExtra("username")) {
-//                String name = data.getExtras().getString("username");
-//                if (name != null && name.length() > 0) {
-//                    menuState = 1;
-//                    invalidateOptionsMenu();
-//                    driver.username = name;
-////                    TextView username = (TextView) findViewById(R.id.show_username);
-//                    NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-//                    TextView username = (TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
-//                            .findViewById(R.id.show_username);
-//                    username.setText(name);
-//                }
-//            }
-//        }
         if (requestCode == ONGOING_REQUESTS_CODE && resultCode == RESULT_OK) {
 //            Toast.makeText(this,data.getExtras().getString("passenger_name"), Toast.LENGTH_LONG).show();
             if (data.hasExtra("request_id")) {
@@ -485,9 +488,13 @@ public class MainActivity extends AppCompatActivity
         //                pickupPoint = new LatLng(pickup[0], pickup[1]);
 
         prefManager.setDoingRequest(true);
-
+        prefManager.setRequestId(current_request.getRequest_id());
         pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
         destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
+
+        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime(), UPDATE_DURING_REQUEST,
+                alarmIntent);
 
         // Setting marker
         if (pickupMarker != null) {
@@ -513,6 +520,7 @@ public class MainActivity extends AppCompatActivity
 
 
         showRoute();
+
 
         // For zooming automatically to the location of the marker
         CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
