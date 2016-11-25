@@ -83,7 +83,7 @@ public class PrefManager {
     }
     public void setDriver(driver driver){
         editor.putString(USER_FULLNAME, driver.getUsername());
-//        editor.putString(USER_PASSWORD, user.getPassword());
+        editor.putString(USER_PASSWORD, driver.getPassword());
         editor.putString(USER_EMAIL, driver.getEmail());
         editor.putString(USER_PHONE, driver.getPhone());
         editor.putString(USER_GENDER, driver.getGender());
@@ -104,7 +104,7 @@ public class PrefManager {
                 pref.getString(USER_FULLNAME, "No data"),
                 pref.getString(USER_EMAIL, "No data"),
                 pref.getString(USER_GENDER, "No data"),
-//                pref.getString(USER_PASSWORD, "No data"),
+                pref.getString(USER_PASSWORD, "No data"),
                 pref.getString(USER_PHONE, "No data")
         );
     }

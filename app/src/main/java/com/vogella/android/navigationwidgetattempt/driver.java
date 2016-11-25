@@ -15,18 +15,22 @@ public class driver {
     String phone;
     @SerializedName(value = "gender")
     String gender;
+    @SerializedName(value = "password")
+    String password;
 
-    public driver(String username, String email, String gender, String phone){
+    public driver(String username, String email, String gender, String phone, String password){
         this.gender = gender;
         this.email = email;
         this.phone = phone;
         this.username = username;
+        this.password = password;
     }
     public driver(){
         this.email = null;
         this.username = null;
         this.phone = null;
         this.gender = null;
+        this.password = null;
     }
 
     public String getUsername() {
@@ -59,5 +63,13 @@ public class driver {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

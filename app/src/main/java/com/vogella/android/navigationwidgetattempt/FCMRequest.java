@@ -105,8 +105,8 @@ public class FCMRequest extends AppCompatActivity {
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = "";
-        String password = "";
+        String email = prefManager.pref.getString("USER_EMAIL","");
+        String password = prefManager.pref.getString("USER_PASSWORD","");
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.accept("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),

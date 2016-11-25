@@ -1,6 +1,9 @@
 package com.vogella.android.navigationwidgetattempt;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -72,6 +75,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 import retrofit2.Call;
@@ -273,11 +277,22 @@ public class MainActivity extends AppCompatActivity
         driver = prefManager.getDriver();
         ((TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
                             .findViewById(R.id.show_username)).setText(driver.getUsername());
-
-//        if (driver.username == null) {
-//            Intent intent = new Intent(this, LoginActivity.class);
-//            startActivityForResult(intent, LOGIN_REQUEST_CODE);
-////            finish();
+//
+//        AlarmManager alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+//
+//        Intent intent = new Intent(this, UpdateLocation.class);
+//        boolean flag = (PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_NO_CREATE)==null);
+///*Register alarm if not registered already*/
+//        if(flag){
+//            PendingIntent alarmIntent = PendingIntent.getBroadcast(this, 0,                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
+//
+//// Create Calendar obj called calendar
+//            Calendar calendar = Calendar.getInstance();
+///* Setting alarm for every one hour from the current time.*/
+//            int intervalTimeMillis = 1000 * 60 * 60; // 1 hour
+//            alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP,
+//                    calendar.getTimeInMillis(), intervalTimeMillis,
+//                    alarmIntent);
 //        }
 
     }
@@ -313,8 +328,8 @@ public class MainActivity extends AppCompatActivity
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = "";
-        String password = "";
+        String email = prefManager.pref.getString("USER_EMAIL","");
+        String password = prefManager.pref.getString("USER_PASSWORD","");
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.status("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
@@ -350,8 +365,8 @@ public class MainActivity extends AppCompatActivity
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = "";
-        String password = "";
+        String email = prefManager.pref.getString("USER_EMAIL","");
+        String password = prefManager.pref.getString("USER_PASSWORD","");
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.active("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
@@ -387,8 +402,8 @@ public class MainActivity extends AppCompatActivity
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = "";
-        String password = "";
+        String email = prefManager.pref.getString("USER_EMAIL","");
+        String password = prefManager.pref.getString("USER_PASSWORD","");
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.cancel("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
@@ -629,6 +644,7 @@ public class MainActivity extends AppCompatActivity
             startActivityForResult(intent, ONGOING_REQUESTS_CODE);
 
         } else if (id == R.id.sign_out) {
+            prefManager.setIsLoggedIn(false);
             Intent intent = new Intent(this, LoginActivity.class);
             startActivityForResult(intent, LOGIN_REQUEST_CODE);
             finish();

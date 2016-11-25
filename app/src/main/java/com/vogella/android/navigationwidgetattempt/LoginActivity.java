@@ -66,7 +66,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             "foo@example.com:hello", "bar@example.com:world",
     };
     private static final driver DUMMY_DRIVER = new driver("Michael Schumacher",
-            "foo@example.com:hello", "male", "00249912345678");
+            "foo@example.com:hello", "male", "00249912345678", "hello");
     private static final String TAG ="UbDriver" ;
 
     private static String user_email = null;
@@ -262,6 +262,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     driver driver = response.body().getdriver();
                     //user.setPassword(password);
                     driver.setEmail(email);
+                    driver.setPassword(password);
                     prefManager.setIsLoggedIn(true);
                     prefManager.setDriver(driver);
 
