@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -89,8 +90,8 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        GoogleApiClient.OnConnectionFailedListener
+        , LocationListener {
 
     private static final long UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
     private static final long UPDATE_WHILE_IDLE = 30 * 1000;
@@ -152,16 +153,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -588,6 +579,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStart() {
         super.onStart();
+        mGoogleApiClient.connect();
         EventBus.getDefault().register(this);
     }
 
@@ -611,6 +603,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onStop() {
+        mGoogleApiClient.disconnect();
         EventBus.getDefault().unregister(this);
         super.onStop();
     }
@@ -782,6 +775,18 @@ public class MainActivity extends AppCompatActivity
                                 case LocationSettingsStatusCodes.SUCCESS:
                                     // All location settings are satisfied. The client can
                                     // initialize location requests here.
+                                    Log.d(TAG, "All location settings are satisfied.");
+                                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                        // TODO: Consider calling
+                                        //    ActivityCompat#requestPermissions
+                                        // here to request the missing permissions, and then overriding
+                                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                        //                                          int[] grantResults)
+                                        // to handle the case where the user grants the permission. See the documentation
+                                        // for ActivityCompat#requestPermissions for more details.
+                                        return;
+                                    }
+                                    LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, MainActivity.this);
 
                                     break;
                                 case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
@@ -826,9 +831,10 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(Bundle bundle) {
 
 
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, (LocationListener) this);
+//        LocationServices.FusedLocationApi.requestLocationUpdates(
+//                mGoogleApiClient, mLocationRequest, (LocationListener) this);
 
+//        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -840,16 +846,59 @@ public class MainActivity extends AppCompatActivity
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        if (mLastLocation != null) {
-            mCurrentLocation = mLastLocation;
-            Toast.makeText(this, "Connected GPlServices "+mLastLocation.getLatitude()+" "+mLastLocation.getLongitude(), Toast.LENGTH_SHORT).show();
-        }
-        else {
-            Toast.makeText(this, "Sorry, it's null", Toast.LENGTH_SHORT).show();
+//        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+//                mGoogleApiClient);
+//        if (mLastLocation != null) {
+//            mCurrentLocation = mLastLocation;
+//            Toast.makeText(this, "Connected GPlServices "+mLastLocation.getLatitude()+" "+mLastLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+//        }
+//        else {
+//            Toast.makeText(this, "Sorry, it's null", Toast.LENGTH_SHORT).show();
+//
+//        }
 
-        }
+//        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new android.location.LocationListener() {
+//            @Override
+//            public void onLocationChanged(Location location) {
+//                mCurrentLocation = location;
+//                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+//                currentLocationPoint = new LatLng(location.getLatitude(), location.getLongitude());
+//
+//                if (currentLocationMarker != null) {
+//                    currentLocationMarker.remove();
+//                }
+//
+//                currentLocationMarker= mMap.addMarker(new MarkerOptions()
+//                        .position(currentLocationPoint)
+//                        .title("Current Location")
+//                );
+//                Toast.makeText(MainActivity.this, "Current Location : " + mCurrentLocation.toString(), Toast.LENGTH_LONG).show();
+//                Log.d(TAG,"Current Location : " + mCurrentLocation.toString());
+//                prefManager.setCurrentLocation(mCurrentLocation.toString());
+//
+//
+////        if(null!= mCurrentLocation)
+////        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+//
+//
+//            }
+//
+//            @Override
+//            public void onStatusChanged(String s, int i, Bundle bundle) {
+//
+//            }
+//
+//            @Override
+//            public void onProviderEnabled(String s) {
+//
+//            }
+//
+//            @Override
+//            public void onProviderDisabled(String s) {
+//
+//            }
+//        });
 
     }
 
