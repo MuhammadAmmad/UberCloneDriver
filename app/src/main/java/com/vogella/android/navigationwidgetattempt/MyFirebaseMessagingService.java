@@ -108,7 +108,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 intent.putExtra("time", received.getTime());
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("dest", dest);
-                intent.putExtra("time", received.getTime());
+//                intent.putExtra("time", received.getTime());
                 intent.putExtra("passenger_name", received.getPassenger_name());
                 intent.putExtra("passenger_phone", received.getPassenger_phone());
                 intent.putExtra("notes", received.getNotes());

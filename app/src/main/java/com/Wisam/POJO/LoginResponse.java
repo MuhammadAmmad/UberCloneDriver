@@ -11,7 +11,7 @@ public class LoginResponse {
     @SerializedName(value = "status")
     private int status;
 
-    @SerializedName(value = "driver")
+    @SerializedName(value = "user")
     private driver driver;
 
     @SerializedName(value = "error_msg")

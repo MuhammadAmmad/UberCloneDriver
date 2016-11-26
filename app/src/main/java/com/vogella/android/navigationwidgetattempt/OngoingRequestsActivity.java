@@ -108,7 +108,13 @@ public class OngoingRequestsActivity extends AppCompatActivity{
             public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null){
-                    OngoingRequestsActivity.this.setRequestsList(response.body().getRides());
+                    List <request> rides = response.body().getRides();
+                    List <request> upcoming = new ArrayList<request>(){{}};
+                    for (request i : rides){
+                        if (i.getStatus().equals("accepted"))
+                            upcoming.add(upcoming.size(),i);
+                    }
+                    OngoingRequestsActivity.this.setRequestsList(upcoming);
                 } else if (response.code() == 401){
                     Toast.makeText(OngoingRequestsActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");

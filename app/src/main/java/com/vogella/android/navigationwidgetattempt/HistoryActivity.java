@@ -113,7 +113,13 @@ public class HistoryActivity extends AppCompatActivity {
             public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null){
-                    HistoryActivity.this.setRequestsList(response.body().getRides());
+                    List <request> rides = response.body().getRides();
+                    List <request> history = new ArrayList<request>(){{}};
+                    for (request i : rides){
+                        if (i.getStatus().equals("completed") || i.getStatus().equals("cancelled"))
+                            history.add(history.size(),i);
+                    }
+                    HistoryActivity.this.setRequestsList(history);
                 } else if (response.code() == 401){
                     Toast.makeText(HistoryActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");

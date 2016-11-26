@@ -411,6 +411,9 @@ public class MainActivity extends AppCompatActivity
         if (pickupToDestRoute != null) {
             pickupToDestRoute.remove();
         }
+        if (driverToPickupRoute != null) {
+            driverToPickupRoute.remove();
+        }
         prefManager.setRequestId("");
         prefManager.setDoingRequest(false);
 
