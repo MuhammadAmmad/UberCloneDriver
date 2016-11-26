@@ -13,6 +13,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
@@ -96,6 +97,8 @@ public class MainActivity extends AppCompatActivity
     private static final long UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
     private static final long UPDATE_WHILE_IDLE = 30 * 1000;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2445;
+    private static final int PERMISSION_REQUEST_LOCATION = 1432;
+    private static final int PERMISSION_REQUEST_CLIENT_CONNECT = 365;
     private GoogleMap mMap;
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
@@ -107,7 +110,7 @@ public class MainActivity extends AppCompatActivity
     private Marker pickupMarker;
     private LatLng destPoint;
     private Marker destMarker;
-    private LatLng currentLocationPoint;
+    private LatLng currentLocationPoint = null;
     private Marker currentLocationMarker;
     private Polyline pickupToDestRoute;
     private Polyline driverToPickupRoute;
@@ -146,6 +149,7 @@ public class MainActivity extends AppCompatActivity
     private PrefManager prefManager;
     private AlarmManager alarmMgr;
     private PendingIntent alarmIntent;
+    private boolean firstMove = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -300,7 +304,88 @@ public class MainActivity extends AppCompatActivity
                 SystemClock.elapsedRealtime(), intervalTimeMillis,
                 alarmIntent);
 //        }
+        // ==================== To get location ================
 
+        // Google API Client
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+
+        // Request permissions
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    PERMISSION_REQUEST_LOCATION);
+        } else {
+            initializeLocation();
+        }
+
+    }
+
+    private void initializeLocation() {
+        // Location Request
+        mLocationRequest = new LocationRequest();
+        // Use high accuracy
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        // Set the update interval to 5 seconds
+        mLocationRequest.setInterval(1000);
+        // Set the fastest update interval to 1 second
+        mLocationRequest.setFastestInterval(500);
+
+
+        // Check device location settings
+        LocationSettingsRequest.Builder locationSettingsReqBuilder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
+                        locationSettingsReqBuilder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(@NonNull LocationSettingsResult result) {
+                final Status status = result.getStatus();
+//                final LocationSettingsStates = result.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        // All location settings are satisfied. The client can
+                        // initialize location requests here.
+
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied, but this can be fixed
+                        // by showing the user a dialog.
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(
+                                    MainActivity.this,
+                                    0x1);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way
+                        // to fix the settings so we won't show the dialog.
+
+                        break;
+                }
+            }
+        });
+
+        // Set UI
+//        setUI(UI_STATE.CONFIRM_PICKUP);
+//
+//        ride = new Ride();
+//
+//
+//        Intent intent = new Intent(this, RideRequestService.class);
+//        startService(intent);
+//        // getDrivers
+//        ride.getDrivers(this, KHARTOUM_CORDS);
+//        mGoogleApiClient.connect();
     }
 
     void endRequest(int res) {
@@ -578,9 +663,16 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION },
+                    PERMISSION_REQUEST_CLIENT_CONNECT);
+        } else {
+            mGoogleApiClient.connect();
+        }
         EventBus.getDefault().register(this);
+        super.onStart();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -671,172 +763,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-                Toast.makeText(MainActivity.this, "This permission is necessary for us to know your location", Toast.LENGTH_SHORT).show();
-
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-            } else {
-
-                // No explanation needed, we can request the permission.
-
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-
-//            return;
-        }
-
-
         // Add a marker in Sydney and move the camera
         LatLng khartoum = new LatLng(15.5838046, 32.5543825);
 //        mMap.addMarker(new MarkerOptions().position(khartoum).title("Marker in Khartoum"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(khartoum, 12));
-
-
-    }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "ACCESS FINE LOCATION permission granted");
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        // TODO: Consider calling
-                        //    ActivityCompat#requestPermissions
-                        // here to request the missing permissions, and then overriding
-                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                        //                                          int[] grantResults)
-                        // to handle the case where the user grants the permission. See the documentation
-                        // for ActivityCompat#requestPermissions for more details.
-                        return;
-                    }
-                    mMap.setMyLocationEnabled(true);
-                    // ==================== To get location ================
-
-                    // Google API Client
-                    mGoogleApiClient = new GoogleApiClient.Builder(this)
-                            .addConnectionCallbacks(this)
-                            .addOnConnectionFailedListener(this)
-                            .addApi(LocationServices.API)
-                            .build();
-                    // Location Request
-                    mLocationRequest = new LocationRequest();
-                    // Use high accuracy
-                    mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                    // Set the update interval to 5 seconds
-                    mLocationRequest.setInterval(5000);
-                    // Set the fastest update interval to 1 second
-                    mLocationRequest.setFastestInterval(1000);
-
-
-                    // Check device location settings
-                    LocationSettingsRequest.Builder locationSettingsReqBuilder = new LocationSettingsRequest.Builder()
-                            .addLocationRequest(mLocationRequest);
-                    PendingResult<LocationSettingsResult> result =
-                            LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
-                                    locationSettingsReqBuilder.build());
-                    result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-                        @Override
-                        public void onResult(LocationSettingsResult result) {
-                            final Status status = result.getStatus();
-//                final LocationSettingsStates = result.getLocationSettingsStates();
-                            switch (status.getStatusCode()) {
-                                case LocationSettingsStatusCodes.SUCCESS:
-                                    // All location settings are satisfied. The client can
-                                    // initialize location requests here.
-                                    Log.d(TAG, "All location settings are satisfied.");
-                                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                        // TODO: Consider calling
-                                        //    ActivityCompat#requestPermissions
-                                        // here to request the missing permissions, and then overriding
-                                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                        //                                          int[] grantResults)
-                                        // to handle the case where the user grants the permission. See the documentation
-                                        // for ActivityCompat#requestPermissions for more details.
-                                        return;
-                                    }
-                                    LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, MainActivity.this);
-
-                                    break;
-                                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                    // Location settings are not satisfied, but this can be fixed
-                                    // by showing the user a dialog.
-                                    try {
-                                        // Show the dialog by calling startResolutionForResult(),
-                                        // and check the result in onActivityResult().
-                                        status.startResolutionForResult(
-                                                MainActivity.this,
-                                                0x1);
-                                    } catch (IntentSender.SendIntentException e) {
-                                        // Ignore the error.
-                                    }
-                                    break;
-                                case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                    // Location settings are not satisfied. However, we have no way
-                                    // to fix the settings so we won't show the dialog.
-
-                                    break;
-                            }
-                        }
-                    });
-
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
-                } else {
-                    Log.d(TAG,"ACCESS FINE LOCATION permission denied");
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-                return;
-            }
-
-            // other 'case' lines to check for other
-            // permissions this app might request
-        }
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-
-
-//        LocationServices.FusedLocationApi.requestLocationUpdates(
-//                mGoogleApiClient, mLocationRequest, (LocationListener) this);
-
-//        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if(firstMove)
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(khartoum, 12));
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -846,69 +778,81 @@ public class MainActivity extends AppCompatActivity
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-//        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-//                mGoogleApiClient);
-//        if (mLastLocation != null) {
-//            mCurrentLocation = mLastLocation;
+        mMap.setMyLocationEnabled(true);
+
+
+
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_LOCATION){
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION },
+                        PERMISSION_REQUEST_LOCATION);
+            }
+            else {
+                initializeLocation();
+
+            }
+        } else if(requestCode == PERMISSION_REQUEST_CLIENT_CONNECT){
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION },
+                        PERMISSION_REQUEST_LOCATION);
+            }
+            else {
+                mGoogleApiClient.connect();
+            }
+        }
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+
+        Log.d(TAG, "onConnected: I am connected");
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        Log.d(TAG, "onConnected: Connected");
+        if (mLastLocation != null) {
+            mCurrentLocation = mLastLocation;
 //            Toast.makeText(this, "Connected GPlServices "+mLastLocation.getLatitude()+" "+mLastLocation.getLongitude(), Toast.LENGTH_SHORT).show();
-//        }
+            // Get drivers
+//            ride.getDrivers(MapsActivity.this, new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+        }
 //        else {
 //            Toast.makeText(this, "Sorry, it's null", Toast.LENGTH_SHORT).show();
 //
 //        }
 
-//        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new android.location.LocationListener() {
-//            @Override
-//            public void onLocationChanged(Location location) {
-//                mCurrentLocation = location;
-//                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-//                currentLocationPoint = new LatLng(location.getLatitude(), location.getLongitude());
-//
-//                if (currentLocationMarker != null) {
-//                    currentLocationMarker.remove();
-//                }
-//
-//                currentLocationMarker= mMap.addMarker(new MarkerOptions()
-//                        .position(currentLocationPoint)
-//                        .title("Current Location")
-//                );
-//                Toast.makeText(MainActivity.this, "Current Location : " + mCurrentLocation.toString(), Toast.LENGTH_LONG).show();
-//                Log.d(TAG,"Current Location : " + mCurrentLocation.toString());
-//                prefManager.setCurrentLocation(mCurrentLocation.toString());
-//
-//
-////        if(null!= mCurrentLocation)
-////        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
-//
-//
-//            }
-//
-//            @Override
-//            public void onStatusChanged(String s, int i, Bundle bundle) {
-//
-//            }
-//
-//            @Override
-//            public void onProviderEnabled(String s) {
-//
-//            }
-//
-//            @Override
-//            public void onProviderDisabled(String s) {
-//
-//            }
-//        });
-
     }
 
     @Override
     public void onConnectionSuspended(int i) {
+        Log.d(TAG,"onConnectionSuspended");
 
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.d(TAG,"onConnectionFailed");
 
     }
     @Override
@@ -916,21 +860,16 @@ public class MainActivity extends AppCompatActivity
 
         mCurrentLocation = location;
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-        currentLocationPoint = new LatLng(location.getLatitude(), location.getLongitude());
-
-        if (currentLocationMarker != null) {
-            currentLocationMarker.remove();
+        if (firstMove && mLastLocation != null){
+            Log.d(TAG, "onConnected: Moving cam");
+            Log.d(TAG, "onLocationChanged: mLocation: "+mLastLocation.toString());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 12.0f));
+            firstMove = false;
         }
-
-        currentLocationMarker= mMap.addMarker(new MarkerOptions()
-                .position(currentLocationPoint)
-                .title("Current Location")
-        );
-        Toast.makeText(MainActivity.this, "Current Location : " + mCurrentLocation.toString(), Toast.LENGTH_LONG).show();
-        Log.d(TAG,"Current Location : " + mCurrentLocation.toString());
-        prefManager.setCurrentLocation(mCurrentLocation.toString());
-
-
+//        Log.d(TAG, "onConnected: Moving cam");
+        prefManager.setCurrentLocation(String.valueOf(mCurrentLocation.getLatitude()) + "," + String.valueOf(mCurrentLocation.getLongitude()));
+        currentLocationPoint = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
+        if(prefManager.isDoingRequest()) showRoute();
 //        if(null!= mCurrentLocation)
 //        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
 
@@ -953,7 +892,7 @@ public class MainActivity extends AppCompatActivity
 //                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, "showRoute:Pickup to Destination Route successfully computed ");
 
-                        if(direction.isOK()) {
+                        if (direction.isOK()) {
                             // Do
                             Route route = direction.getRouteList().get(0);
                             Leg leg = route.getLegList().get(0);
@@ -982,46 +921,48 @@ public class MainActivity extends AppCompatActivity
                         Log.d(TAG, "showRoute:Pickup to Destination Route Failed ");
                     }
                 });
+        if (currentLocationPoint != null) {
+            GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
+//                .from(mCurrentLocation.)
+                    .from(currentLocationPoint)
+                    .to(pickupPoint)
+                    .execute(new DirectionCallback() {
+                        @Override
+                        public void onDirectionSuccess(Direction direction, String rawBody) {
+                            // Do something here
+//                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "showRoute:Driver to Pickup Route successfully computed ");
 
-//        GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
-//                .from(currentLocationPoint)
-//                .to(pickupPoint)
-//                .execute(new DirectionCallback() {
-//                    @Override
-//                    public void onDirectionSuccess(Direction direction, String rawBody) {
-//                        // Do something here
-////                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
-//                        Log.d(TAG, "showRoute:Driver to Pickup Route successfully computed ");
-//
-//                        if(direction.isOK()) {
-//                            // Do
-//                            Route route = direction.getRouteList().get(0);
-//                            Leg leg = route.getLegList().get(0);
-//
-//                            // Distance info
-//                            Info distanceInfo = leg.getDistance();
-//                            Info durationInfo = leg.getDuration();
-//                            String distance = distanceInfo.getText();
-//                            String duration = durationInfo.getText();
-//
-//                            ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-//                            PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
-//                            if (driverToPickupRoute != null) {
-//                                driverToPickupRoute.remove();
-//                            }
-//                            driverToPickupRoute = mMap.addPolyline(polylineOptions);
-//
-//                        }
-//
-//                    }
-//
-//                    @Override
-//                    public void onDirectionFailure(Throwable t) {
-//                        // Do something here
-//                        Toast.makeText(MainActivity.this, "Driver to Pickup Route Failed ", Toast.LENGTH_SHORT).show();
-//                        Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
-//                    }
-//                });
+                            if (direction.isOK()) {
+                                // Do
+                                Route route = direction.getRouteList().get(0);
+                                Leg leg = route.getLegList().get(0);
+
+                                // Distance info
+                                Info distanceInfo = leg.getDistance();
+                                Info durationInfo = leg.getDuration();
+                                String distance = distanceInfo.getText();
+                                String duration = durationInfo.getText();
+
+                                ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+                                PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorAccent));
+                                if (driverToPickupRoute != null) {
+                                    driverToPickupRoute.remove();
+                                }
+                                driverToPickupRoute = mMap.addPolyline(polylineOptions);
+
+                            }
+
+                        }
+
+                        @Override
+                        public void onDirectionFailure(Throwable t) {
+                            // Do something here
+                            Toast.makeText(MainActivity.this, "Driver to Pickup Route Failed ", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
+                        }
+                    });
+        }
     }
 
 }
