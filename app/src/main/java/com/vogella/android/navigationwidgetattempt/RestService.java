@@ -19,39 +19,39 @@ public interface RestService {
 //    @GET("passenger_api/login")
 //    Call<LoginResponse> login(@Header("Authorization") String authorization );
     @FormUrlEncoded
-    @POST("driver_api/login")
+    @POST("driver_api/login/")
     Call<LoginResponse> login(@Header("Authorization") String authorization, @Field("registration_token") String registration_token);
 
 //    @FormUrlEncoded
-    @POST("driver_api/requests")
+    @POST("driver_api/requests/")
     Call<RequestsResponse> requests(@Header("Authorization") String authorization );
 
 //    @FormUrlEncoded
-    @POST("driver_api/history")
+    @POST("driver_api/history/")
     Call<RequestsResponse> history(@Header("Authorization") String authorization );
 
     @FormUrlEncoded
-    @POST("driver_api/accept")
+    @POST("driver_api/accept/")
     Call<StatusResponse> accept(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("accepted") boolean accepted);
 
     @FormUrlEncoded
-    @POST("driver_api/active")
-    Call<StatusResponse> active(@Header("Authorization") String authorization, @Field("active") boolean active, @Field("location")String location);
+    @POST("driver_api/active/")
+    Call<StatusResponse> active(@Header("Authorization") String authorization, @Field("active") int active, @Field("location")String location);
 
     @FormUrlEncoded
-    @POST("driver_api/status")
+    @POST("driver_api/status/")
     Call<StatusResponse> status(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("status") String status);
 
 //    @FormUrlEncoded
-    @GET("driver_api/cancel")
+    @GET("driver_api/cancel/")
     Call<StatusResponse> cancel(@Header("Authorization") String authorization, @Query("request_id") String request_id);
 
     @FormUrlEncoded
-    @POST("driver_api/location")
+    @POST("driver_api/location/")
     Call<StatusResponse> location(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("location")String location);
 
     @FormUrlEncoded
-    @POST("driver_api/token")
+    @POST("driver_api/token/")
     Call<StatusResponse> token(@Header("Authorization") String authorization, @Field("registration_token")String registration_token);
 
 }

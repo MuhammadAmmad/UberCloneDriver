@@ -30,6 +30,8 @@ public class PrefManager {
 
     private static final String REQUEST_ID = "REQUEST_ID";
 
+    private static final String REQUEST_STATUS = "REQUEST_STATUS";
+
     // User data
     private static final String USER_FULLNAME = "UserName";
     private static final String USER_PASSWORD = "UserPassword";
@@ -81,6 +83,15 @@ public class PrefManager {
 
     public String getRequestId() {
         return pref.getString(REQUEST_ID, "No data");
+    }
+
+    public void setRequestStatus(String status) {
+        editor.putString(REQUEST_STATUS, status);
+        editor.apply();
+    }
+
+    public String getRequestStatus() {
+        return pref.getString(REQUEST_STATUS, "No data");
     }
 
     public void setIsLoggedIn(boolean IsLoggedIn) {

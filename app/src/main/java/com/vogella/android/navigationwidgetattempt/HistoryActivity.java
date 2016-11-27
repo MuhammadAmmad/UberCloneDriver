@@ -103,8 +103,8 @@ public class HistoryActivity extends AppCompatActivity {
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = prefManager.pref.getString("USER_EMAIL","");
-        String password = prefManager.pref.getString("USER_PASSWORD","");
+              String email = prefManager.pref.getString("UserEmail","");
+        String password = prefManager.pref.getString("UserPassword","");
 
         RestService service = retrofit.create(RestService.class);
         Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
@@ -168,6 +168,14 @@ public class HistoryActivity extends AppCompatActivity {
         EventBus.getDefault().unregister(this);
         super.onStop();
     }
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (prefManager.isLoggedIn() == false) {
+            Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
+            HistoryActivity.this.startActivity(intent);
+            HistoryActivity.super.finish();
+        }
+    }
 
 }

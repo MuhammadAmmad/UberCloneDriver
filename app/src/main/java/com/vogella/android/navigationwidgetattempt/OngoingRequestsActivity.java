@@ -98,8 +98,10 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
         //showProgress()
 
-        String email = prefManager.pref.getString("USER_EMAIL","");
-        String password = prefManager.pref.getString("USER_PASSWORD","");
+        String email = prefManager.pref.getString("UserEmail","");
+//        String email = prefManager.pref.getString("USER_EMAIL","");
+        String password = prefManager.pref.getString("UserPassword","");
+//        String password = prefManager.pref.getString("USER_PASSWORD","");
 
         RestService service = retrofit.create(RestService.class);
         Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
@@ -107,6 +109,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
             @Override
             public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
+                Log.d(TAG, "onResponse: code: " + response.code());
                 if (response.isSuccess() && response.body() != null){
                     List <request> rides = response.body().getRides();
                     List <request> upcoming = new ArrayList<request>(){{}};
@@ -208,5 +211,14 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         super.onStop();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (prefManager.isLoggedIn() == false) {
+            Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
+            OngoingRequestsActivity.this.startActivity(intent);
+            OngoingRequestsActivity.super.finish();
+        }
+    }
 
 }

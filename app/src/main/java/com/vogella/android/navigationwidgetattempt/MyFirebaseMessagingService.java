@@ -42,6 +42,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
     private static request received = new request();
+    private PrefManager prefManager;
+
     /**
      * Called when message is received.
      *
@@ -65,6 +67,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         //data includes: request_id, price, pickup, time
         Log.d(TAG, "From: " + remoteMessage.getFrom());
+
+        prefManager = new PrefManager(this);
 
         // Check if message contains a data payload.
         String pickup = "you didn't tell me where !!";
@@ -118,6 +122,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             else if (status.equals("1")){ // Passenger Canceled
                 for (Map.Entry<String, String> field : request.entrySet()) {
                     if (field.getKey().equals("request_id")) {
+                        prefManager.setRequestStatus("canceled");
                         EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
                         OngoingRequestsActivity.removeRequest(field.getValue());
                         sendNotification("The passenger Canceled the request no." + field.getValue());
@@ -129,6 +134,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 for (Map.Entry<String, String> field : request.entrySet()) {
                     if (field.getKey().equals("request_id")) {
                         sendNotification("The request has been completed");
+                        prefManager.setRequestStatus("completed");
                         EventBus.getDefault().post(new PassengerArrived(field.getValue()));
                         OngoingRequestsActivity.removeRequest(field.getValue());
                        // break;
@@ -138,6 +144,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             else if (status.equals("3")){ // Driver logged out
                 sendNotification("You are logged out of this device." +
                         "Note that you can be loggedin on one device only");
+                prefManager.setIsLoggedIn(false);
                 EventBus.getDefault().post(new DriverLoggedout());
             }
         }

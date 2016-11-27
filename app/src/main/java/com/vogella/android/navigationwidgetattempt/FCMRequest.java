@@ -86,7 +86,7 @@ public class FCMRequest extends AppCompatActivity {
                 progressBar.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        serverAccept("11111", true);
+                        serverAccept(request.getRequest_id(), true);
                         FCMRequest.super.finish();
 //                Intent intent = new Intent(getBaseContext(), MainActivity.class);
                         //              startActivity(intent);
@@ -96,7 +96,7 @@ public class FCMRequest extends AppCompatActivity {
                 ((TextView) findViewById(R.id.fcmrequest_reject)).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        serverAccept("11111", false);
+                        serverAccept(request.getRequest_id(), false);
                         FCMRequest.super.finish();
                     }
                 });
@@ -107,8 +107,8 @@ public class FCMRequest extends AppCompatActivity {
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = prefManager.pref.getString("USER_EMAIL","");
-        String password = prefManager.pref.getString("USER_PASSWORD","");
+              String email = prefManager.pref.getString("UserEmail","");
+        String password = prefManager.pref.getString("UserPassword","");
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.accept("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
@@ -154,6 +154,15 @@ public class FCMRequest extends AppCompatActivity {
 
             }
         });
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (prefManager.isLoggedIn() == false) {
+            Intent intent = new Intent(FCMRequest.this, LoginActivity.class);
+            FCMRequest.this.startActivity(intent);
+            FCMRequest.super.finish();
+        }
     }
 
 

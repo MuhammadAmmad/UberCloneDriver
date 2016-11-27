@@ -171,16 +171,22 @@ public class MainActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        String token = FirebaseInstanceId.getInstance().getToken();
+
+        // Log and toast
+        String msg = getString(R.string.msg_token_fmt, token);
+        Log.d(TAG, msg);
+
         final Button changeDriverStatus = (Button) findViewById(R.id.driver_status);
         changeDriverStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (changeDriverStatus.getText().toString().equals("available")) {
                     changeDriverStatus.setText("away");
-                    sendActive(false, "15.6023428, 32.5873593");
+                    sendActive(0, "15.6023428, 32.5873593");
                 } else if (changeDriverStatus.getText().toString().equals("away")) {
                     changeDriverStatus.setText("available");
-                    sendActive(true, "15.6023428, 32.5873593");
+                    sendActive(1, "15.6023428, 32.5873593");
                 }
             }
         });
@@ -460,13 +466,13 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void sendActive(boolean active, final String location) {
+    private void sendActive(int active, final String location) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        String email = prefManager.pref.getString("USER_EMAIL", "");
-        String password = prefManager.pref.getString("USER_PASSWORD", "");
+        String email = prefManager.pref.getString("UserEmail", "");
+        String password = prefManager.pref.getString("UserPassword", "");
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.active("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
@@ -576,12 +582,13 @@ public class MainActivity extends AppCompatActivity
 
         prefManager.setDoingRequest(true);
         prefManager.setRequestId(current_request.getRequest_id());
-        pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
-        destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
-
         alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                 SystemClock.elapsedRealtime(), UPDATE_DURING_REQUEST,
                 alarmIntent);
+
+        pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
+        destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
+
 
         // Setting marker
         if (pickupMarker != null) {
@@ -625,6 +632,83 @@ public class MainActivity extends AppCompatActivity
         linearLayout.setVisibility(View.VISIBLE);
     }
 
+    public enum UI_STATE{
+        SIMPLE,
+        DOINGREQUEST,
+        STATUS_MESSAGE
+    }
+
+    public void setUI(UI_STATE state){
+        switch (state){
+            case SIMPLE:
+                LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
+                linearLayout.setVisibility(View.INVISIBLE);
+                if (pickupMarker != null) {
+                    pickupMarker.remove();
+                }
+                if (destMarker != null) {
+                    destMarker.remove();
+                }
+                if (currentLocationMarker != null) {
+                    currentLocationMarker.remove();
+                }
+                if (pickupToDestRoute != null) {
+                    pickupToDestRoute.remove();
+                }
+                if (driverToPickupRoute != null) {
+                    driverToPickupRoute.remove();
+                }
+                break;
+            case DOINGREQUEST:
+                pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
+                destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
+
+
+                // Setting marker
+                if (pickupMarker != null) {
+                    pickupMarker.remove();
+                }
+                pickupMarker = mMap.addMarker(new MarkerOptions()
+                        .position(pickupPoint)
+                        .title("Pickup")
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.start_loc_smaller))
+                );
+
+
+                // Setting marker
+                if (destMarker != null) {
+                    destMarker.remove();
+                }
+
+                destMarker = mMap.addMarker(new MarkerOptions()
+                        .position(destPoint)
+                        .title("Destination")
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
+                );
+
+
+                showRoute();
+
+
+                // For zooming automatically to the location of the marker
+                CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+                //set values for the different views
+                linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
+//                LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
+                Button nextState = (Button) findViewById(R.id.next_state);
+                TextView current = (TextView) findViewById(R.id.current_status);
+                current.setText(current_request.getDisplayStatus(current_request.getStatus()));
+                String temp = current_request.getStatus();
+                current_request.nextStatus();
+                nextState.setText(current_request.getDisplayStatus(current_request.getStatus()));
+                current_request.setStatus(temp);
+                linearLayout.setVisibility(View.VISIBLE);
+
+        }
+    }
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -655,6 +739,19 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+        if(prefManager.getRequestStatus().equals("completed")){
+            Log.d(TAG,"The request has been completed");
+            endRequest(REQUEST_SUCCESS);
+        }
+        if(prefManager.getRequestStatus().equals("canceled")){
+            Log.d(TAG,"The request has been completed");
+            endRequest(REQUEST_CANCELLED);
+        }
+        if(prefManager.isLoggedIn() == false){
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            MainActivity.this.startActivity(intent);
+            MainActivity.super.finish();
+        }
 //        if(prefManager.isDoingRequest()){
 //            Gson gson = new Gson();
 //            String json = prefManager.pref.getString("current_request","");
@@ -680,12 +777,13 @@ public class MainActivity extends AppCompatActivity
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onPassengerCancelled(PassengerCanceled event) {
+        Log.d(TAG,"onPassengerCanceled has been invoked");
         endRequest(REQUEST_CANCELLED);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
-        prefManager.setIsLoggedIn(false);
+        Log.d(TAG,"onDriverLoggedout has been invoked");
         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
         MainActivity.this.startActivity(intent);
         MainActivity.super.finish();
@@ -693,6 +791,7 @@ public class MainActivity extends AppCompatActivity
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onPassngerArrived(PassengerArrived event) {
+        Log.d(TAG,"onPassengerArrived has been invoked");
         endRequest(REQUEST_SUCCESS);
     }
 
@@ -734,11 +833,6 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        String token = FirebaseInstanceId.getInstance().getToken();
-
-        // Log and toast
-        String msg = getString(R.string.msg_token_fmt, token);
-        Log.d(TAG, msg);
 
         // Handle navigation view item clicks here.
         int id = item.getItemId();
