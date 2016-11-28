@@ -32,7 +32,7 @@ public interface RestService {
 
     @FormUrlEncoded
     @POST("driver_api/accept/")
-    Call<StatusResponse> accept(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("accepted") boolean accepted);
+    Call<StatusResponse> accept(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("accepted") int accepted);
 
     @FormUrlEncoded
     @POST("driver_api/active/")

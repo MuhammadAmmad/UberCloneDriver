@@ -83,8 +83,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     received.setRequest_id(field.getValue());
                 if (field.getKey().equals("price"))
                     received.setPrice(field.getValue());
-                if (field.getKey().equals("time"))
+                if (field.getKey().equals("time")) {
+                    Log.d(TAG, "time received from server =" + field.getValue());
                     received.setTime(field.getValue());
+                }
                 if (field.getKey().equals("notes"))
                     received.setNotes(field.getValue());
                 if (field.getKey().equals("passenger_phone"))
@@ -109,6 +111,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 intent.putExtra("request_id", received.getRequest_id());
                 intent.putExtra("price", received.getPrice());
                 intent.putExtra("pickup", pickup);
+                Log.d(TAG, "time read from the first request object =" + received.getTime());
                 intent.putExtra("time", received.getTime());
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("dest", dest);

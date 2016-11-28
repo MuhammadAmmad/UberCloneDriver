@@ -88,7 +88,7 @@ public class FCMRequest extends AppCompatActivity {
                 progressBar.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        serverAccept(request.getRequest_id(), true);
+                        serverAccept(request.getRequest_id(), 1);
                         FCMRequest.super.finish();
 //                Intent intent = new Intent(getBaseContext(), MainActivity.class);
                         //              startActivity(intent);
@@ -98,13 +98,13 @@ public class FCMRequest extends AppCompatActivity {
                 ((TextView) findViewById(R.id.fcmrequest_reject)).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        serverAccept(request.getRequest_id(), false);
+                        serverAccept(request.getRequest_id(), 0);
                         FCMRequest.super.finish();
                     }
                 });
     }
 
-    private void serverAccept(String request_id, final boolean accepted ) {
+    private void serverAccept(String request_id, final int accepted ) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -120,7 +120,7 @@ public class FCMRequest extends AppCompatActivity {
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null){
-                    if(accepted) {
+                    if(accepted == 1) {
                         if(response.body().getStatus() == 0) {
                             Toast.makeText(getBaseContext(), "You have accepted this request " +
                                     "You can now view it in the ongoing requests tab", Toast.LENGTH_LONG).show();
@@ -153,7 +153,7 @@ public class FCMRequest extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-
+                Log.d(TAG, "The response is onFailure");
             }
         });
     }
