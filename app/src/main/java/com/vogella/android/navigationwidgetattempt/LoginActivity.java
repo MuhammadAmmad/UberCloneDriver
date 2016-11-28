@@ -134,11 +134,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 //        startActivity(map);
         super.finish();
     }
-
-    @Override
-    public void onBackPressed(){
-        Toast.makeText(this, "You have to login to access the app", Toast.LENGTH_LONG).show();
-    }
+    
 
     private void populateAutoComplete() {
         if (!mayRequestContacts()) {

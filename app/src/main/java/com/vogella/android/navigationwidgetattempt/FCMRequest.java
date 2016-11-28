@@ -60,8 +60,10 @@ public class FCMRequest extends AppCompatActivity {
                 long unixTime;
                 if(request.getTime().equals("now"))
                     unixTime = System.currentTimeMillis();
-                else
-                    unixTime = Long.valueOf(request.getTime()) * 1000;
+                else {
+                    Log.d(TAG,"Time is :" + request.getTime());
+                    unixTime = Long.valueOf(request.getTime());
+                }
                 Date df = new java.util.Date(unixTime);
                 SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
                 sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
