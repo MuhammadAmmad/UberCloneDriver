@@ -121,6 +121,8 @@ public class request {
 
     public void setDest(double[] dest) {
         this.dest = dest;
+        this.destString = String.valueOf(dest[0]) + "," + String.valueOf(dest[1]);
+
     }
 
     public String getTime() {

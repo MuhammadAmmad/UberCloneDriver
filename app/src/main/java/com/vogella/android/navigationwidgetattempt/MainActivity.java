@@ -148,6 +148,9 @@ public class MainActivity extends AppCompatActivity
     private AlarmManager alarmMgr;
     private PendingIntent alarmIntent;
     private boolean firstMove = true;
+    private boolean mapIsReady;
+    private boolean setWhenReady = false;
+    private boolean firstLocationToDriverRouting;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -243,6 +246,7 @@ public class MainActivity extends AppCompatActivity
                 sendStatus(current_request.getRequest_id(), current_request.getStatus());
                 if (current_request.getStatus().equals("completed")) {
                     endRequest(REQUEST_SUCCESS);
+                    setUI(UI_STATE.SIMPLE);
                 } else
                     nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
             }
@@ -392,8 +396,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     void endRequest(int res) {
-        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
-        linearLayout.setVisibility(View.INVISIBLE);
+//        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
+//        linearLayout.setVisibility(View.INVISIBLE);
         if (res == REQUEST_SUCCESS)
             Toast.makeText(MainActivity.this, "Thank you for your efforts! The request is complete",
                     Toast.LENGTH_LONG).show();
@@ -401,22 +405,22 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(MainActivity.this, "The request has been canceled",
                     Toast.LENGTH_LONG).show();
         OngoingRequestsActivity.removeRequest(current_request.getRequest_id());
-        current_request = new request();
-        if (pickupMarker != null) {
-            pickupMarker.remove();
-        }
-        if (destMarker != null) {
-            destMarker.remove();
-        }
-        if (currentLocationMarker != null) {
-            currentLocationMarker.remove();
-        }
-        if (pickupToDestRoute != null) {
-            pickupToDestRoute.remove();
-        }
-        if (driverToPickupRoute != null) {
-            driverToPickupRoute.remove();
-        }
+//        current_request = new request();
+//        if (pickupMarker != null) {
+//            pickupMarker.remove();
+//        }
+//        if (destMarker != null) {
+//            destMarker.remove();
+//        }
+//        if (currentLocationMarker != null) {
+//            currentLocationMarker.remove();
+//        }
+//        if (pickupToDestRoute != null) {
+//            pickupToDestRoute.remove();
+//        }
+//        if (driverToPickupRoute != null) {
+//            driverToPickupRoute.remove();
+//        }
         prefManager.setRequestId("");
         prefManager.setDoingRequest(false);
 
@@ -518,6 +522,7 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
                     endRequest(REQUEST_CANCELLED);
+                    setUI(UI_STATE.SIMPLE);
                     Log.d(TAG, "The request has been cancelled successfully");
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
@@ -562,6 +567,7 @@ public class MainActivity extends AppCompatActivity
                 temp.setTime(data.getExtras().getString("time"));
                 temp.setNotes(data.getExtras().getString("notes"));
                 temp.setPrice(data.getExtras().getString("price"));
+                prefManager.setRequest(temp);
 //                current_request = new request();
 //                current_request.setPassenger_name(data.getExtras().getString("passenger_name"));
 //                current_request.setPassenger_phone(data.getExtras().getString("passenger_phone"));
@@ -611,50 +617,50 @@ public class MainActivity extends AppCompatActivity
 
         sendStatus(current_request.getRequest_id(),current_request.getStatus());
 
-        pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
-        destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
-
-
-        // Setting marker
-        if (pickupMarker != null) {
-            pickupMarker.remove();
-        }
-        pickupMarker = mMap.addMarker(new MarkerOptions()
-                .position(pickupPoint)
-                .title("Pickup")
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.start_loc_smaller))
-        );
-
-
-        // Setting marker
-        if (destMarker != null) {
-            destMarker.remove();
-        }
-
-        destMarker = mMap.addMarker(new MarkerOptions()
-                .position(destPoint)
-                .title("Destination")
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
-        );
-
-
-        showRoute();
-
-
-        // For zooming automatically to the location of the marker
-        CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-        //set values for the different views
-        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
-        Button nextState = (Button) findViewById(R.id.next_state);
-        TextView current = (TextView) findViewById(R.id.current_status);
-        current.setText(current_request.getDisplayStatus(current_request.getStatus()));
-        String temp = current_request.getStatus();
-        current_request.nextStatus();
-        nextState.setText(current_request.getDisplayStatus(current_request.getStatus()));
-        current_request.setStatus(temp);
-        linearLayout.setVisibility(View.VISIBLE);
+//        pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
+//        destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
+//
+//
+//        // Setting marker
+//        if (pickupMarker != null) {
+//            pickupMarker.remove();
+//        }
+//        pickupMarker = mMap.addMarker(new MarkerOptions()
+//                .position(pickupPoint)
+//                .title("Pickup")
+//                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.start_loc_smaller))
+//        );
+//
+//
+//        // Setting marker
+//        if (destMarker != null) {
+//            destMarker.remove();
+//        }
+//
+//        destMarker = mMap.addMarker(new MarkerOptions()
+//                .position(destPoint)
+//                .title("Destination")
+//                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
+//        );
+//
+//
+//        showRoute();
+//
+//
+//        // For zooming automatically to the location of the marker
+//        CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
+//        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+//
+//        //set values for the different views
+//        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
+//        Button nextState = (Button) findViewById(R.id.next_state);
+//        TextView current = (TextView) findViewById(R.id.current_status);
+//        current.setText(current_request.getDisplayStatus(current_request.getStatus()));
+//        String temp = current_request.getStatus();
+//        current_request.nextStatus();
+//        nextState.setText(current_request.getDisplayStatus(current_request.getStatus()));
+//        current_request.setStatus(temp);
+//        linearLayout.setVisibility(View.VISIBLE);
     }
 
     public enum UI_STATE{
@@ -688,36 +694,11 @@ public class MainActivity extends AppCompatActivity
                 pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
                 destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
 
+                if(mapIsReady)
+                    setMarkers();
+                else
+                    setWhenReady = true;
 
-                // Setting marker
-                if (pickupMarker != null) {
-                    pickupMarker.remove();
-                }
-                pickupMarker = mMap.addMarker(new MarkerOptions()
-                        .position(pickupPoint)
-                        .title("Pickup")
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.start_loc_smaller))
-                );
-
-
-                // Setting marker
-                if (destMarker != null) {
-                    destMarker.remove();
-                }
-
-                destMarker = mMap.addMarker(new MarkerOptions()
-                        .position(destPoint)
-                        .title("Destination")
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
-                );
-
-
-                showRoute();
-
-
-                // For zooming automatically to the location of the marker
-                CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
                 //set values for the different views
                 linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
@@ -732,6 +713,39 @@ public class MainActivity extends AppCompatActivity
                 linearLayout.setVisibility(View.VISIBLE);
 
         }
+    }
+
+    private void setMarkers() {
+        Log.d(TAG,"setMarkers has been called");
+        // Setting marker
+        if (pickupMarker != null) {
+            pickupMarker.remove();
+        }
+        pickupMarker = mMap.addMarker(new MarkerOptions()
+                .position(pickupPoint)
+                .title("Pickup")
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.start_loc_smaller))
+        );
+
+
+        // Setting marker
+        if (destMarker != null) {
+            destMarker.remove();
+        }
+
+        destMarker = mMap.addMarker(new MarkerOptions()
+                .position(destPoint)
+                .title("Destination")
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
+        );
+
+
+        showRoute();
+
+
+        // For zooming automatically to the location of the marker
+        CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
     @Override
@@ -754,11 +768,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onPause() {
         super.onPause();
-//        if(prefManager.isDoingRequest()){
-//            Gson gson = new Gson();
-//            String json = gson.toJson(current_request);
-//            prefManager.editor.putString("current_request", json);
-//        }
+        if(prefManager.isDoingRequest()){
+            prefManager.setRequest(current_request);
+        }
     }
 
     @Override
@@ -818,9 +830,33 @@ public class MainActivity extends AppCompatActivity
                         alarmIntent);
             }
 
-
         }
 
+        //Setup the UI based on whether there is a current request
+        if(prefManager.isDoingRequest()){
+            current_request = prefManager.getRequest();
+            if(current_request.getStatus().equals("completed")){
+                Log.d(TAG,"The passenger marked the request as complete");
+                endRequest(REQUEST_SUCCESS);
+                setUI(UI_STATE.SIMPLE);
+                current_request = new request();
+            }
+            else
+                if(current_request.getStatus().equals("canceled")){
+                Log.d(TAG,"The passenger canceled the request");
+                endRequest(REQUEST_CANCELLED);
+                    setUI(UI_STATE.SIMPLE);
+                current_request = new request();
+            }
+            else {
+                    Log.d(TAG,"The driver is doing a request");
+//                    current_request = prefManager.getRequest();
+                    setUI(UI_STATE.DOINGREQUEST);
+                }
+        }
+        else {
+            setUI(UI_STATE.SIMPLE);
+        }
 
 //        prefManager.setCurrentLocation(DUMMY_DRIVER_LOCATION);
 
@@ -943,10 +979,17 @@ public class MainActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         // Add a marker in Sydney and move the camera
+        mapIsReady = true;
         LatLng khartoum = new LatLng(15.5838046, 32.5543825);
 //        mMap.addMarker(new MarkerOptions().position(khartoum).title("Marker in Khartoum"));
         if(firstMove)
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(khartoum, 12));
+
+        if(setWhenReady){
+            setWhenReady = false;
+            setMarkers();
+        }
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -1049,7 +1092,7 @@ public class MainActivity extends AppCompatActivity
 //        Log.d(TAG, "onConnected: Moving cam");
         prefManager.setCurrentLocation(String.valueOf(mCurrentLocation.getLatitude()) + "," + String.valueOf(mCurrentLocation.getLongitude()));
         currentLocationPoint = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
-        if(prefManager.isDoingRequest()) showRoute();
+        if(prefManager.isDoingRequest()) if(firstLocationToDriverRouting) {showRoute(); firstLocationToDriverRouting = false;}
 //        if(null!= mCurrentLocation)
 //        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
 
