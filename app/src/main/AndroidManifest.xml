@@ -62,7 +62,7 @@
         <service
             android:name=".LocationService"
             android:exported="false"></service>
-        <receiver android:name="com.vogella.android.navigationwidgetattempt.UpdateLocation"></receiver>
+        <receiver android:name="com.vogella.android.navigationwidgetattempt.UpdateLocation_Active"></receiver>
     </application>
 
 </manifest>

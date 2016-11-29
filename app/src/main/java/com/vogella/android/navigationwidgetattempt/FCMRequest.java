@@ -89,7 +89,7 @@ public class FCMRequest extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         serverAccept(request.getRequest_id(), 1);
-                        FCMRequest.super.finish();
+//                        FCMRequest.super.finish();
 //                Intent intent = new Intent(getBaseContext(), MainActivity.class);
                         //              startActivity(intent);
                     }
@@ -99,7 +99,7 @@ public class FCMRequest extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         serverAccept(request.getRequest_id(), 0);
-                        FCMRequest.super.finish();
+//                        FCMRequest.super.finish();
                     }
                 });
     }

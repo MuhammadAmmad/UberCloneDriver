@@ -41,15 +41,37 @@ public class LocationService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         prefManager = new PrefManager(this);
-        if (intent != null) {
-            String location = prefManager.getCurrentLocation();
-            String request_id;
-            if(prefManager.isDoingRequest())
-                request_id = prefManager.getRequestId();
-            else
-                request_id = "-1";
-            sendLocation(request_id, location);
+        Log.d(TAG,"This has been called!");
+        if(intent.hasExtra("alarmType")){
+            Log.d(TAG,"intent has alarmType");
+            if(intent.getStringExtra("alarmType").equals("location")){
+                Log.d(TAG,"alarmType is location");
+                String location = prefManager.getCurrentLocation();
+                String request_id;
+                if(prefManager.isDoingRequest())
+                    request_id = prefManager.getRequestId();
+                else
+                    request_id = "-1";
+                sendLocation(request_id, location);
+            }
+            else if(intent.getStringExtra("alarmType").equals("active")){
+                Log.d(TAG,"alarmType is active");
+                String location = prefManager.getCurrentLocation();
+                int active;
+                if(prefManager.isActive())
+                    active = 1;
+                else
+                    active = 0;
+                sendActive(active, location);
+            }
+            else {
+                Log.d(TAG,"alarmType is : " + intent.getStringExtra("alarmType"));
+            }
         }
+        else {
+            Log.d(TAG,"The intent doesn't have alarmType extra");
+        }
+
     }
     private void sendLocation(String request_id, final String location ) {
         Retrofit retrofit = new Retrofit.Builder()
@@ -107,4 +129,44 @@ public class LocationService extends IntentService {
 //        // TODO: Handle action Baz
 //        throw new UnsupportedOperationException("Not yet implemented");
 //    }
+
+    private void sendActive(int active, final String location) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = prefManager.pref.getString("UserEmail", "");
+        String password = prefManager.pref.getString("UserPassword", "");
+
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.active("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
+                active, location);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null) {
+                    Log.d(TAG, "The driver status has been changed successfully");
+                } else if (response.code() == 401) {
+//                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "sendActive User not logged in");
+                    prefManager.setIsLoggedIn(false);
+//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//                    MainActivity.this.startActivity(intent);
+//                    MainActivity.super.finish();
+                } else {
+//                    clearHistoryEntries();
+//                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "sendActive: Unknown error occurred");
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+
+            }
+        });
+    }
+
 }

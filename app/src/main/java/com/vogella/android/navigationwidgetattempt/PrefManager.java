@@ -29,8 +29,18 @@ public class PrefManager {
     private static final String DOING_REQUEST = "DOING_REQUEST";
 
     private static final String REQUEST_ID = "REQUEST_ID";
-
     private static final String REQUEST_STATUS = "REQUEST_STATUS";
+    private static final String REQUEST_NOTES = "REQUEST_NOTES";
+    private static final String REQUEST_TIME = "REQUEST_TIME";
+    private static final String REQUEST_PRICE = "REQUEST_PRICE";
+    private static final String REQUEST_PASSENGER_NAME = "REQUEST_PASSENGER_NAME";
+    private static final String REQUEST_PASSENGER_PHONE = "REQUEST_PASSENGER_PHONE";
+    private static final String REQUEST_PICKUP = "REQUEST_PICKUP";
+    private static final String REQUEST_PICKUP_TEXT = "REQUEST_PICKUP_TEXT";
+    private static final String REQUEST_PICKUP_STRING = "REQUEST_PICKUP_STRING";
+    private static final String REQUEST_DEST = "REQUEST_DEST";
+    private static final String REQUEST_DEST_TEXT = "REQUEST_DEST_TEXT";
+    private static final String REQUEST_DEST_STRING = "REQUEST_DEST_STRING";
 
     // User data
     private static final String USER_FULLNAME = "UserName";
@@ -41,6 +51,10 @@ public class PrefManager {
 
 
     private static final String PLACES_LIST = "PlacesList";
+
+
+
+    private static final String ACTIVE = "ACTIVE";
 
 
 
@@ -64,6 +78,16 @@ public class PrefManager {
 
     public boolean isFirstTimeLaunch() {
         return pref.getBoolean(IS_FIRST_TIME_LAUNCHED, true);
+    }
+
+
+    public void setActive(boolean active) {
+        editor.putBoolean(ACTIVE, active);
+        editor.commit();
+    }
+
+    public boolean isActive() {
+        return pref.getBoolean(ACTIVE, true);
     }
 
 
@@ -152,6 +176,31 @@ public class PrefManager {
         editor.apply();
     }
 
+    public void setRequest(request request){
+        editor.putString(REQUEST_STATUS, request.getStatus());
+        editor.putString(REQUEST_TIME, request.getTime());
+        editor.putString(REQUEST_PRICE, request.getPrice());
+        editor.putString(REQUEST_NOTES, request.getNotes());
+        editor.putString(REQUEST_ID, request.getRequest_id());
+        editor.putString(REQUEST_DEST_STRING,request.getDestString());
+        editor.putString(REQUEST_PICKUP_STRING,request.getPickupString());
+        editor.putString(REQUEST_PASSENGER_NAME, request.getPassenger_name());
+        editor.putString(REQUEST_PASSENGER_PHONE, request.getPassenger_phone());
+        editor.apply();
+    }
+
+    public request getRequest() {
+        return new request(pref.getString(REQUEST_ID,"No data"),
+                pref.getString(REQUEST_PICKUP_STRING,"No data"),
+                pref.getString(REQUEST_DEST_STRING,"No data"),
+                pref.getString(REQUEST_PASSENGER_NAME,"No data"),
+                pref.getString(REQUEST_PASSENGER_PHONE,"No data"),
+                pref.getString(REQUEST_TIME,"No data"),
+                pref.getString(REQUEST_PRICE,"No data"),
+                pref.getString(REQUEST_NOTES,"No data"),
+                pref.getString(REQUEST_STATUS,"No data")
+        );
+    }
 //    public String getPlacesList(){
 //        ArrayList<MapPlace> placesList = new ArrayList<>();
 //        Gson gson = new Gson();
