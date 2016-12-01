@@ -216,45 +216,94 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
+//        boolean cancel = true;
+//        setCurrentRequestOnClickListeners(cancel);
+//        previous_requests = (RecyclerView) findViewById(R.id.past_requests);
+//        previous_requests.setHasFixedSize(true);
+//        layoutManager = new LinearLayoutManager(this);
+//        previous_requests.setLayoutManager(layoutManager);
 
-        Button cancelRequest = (Button) findViewById(R.id.cancel_request);
-        cancelRequest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
-                alerBuilder.setMessage("Are you sure you want to cancel this request?");
-                alerBuilder.setPositiveButton("Yes, cancel the request", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        sendCancel(current_request.getRequest_id());
-                    }
-                });
-                alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+        prefManager = new PrefManager(this);
+        // ==================== To get location ================
 
-                    }
-                });
-                alerBuilder.show();
-            }
-        });
-        final Button nextState = (Button) findViewById(R.id.next_state);
-        nextState.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                TextView current = (TextView) findViewById(R.id.current_status);
-                current.setText(nextState.getText().toString());
-                current_request.nextStatus();
-                sendStatus(current_request.getRequest_id(), current_request.getStatus());
-                if (current_request.getStatus().equals("completed")) {
-                    endRequest(REQUEST_SUCCESS);
-                    setUI(UI_STATE.SIMPLE);
-                } else
-                    nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
-            }
-        });
+        // Google API Client
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
 
-        TextView current = (TextView) findViewById(R.id.current_status);
+        // Request permissions
+
+
+
+    }
+
+    private void setCurrentRequestOnClickListeners(boolean cancel) {
+        if(cancel) {
+            Button cancelRequest = (Button) findViewById(R.id.cancel_request);
+            cancelRequest.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
+                    alerBuilder.setMessage("Are you sure you want to cancel this request?");
+                    alerBuilder.setPositiveButton("Yes, cancel the request", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            sendCancel(current_request.getRequest_id());
+                        }
+                    });
+                    alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                    alerBuilder.show();
+                }
+            });
+        }
+        final Button nextState;
+        if (cancel) {
+            nextState = (Button) findViewById(R.id.next_state);
+            nextState.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    TextView current = (TextView) findViewById(R.id.current_status);
+                    current.setText(nextState.getText().toString());
+                    current_request.nextStatus();
+                    sendStatus(current_request.getRequest_id(), current_request.getStatus());
+                    if (current_request.getStatus().equals("passenger_onboard")) {
+                        ((LinearLayout) findViewById(R.id.ongoing_request)).setVisibility(View.INVISIBLE);
+//                        ((LinearLayout) findViewById(R.id.ongoing_request_no_cancel)).setVisibility(View.VISIBLE);
+                        setUI(UI_STATE.DOINGREQUEST);
+                    } else
+                        nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
+                }
+            });
+        }
+        else {
+            nextState = (Button) findViewById(R.id.next_state_no_cancel);
+            nextState.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    TextView current = (TextView) findViewById(R.id.current_status_no_cancel);
+                    current.setText(nextState.getText().toString());
+                    current_request.nextStatus();
+                    sendStatus(current_request.getRequest_id(), current_request.getStatus());
+                    if (current_request.getStatus().equals("completed")) {
+                        endRequest(REQUEST_SUCCESS);
+                        setUI(UI_STATE.SIMPLE);
+                    } else
+                        nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
+                }
+            });
+        }
+        TextView current;
+        if(cancel)
+            current = (TextView) findViewById(R.id.current_status);
+        else
+            current = (TextView) findViewById(R.id.current_status_no_cancel);
         current.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -309,28 +358,9 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
-//        previous_requests = (RecyclerView) findViewById(R.id.past_requests);
-//        previous_requests.setHasFixedSize(true);
-//        layoutManager = new LinearLayoutManager(this);
-//        previous_requests.setLayoutManager(layoutManager);
-
-        prefManager = new PrefManager(this);
-        // ==================== To get location ================
-
-        // Google API Client
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-
-        // Request permissions
-
-
-
     }
 
-    private void initializeLocation() {
+        private void initializeLocation() {
         // Location Request
         mLocationRequest = new LocationRequest();
         // Use high accuracy
@@ -680,6 +710,7 @@ public class MainActivity extends AppCompatActivity
             case SIMPLE:
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
                 linearLayout.setVisibility(View.INVISIBLE);
+                ((LinearLayout) findViewById(R.id.ongoing_request_no_cancel)).setVisibility(View.INVISIBLE);
                 if (pickupMarker != null) {
                     pickupMarker.remove();
                 }
@@ -707,17 +738,27 @@ public class MainActivity extends AppCompatActivity
 
 
                 //set values for the different views
-                linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
-//                LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
-                Button nextState = (Button) findViewById(R.id.next_state);
-                TextView current = (TextView) findViewById(R.id.current_status);
+                Button nextState;
+                TextView current;
+                boolean cancel;
+                if(current_request.getStatus().equals("passenger_onboard") ||
+                        current_request.getStatus().equals("arrived_dest")||
+                        current_request.getStatus().equals("completed")) {
+                    linearLayout = (LinearLayout) findViewById(R.id.ongoing_request_no_cancel);
+                    nextState = (Button) findViewById(R.id.next_state_no_cancel);
+                    current = (TextView) findViewById(R.id.current_status_no_cancel);
+                    cancel = false;
+                }
+                else {
+                    linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
+                    nextState = (Button) findViewById(R.id.next_state);
+                    current = (TextView) findViewById(R.id.current_status);
+                    cancel = true;
+                }
                 current.setText(current_request.getDisplayStatus(current_request.getStatus()));
-                String temp = current_request.getStatus();
-                current_request.nextStatus();
-                nextState.setText(current_request.getDisplayStatus(current_request.getStatus()));
-                current_request.setStatus(temp);
+                nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
                 linearLayout.setVisibility(View.VISIBLE);
-
+                setCurrentRequestOnClickListeners(cancel);
         }
     }
 
