@@ -1,7 +1,14 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.app.AlarmManager;
 import android.app.IntentService;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+import android.os.SystemClock;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
@@ -44,6 +51,33 @@ public class LocationService extends IntentService {
         Log.d(TAG,"This has been called!");
         if(intent.hasExtra("alarmType")){
             Log.d(TAG,"intent has alarmType");
+//            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+//            PendingIntent pi = PendingIntent.getService(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//            PendingIntent pi2 = PendingIntent.getService(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//            alarmManager.cancel(pi);
+//            alarmManager.cancel(pi2);
+
+            if(isLocationEnabled(this)) {
+                Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+                locationIntent.putExtra("alarmType", "location");
+                PendingIntent locationPI = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                AlarmManager m = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                ;
+                int intervalTimeMillis;
+                if (prefManager.isDoingRequest())
+                    intervalTimeMillis = 10 * 1000;  // 10 seconds
+                else
+                    intervalTimeMillis = 30 * 60 * 1000;//5 * 60 * 1000; // 5 minutes
+                m.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + intervalTimeMillis, locationPI);
+                Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+                activeIntent.putExtra("alarmType", "active");
+
+                PendingIntent activePI = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                intervalTimeMillis = 30 * 1000;
+                m.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + intervalTimeMillis, activePI);
+            }
+
             if(intent.getStringExtra("alarmType").equals("location")){
                 Log.d(TAG,"alarmType is location");
                 String location = prefManager.getCurrentLocation();
@@ -168,6 +202,28 @@ public class LocationService extends IntentService {
 
             }
         });
+    }
+    public static boolean isLocationEnabled(Context context) {
+        int locationMode = 0;
+        String locationProviders;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            try {
+                locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+
+        }else{
+            locationProviders = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            return !TextUtils.isEmpty(locationProviders);
+        }
+
+
     }
 
 }

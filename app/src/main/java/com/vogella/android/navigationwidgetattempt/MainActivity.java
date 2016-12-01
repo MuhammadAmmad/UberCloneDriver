@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity
         , LocationListener {
 
     private static final long UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
-    private static final long UPDATE_WHILE_IDLE = 30 * 1000;
+    private static final long UPDATE_WHILE_IDLE = 30 * 60 * 1000;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2445;
     private static final int PERMISSION_REQUEST_LOCATION = 1432;
     private static final int PERMISSION_REQUEST_CLIENT_CONNECT = 365;
@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity
     private boolean mapIsReady;
     private boolean setWhenReady = false;
     private boolean firstLocationToDriverRouting;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -457,10 +458,14 @@ public class MainActivity extends AppCompatActivity
 //        }
         prefManager.setRequestId("");
         prefManager.setDoingRequest(false);
+        Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+        locationIntent.putExtra("alarmType", "location");
+        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime(), UPDATE_WHILE_IDLE,
-                alarmIntent);
+        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, UPDATE_WHILE_IDLE, alarmIntent);
+//        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                SystemClock.elapsedRealtime(), UPDATE_WHILE_IDLE,
+//                alarmIntent);
     }
 
     private void sendStatus(String request_id, final String status) {
@@ -647,9 +652,15 @@ public class MainActivity extends AppCompatActivity
 
         prefManager.setDoingRequest(true);
         prefManager.setRequestId(current_request.getRequest_id());
-        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime(), UPDATE_DURING_REQUEST,
-                alarmIntent);
+        Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+        locationIntent.putExtra("alarmType", "location");
+        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, UPDATE_DURING_REQUEST, alarmIntent);
+
+//        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                SystemClock.elapsedRealtime(), UPDATE_DURING_REQUEST,
+//                alarmIntent);
 
         sendStatus(current_request.getRequest_id(),current_request.getStatus());
 
@@ -844,12 +855,12 @@ public class MainActivity extends AppCompatActivity
             //setup location alarm
             alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-            Intent locationIntent = new Intent(this, UpdateLocation_Active.class);
+            Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
             locationIntent.putExtra("alarmType", "location");
-            boolean locationFlag = (PendingIntent.getBroadcast(this, 0, locationIntent, PendingIntent.FLAG_NO_CREATE) == null);
+            boolean locationFlag = (PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_NO_CREATE) == null);
 /*Register alarm if not registered already*/
-            if(locationFlag){
-                alarmIntent = PendingIntent.getBroadcast(this, 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//            if(locationFlag){
+                alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 /* Setting alarm for every one hour from the current time.*/
                 int intervalTimeMillis;
@@ -857,25 +868,26 @@ public class MainActivity extends AppCompatActivity
                     intervalTimeMillis = 10 * 1000;  // 10 seconds
                 else
                     intervalTimeMillis = 5 * 60 * 1000;//5 * 60 * 1000; // 5 minutes
-                alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                        SystemClock.elapsedRealtime(), intervalTimeMillis,
-                        alarmIntent);
-            }
-
-            Intent activeIntent = new Intent(this, UpdateLocation_Active.class);
+                alarmMgr.set(AlarmManager.RTC_WAKEUP, intervalTimeMillis, alarmIntent);
+//             alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                        SystemClock.elapsedRealtime(), intervalTimeMillis,
+//                        alarmIntent);
+//            }
+            Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
             activeIntent.putExtra("alarmType", "active");
-            boolean activeFlag = (PendingIntent.getBroadcast(this, 67769, activeIntent, PendingIntent.FLAG_NO_CREATE) == null);
+            boolean activeFlag = (PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_NO_CREATE) == null);
 /*Register alarm if not registered already*/
-            if(activeFlag){
-                alarmIntent = PendingIntent.getBroadcast(this, 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//            if(activeFlag){
+                alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 /* Setting alarm for every one hour from the current time.*/
-                int intervalTimeMillis;
+//                int intervalTimeMillis;
                     intervalTimeMillis = 30 * 1000;//30 * 1000; // 30 seconds
-                alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                        SystemClock.elapsedRealtime(), intervalTimeMillis,
-                        alarmIntent);
-            }
+                alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, intervalTimeMillis, alarmIntent);
+//                alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                        SystemClock.elapsedRealtime(), intervalTimeMillis,
+//                        alarmIntent);
+////            }
 
         }
 
