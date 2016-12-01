@@ -18,8 +18,11 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -116,8 +119,21 @@ public class HistoryActivity extends AppCompatActivity {
                     List <request> rides = response.body().getRides();
                     List <request> history = new ArrayList<request>(){{}};
                     for (request i : rides){
-                        if (i.getStatus().equals("completed") || i.getStatus().equals("cancelled"))
-                            history.add(history.size(),i);
+                        if (i.getStatus().equals("completed") || i.getStatus().equals("canceled")) {
+                            long unixTime;
+                            if(i.getTime().equals("now"))
+                                unixTime = System.currentTimeMillis();
+                            else {
+                                Log.d(TAG,"Time is :" + i.getTime());
+                                unixTime = Long.valueOf(i.getTime()) * 1000; // In this case, the server sends the time in seconds while unix time needs milliseconds
+                            }
+                            Date df = new java.util.Date(unixTime);
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
+                            sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
+                            i.setTime(sdf.format(df));
+
+                            history.add(history.size(), i);
+                        }
                     }
                     HistoryActivity.this.setRequestsList(history);
                 } else if (response.code() == 401){
@@ -142,11 +158,11 @@ public class HistoryActivity extends AppCompatActivity {
     }
 
     private void setRequestsList(List<request> rides) {
-        if (History.isEmpty()){
+//        if (History.isEmpty()){
             History = rides;
             ca.updateRequestsList(History);
             ca.notifyDataSetChanged();
-        }
+//        }
     }
 
     @Override

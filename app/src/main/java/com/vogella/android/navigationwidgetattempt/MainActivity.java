@@ -126,10 +126,12 @@ public class MainActivity extends AppCompatActivity
     private static final String DUMMY_STATUS = "on_the_way";
     private static final String DUMMY_NOTES = "Drive slowly";
     private static final String DUMMY_PRICE = "43";
+    private static final String DUMMY_DEST_TEXT = "My home";
+    private static final String DUMMY_PICKUP_TEXT = "My workplace";
     private static final String DUMMY_TIME = "06/11/2016 ; 15:45";
     private static request current_request = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,
             DUMMY_PASSENGER_NAME, DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES,
-            DUMMY_STATUS);
+            DUMMY_STATUS, DUMMY_PICKUP_TEXT, DUMMY_DEST_TEXT);
     //    private static request current_request = new request();
     private static final int REQUEST_SUCCESS = 1;
     private static final int REQUEST_CANCELLED = 0;
@@ -189,7 +191,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG,"changeDriverStatus button pressed. Attempting to change from avaialble to away");
                     changeDriverStatus.setText("away");
                     prefManager.setActive(false);
-                    sendActive(0, "15.6023428, 32.5873593");
+                    sendActive(0, prefManager.getCurrentLocation());
                 } else if (changeDriverStatus.getText().toString().equals("away")) {
 //                } else{
                     Log.d(TAG,"changeDriverStatus button pressed. Attempting to change from away to available");
@@ -210,7 +212,7 @@ public class MainActivity extends AppCompatActivity
                     }
 //                    changeDriverStatus.setText("available");
 //                    prefManager.setActive(true);
-//                    sendActive(1, "15.6023428, 32.5873593");
+//                    sendActive(1, prefManager.getCurrentLocation());
                 }
             }
         });
@@ -263,13 +265,15 @@ public class MainActivity extends AppCompatActivity
                 ((TextView) findViewById(R.id.cr_price)).setText(current_request.getPrice());
                 ((TextView) findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus()));
                 ((TextView) findViewById(R.id.cr_notes)).setText(current_request.getNotes());
-                ((TextView) findViewById(R.id.cr_pickup)).
-//                        setText(current_request.pickup);
-        setText(String.valueOf(current_request.getPickup()[0]) + " , " +
-        String.valueOf(current_request.getPickup()[1]));
-                ((TextView) findViewById(R.id.cr_dest)).
-                        setText(String.valueOf(current_request.getDest()[0]) + " , " +
-                                String.valueOf(current_request.getDest()[1]));
+//                ((TextView) findViewById(R.id.cr_pickup)).setText(current_request.pickup);
+                ((TextView) findViewById(R.id.cr_pickup)).setText(current_request.getPickupText());
+//                ((TextView) findViewById(R.id.cr_pickup)).
+//                    setText(String.valueOf(current_request.getPickup()[0]) + " , " +
+//                    String.valueOf(current_request.getPickup()[1]));
+                ((TextView) findViewById(R.id.cr_dest)).setText(current_request.getDestText());
+//                ((TextView) findViewById(R.id.cr_dest)).
+//                        setText(String.valueOf(current_request.getDest()[0]) + " , " +
+//                                String.valueOf(current_request.getDest()[1]));
                 ((TextView) findViewById(R.id.cr_time)).setText(current_request.getTime());
 
                 Button hide_request = (Button) findViewById(R.id.cr_close);
@@ -567,6 +571,8 @@ public class MainActivity extends AppCompatActivity
                 temp.setTime(data.getExtras().getString("time"));
                 temp.setNotes(data.getExtras().getString("notes"));
                 temp.setPrice(data.getExtras().getString("price"));
+                temp.setDestText(data.getStringExtra("dest_text"));
+                temp.setPickupText(data.getStringExtra("pickup_text"));
                 prefManager.setRequest(temp);
 //                current_request = new request();
 //                current_request.setPassenger_name(data.getExtras().getString("passenger_name"));

@@ -1,12 +1,16 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.CountDownTimer;
+import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,10 +35,21 @@ public class FCMRequest extends AppCompatActivity {
     private PrefManager prefManager;
     private static final int TIMEOUT = 1;
     private static int reason = TIMEOUT;
+    private PowerManager.WakeLock wl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "My Tag");
+        wl.acquire();
+        final Window win = getWindow();
+        win.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
+
         Intent data = getIntent();
         setContentView(R.layout.activity_fcmrequest);
         final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressbar_timerview);
@@ -50,10 +65,12 @@ public class FCMRequest extends AppCompatActivity {
                 request.setNotes(data.getStringExtra("notes"));
                 request.setPrice(data.getStringExtra("price"));
                 request.setRequest_id(data.getExtras().getString("request_id"));
+                request.setPickupText(data.getStringExtra("pickup_text"));
                 request.setPickupString(data.getStringExtra("pickup"));
 //                request.pickup[0] = Double.parseDouble(data.getStringExtra("pickup").split(",")[0]);
 //                request.pickup[1] = Double.parseDouble(data.getStringExtra("pickup").split(",")[1]);
 //        request.pickup = data.getStringExtra("pickup");
+                request.setDestText(data.getStringExtra("dest_text"));
                 request.setDestString(data.getStringExtra("dest"));
 //                request.dest[0] = Double.parseDouble(data.getStringExtra("dest").split(",")[0]);
 //                request.dest[1] = Double.parseDouble(data.getStringExtra("dest").split(",")[1]);
@@ -62,14 +79,14 @@ public class FCMRequest extends AppCompatActivity {
                     unixTime = System.currentTimeMillis();
                 else {
                     Log.d(TAG,"Time is :" + request.getTime());
-                    unixTime = Long.valueOf(request.getTime());
+                    unixTime = Long.valueOf(request.getTime()); // In this case, the server sends the time in milliseconds just as expected from unixTime.
                 }
                 Date df = new java.util.Date(unixTime);
                 SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
                 sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
                 request.setTime(sdf.format(df));
 
-                ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(data.getStringExtra("pickup"));
+                ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(request.getPickupText());
                 ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.getPrice());
                 ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.getTime());
                 CountDownTimer countDownTimer = new CountDownTimer(20 * 1000, 500) {
@@ -136,6 +153,9 @@ public class FCMRequest extends AppCompatActivity {
                     }
                     else {
                         Log.d(TAG, "You have rejected the request");
+                        Toast.makeText(getBaseContext(), "You have rejected the request",
+                                Toast.LENGTH_LONG).show();
+                        FCMRequest.super.finish();
                     }
                 } else if (response.code() == 401){
                     Toast.makeText(FCMRequest.this, "Please login to continue", Toast.LENGTH_SHORT).show();

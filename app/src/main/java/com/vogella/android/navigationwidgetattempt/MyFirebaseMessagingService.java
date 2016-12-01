@@ -93,6 +93,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     received.setPassenger_phone(field.getValue());
                 if (field.getKey().equals("passenger_name"))
                     received.setPassenger_name(field.getValue());
+                if (field.getKey().equals("dest_text"))
+                    received.setDestText(field.getValue());
+                if (field.getKey().equals("pickup_text"))
+                    received.setPickupText(field.getValue());
                 if (field.getKey().equals("pickup")) {
                     pickup = field.getValue();
                 }
@@ -111,10 +115,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 intent.putExtra("request_id", received.getRequest_id());
                 intent.putExtra("price", received.getPrice());
                 intent.putExtra("pickup", pickup);
+                intent.putExtra("pickup_text", received.getPickupText());
                 Log.d(TAG, "time read from the first request object =" + received.getTime());
                 intent.putExtra("time", received.getTime());
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("dest", dest);
+                intent.putExtra("dest_text", received.getDestText());
 //                intent.putExtra("time", received.getTime());
                 intent.putExtra("passenger_name", received.getPassenger_name());
                 intent.putExtra("passenger_phone", received.getPassenger_phone());

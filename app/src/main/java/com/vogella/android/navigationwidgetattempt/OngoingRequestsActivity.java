@@ -17,9 +17,12 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -43,6 +46,8 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     private static final String DUMMY_PRICE = "43";
     private static final String DUMMY_TIME = "06/11/2016 ; 15:45";
     private static final String TAG = "OngoingRequestsActivity";
+    private static final String DUMMY_DEST_TEXT = "My home";
+    private static final String DUMMY_PICKUP_TEXT = "My workplace";
     //    private static request current_request = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,
 //            DUMMY_PASSENGER_NAME, DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES,
 //            DUMMY_STATUS);
@@ -114,8 +119,21 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                     List <request> rides = response.body().getRides();
                     List <request> upcoming = new ArrayList<request>(){{}};
                     for (request i : rides){
-                        if (i.getStatus().equals("accepted"))
-                            upcoming.add(upcoming.size(),i);
+                        if (i.getStatus().equals("accepted")) {
+                            long unixTime;
+                            if(i.getTime().equals("now"))
+                                unixTime = System.currentTimeMillis();
+                            else {
+                                Log.d(TAG,"Time is :" + i.getTime());
+                                unixTime = Long.valueOf(i.getTime())  * 1000; // In this case, the server sends the time in seconds while unix time needs milliseconds
+                            }
+                            Date df = new java.util.Date(unixTime);
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
+                            sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
+                            i.setTime(sdf.format(df));
+
+                            upcoming.add(upcoming.size(), i);
+                        }
                     }
                     OngoingRequestsActivity.this.setRequestsList(upcoming);
                 } else if (response.code() == 401){
@@ -134,17 +152,18 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
             @Override
             public void onFailure(Call<RequestsResponse> call, Throwable t) {
-                    Toast.makeText(OngoingRequestsActivity.this, "Failed to receive", Toast.LENGTH_SHORT).show();
+                Toast.makeText(OngoingRequestsActivity.this, "Failed to receive", Toast.LENGTH_SHORT).show();
+                finish();
             }
         });
     }
 
     private void setRequestsList(List<request> rides) {
-        if (requestList.isEmpty()){
+//        if (requestList.isEmpty()){
             requestList = rides;
             ca.updateRequestsList(requestList);
             ca.notifyDataSetChanged();
-        }
+//        }
     }
 
 
@@ -154,7 +173,8 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         List<request> result = new ArrayList<request>();
         for (int i=1; i <= size; i++) {
             request ci = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,DUMMY_PASSENGER_NAME,
-                    DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES, DUMMY_STATUS);
+                    DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES, DUMMY_STATUS,
+                    DUMMY_PICKUP_TEXT, DUMMY_DEST_TEXT);
 //            ci.passenger_name = DUMMY_PASSENGER_NAME + i;
 //            ci.passenger_phone = DUMMY_PASSENGER_PHONE + i;
 //            ci.status = DUMMY_STATUS;

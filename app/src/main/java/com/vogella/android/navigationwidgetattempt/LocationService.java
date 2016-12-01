@@ -107,6 +107,7 @@ public class LocationService extends IntentService {
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
+                Log.i(TAG, "Failed to get the server");
 
             }
         });

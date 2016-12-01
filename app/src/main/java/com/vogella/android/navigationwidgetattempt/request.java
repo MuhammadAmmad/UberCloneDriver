@@ -17,8 +17,12 @@ public class request {
     private String request_id;
     @SerializedName(value = "pickup")
     private String pickupString;
+    @SerializedName(value = "pickup_text")
+    private String pickupText;
     @SerializedName(value = "dest")
     private String destString;
+    @SerializedName(value = "dest_text")
+    private String destText;
     @SerializedName(value = "time")
     private String time;
     @SerializedName(value = "price")
@@ -35,9 +39,11 @@ public class request {
     public request(){
         this.dest = new double[2];
         this.destString = "";
+        this.destText = "";
         this.passenger_name = "";
         this.pickup = new double[2];
         this.pickupString = "";
+        this.pickupText = "";
         this.time = "";
         this.price = "";
         this.request_id = "";
@@ -46,7 +52,8 @@ public class request {
         this.passenger_phone = "";
     }
     public request(String request_id, String pickup, String dest, String passenger_name,
-                   String passenger_phone, String time, String price, String notes, String status){
+                   String passenger_phone, String time, String price, String notes, String status,
+                   String pickupText, String destText){
         this.pickup[0] = Double.parseDouble(pickup.split(",")[0]);
         this.pickup[1] = Double.parseDouble(pickup.split(",")[1]);
         this.dest[0] = Double.parseDouble(dest.split(",")[0]);
@@ -60,10 +67,13 @@ public class request {
         this.passenger_phone = passenger_phone;
         this.pickupString = pickup;
         this.destString = dest;
+        this.pickupText = pickupText;
+        this.destText = destText;
     }
 
     public request(String request_id, double pickup[], double dest[], String passenger_name,
-                   String passenger_phone, String time, String price, String notes, String status){
+                   String passenger_phone, String time, String price, String notes, String status,
+                   String pickupText, String destText){
         this.pickup = pickup;
         this.dest = dest;
         this.pickupString = String.valueOf(pickup[0]) + "," + String.valueOf(pickup[1]);
@@ -75,6 +85,24 @@ public class request {
         this.status = status;
         this.notes = notes;
         this.passenger_phone = passenger_phone;
+        this.pickupText = pickupText;
+        this.destText = destText;
+    }
+
+    public String getPickupText() {
+        return pickupText;
+    }
+
+    public void setPickupText(String pickupText) {
+        this.pickupText = pickupText;
+    }
+
+    public String getDestText() {
+        return destText;
+    }
+
+    public void setDestText(String destText) {
+        this.destText = destText;
     }
 
     public String getRequest_id() {

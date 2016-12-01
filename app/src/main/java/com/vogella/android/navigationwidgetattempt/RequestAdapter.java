@@ -32,8 +32,8 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.date.setText(ci.getTime());
         RequestViewHolder.status.setText(ci.getStatus());
-        RequestViewHolder.pickup.setText(ci.getPickupString());
-        RequestViewHolder.dest.setText(ci.getDestString());
+        RequestViewHolder.pickup.setText(ci.getPickupText());
+        RequestViewHolder.dest.setText(ci.getDestText());
 //        RequestViewHolder.pickup.setText(String.valueOf(ci.getPickup()[0]) + "," + String.valueOf(ci.getPickup()[1]));
 //        RequestViewHolder.dest.setText(String.valueOf(ci.getDest()[0]) + "," + String.valueOf(ci.getDest()[1]));
 //        RequestViewHolder.request_time.setText(ci.time);

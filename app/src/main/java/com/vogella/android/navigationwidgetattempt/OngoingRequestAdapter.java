@@ -47,9 +47,11 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.date.setText(ci.getTime());
         RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus()));
-        RequestViewHolder.pickup.setText(ci.getPickupString());
+        RequestViewHolder.pickup.setText(ci.getPickupText());
+//        RequestViewHolder.pickup.setText(ci.getPickupString());
 //        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
-        RequestViewHolder.dest.setText(ci.getDestString());
+        RequestViewHolder.dest.setText(ci.getDestText());
+//        RequestViewHolder.dest.setText(ci.getDestString());
 //        RequestViewHolder.dest.setText(String.valueOf(ci.dest[0]) + "," + String.valueOf(ci.dest[1]));
 
 /*
@@ -88,6 +90,8 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                             intent.putExtra("price", ci.getPrice());
                             intent.putExtra("notes", ci.getNotes());
                             intent.putExtra("request_id", ci.getRequest_id());
+                            intent.putExtra("pickup_text", ci.getPickupText());
+                            intent.putExtra("dest_text", ci.getDestText());
 
                             ((Activity) context).setResult(Activity.RESULT_OK, intent);
                             ((Activity) context).finish();

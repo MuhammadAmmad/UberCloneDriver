@@ -183,7 +183,9 @@ public class PrefManager {
         editor.putString(REQUEST_NOTES, request.getNotes());
         editor.putString(REQUEST_ID, request.getRequest_id());
         editor.putString(REQUEST_DEST_STRING,request.getDestString());
+        editor.putString(REQUEST_DEST_TEXT,request.getDestText());
         editor.putString(REQUEST_PICKUP_STRING,request.getPickupString());
+        editor.putString(REQUEST_PICKUP_TEXT,request.getPickupText());
         editor.putString(REQUEST_PASSENGER_NAME, request.getPassenger_name());
         editor.putString(REQUEST_PASSENGER_PHONE, request.getPassenger_phone());
         editor.apply();
@@ -198,7 +200,9 @@ public class PrefManager {
                 pref.getString(REQUEST_TIME,"No data"),
                 pref.getString(REQUEST_PRICE,"No data"),
                 pref.getString(REQUEST_NOTES,"No data"),
-                pref.getString(REQUEST_STATUS,"No data")
+                pref.getString(REQUEST_STATUS,"No data"),
+                pref.getString(REQUEST_PICKUP_TEXT,"No data"),
+                pref.getString(REQUEST_DEST_TEXT,"No data")
         );
     }
 //    public String getPlacesList(){
