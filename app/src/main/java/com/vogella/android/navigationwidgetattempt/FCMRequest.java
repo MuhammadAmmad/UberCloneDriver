@@ -1,5 +1,6 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.CountDownTimer;
@@ -89,7 +90,7 @@ public class FCMRequest extends AppCompatActivity {
                 ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(request.getPickupText());
                 ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.getPrice());
                 ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.getTime());
-                CountDownTimer countDownTimer = new CountDownTimer(20 * 1000, 500) {
+                final CountDownTimer countDownTimer = new CountDownTimer(20 * 1000, 500) {
                     @Override
                     public void onTick(long l) {
                         long seconds = l / 1000;
@@ -105,6 +106,7 @@ public class FCMRequest extends AppCompatActivity {
                 progressBar.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        countDownTimer.cancel();
                         serverAccept(request.getRequest_id(), 1);
 //                        FCMRequest.super.finish();
 //                Intent intent = new Intent(getBaseContext(), MainActivity.class);
@@ -115,6 +117,7 @@ public class FCMRequest extends AppCompatActivity {
                 ((TextView) findViewById(R.id.fcmrequest_reject)).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        countDownTimer.cancel();
                         serverAccept(request.getRequest_id(), 0);
 //                        FCMRequest.super.finish();
                     }
@@ -129,6 +132,13 @@ public class FCMRequest extends AppCompatActivity {
               String email = prefManager.pref.getString("UserEmail","");
         String password = prefManager.pref.getString("UserPassword","");
 
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setMessage("Connecting ... ");
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
+
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.accept("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
                                                     request_id,accepted);
@@ -136,6 +146,7 @@ public class FCMRequest extends AppCompatActivity {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
+                if(progress.isShowing())progress.dismiss();
                 if (response.isSuccess() && response.body() != null){
                     if(accepted == 1) {
                         if(response.body().getStatus() == 0) {
@@ -169,11 +180,14 @@ public class FCMRequest extends AppCompatActivity {
                     Toast.makeText(FCMRequest.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
                 }
                 reason = NOT_TIMEOUT;
+                FCMRequest.super.finish();
             }
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
+                if(progress.isShowing())progress.dismiss();
                 Log.d(TAG, "The response is onFailure");
+                FCMRequest.super.finish();
             }
         });
     }

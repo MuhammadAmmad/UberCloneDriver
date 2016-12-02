@@ -100,11 +100,11 @@ public class PrefManager {
         return pref.getString(CURRENT_LOCATION, "No data");
     }
 
-    public void setRequestId(String request_id) {
-        editor.putString(REQUEST_ID, request_id);
-        editor.apply();
-    }
-
+//    public void setRequestId(String request_id) {
+//        editor.putString(REQUEST_ID, request_id);
+//        editor.apply();
+//    }
+//
     public String getRequestId() {
         return pref.getString(REQUEST_ID, "No data");
     }

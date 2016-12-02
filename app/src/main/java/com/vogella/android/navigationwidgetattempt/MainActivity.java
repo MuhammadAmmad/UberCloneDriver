@@ -428,7 +428,7 @@ public class MainActivity extends AppCompatActivity
 //        if (driverToPickupRoute != null) {
 //            driverToPickupRoute.remove();
 //        }
-        prefManager.setRequestId("");
+//        prefManager.setRequestId("");
         prefManager.setDoingRequest(false);
         Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
         locationIntent.putExtra("alarmType", "location");
@@ -466,6 +466,10 @@ public class MainActivity extends AppCompatActivity
                 if (response.isSuccess() && response.body() != null) {
 //                    Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The status has been sent successfully");
+                    if(status.equals("on_the_way")){
+                        prefManager.isDoingRequest();
+                        setUI(UI_STATE.DOINGREQUEST);
+                    }
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
@@ -615,6 +619,7 @@ public class MainActivity extends AppCompatActivity
                 temp.setPrice(data.getExtras().getString("price"));
                 temp.setDestText(data.getStringExtra("dest_text"));
                 temp.setPickupText(data.getStringExtra("pickup_text"));
+                temp.setRequest_id(data.getStringExtra("request_id"));
                 prefManager.setRequest(temp);
 //                current_request = new request();
 //                current_request.setPassenger_name(data.getExtras().getString("passenger_name"));
@@ -657,8 +662,8 @@ public class MainActivity extends AppCompatActivity
     private void startRequest() {
         //                pickupPoint = new LatLng(pickup[0], pickup[1]);
 
-        prefManager.setDoingRequest(true);
-        prefManager.setRequestId(current_request.getRequest_id());
+
+//        prefManager.setRequestId(current_request.getRequest_id());
         Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
         locationIntent.putExtra("alarmType", "location");
         alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -668,8 +673,12 @@ public class MainActivity extends AppCompatActivity
 //        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
 //                SystemClock.elapsedRealtime(), UPDATE_DURING_REQUEST,
 //                alarmIntent);
+        current_request = prefManager.getRequest();
 
         sendStatus(current_request.getRequest_id(),current_request.getStatus());
+//        while(no_response);
+//        if(onTheWay)
+//            prefManager.setDoingRequest(true);
 
 //        pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
 //        destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
