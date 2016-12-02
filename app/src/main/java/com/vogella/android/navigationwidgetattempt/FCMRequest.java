@@ -61,7 +61,7 @@ public class FCMRequest extends AppCompatActivity {
                 prefManager = new PrefManager(this);
                 request.setPassenger_name(data.getStringExtra("passenger_name"));
                 request.setPassenger_phone(data.getStringExtra("passenger_phone"));
-                request.setStatus("Accepted");
+                request.setStatus("accepted");
                 request.setTime(data.getStringExtra("time"));
                 request.setNotes(data.getStringExtra("notes"));
                 request.setPrice(data.getStringExtra("price"));
@@ -100,7 +100,7 @@ public class FCMRequest extends AppCompatActivity {
                     @Override
                     public void onFinish() {
                         if(reason == TIMEOUT)
-                            Toast.makeText(getBaseContext(), "You didn't accept", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getBaseContext(), R.string.fcm_ignored, Toast.LENGTH_LONG).show();
                     }
                 }.start();
                 progressBar.setOnClickListener(new View.OnClickListener() {
@@ -133,7 +133,7 @@ public class FCMRequest extends AppCompatActivity {
         String password = prefManager.pref.getString("UserPassword","");
 
         final ProgressDialog progress = new ProgressDialog(this);
-        progress.setMessage("Connecting ... ");
+        progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
         progress.show();
@@ -150,26 +150,25 @@ public class FCMRequest extends AppCompatActivity {
                 if (response.isSuccess() && response.body() != null){
                     if(accepted == 1) {
                         if(response.body().getStatus() == 0) {
-                            Toast.makeText(getBaseContext(), "You have accepted this request " +
-                                    "You can now view it in the ongoing requests tab", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getBaseContext(), R.string.FCM_accepted_new_request, Toast.LENGTH_LONG).show();
                             Log.d(TAG, "You have accepted the request");
                             OngoingRequestsActivity.addRequest(request);
                             FCMRequest.super.finish();
                         }
                         else if(response.body().getStatus() == 3){
-                             Toast.makeText(getBaseContext(), "Another driver has alread accepted this request",
+                             Toast.makeText(getBaseContext(), R.string.FCM_another_driver_accepted,
                                      Toast.LENGTH_LONG).show();
                             FCMRequest.super.finish();
                         }
                     }
                     else {
                         Log.d(TAG, "You have rejected the request");
-                        Toast.makeText(getBaseContext(), "You have rejected the request",
+                        Toast.makeText(getBaseContext(), R.string.FCM_rejected_request,
                                 Toast.LENGTH_LONG).show();
                         FCMRequest.super.finish();
                     }
                 } else if (response.code() == 401){
-                    Toast.makeText(FCMRequest.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(FCMRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(FCMRequest.this, LoginActivity.class);
@@ -177,7 +176,7 @@ public class FCMRequest extends AppCompatActivity {
                     FCMRequest.super.finish();
                 } else {
 //                    clearHistoryEntries();
-                    Toast.makeText(FCMRequest.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(FCMRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
                 reason = NOT_TIMEOUT;
                 FCMRequest.super.finish();

@@ -12,7 +12,6 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
@@ -188,13 +187,13 @@ public class MainActivity extends AppCompatActivity
         changeDriverStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (changeDriverStatus.getText().toString().equals("available")) {
+                if (changeDriverStatus.getText().toString().equals(getString(R.string.driver_active))) {
 //                if (prefManager.isActive()) {
                     Log.d(TAG,"changeDriverStatus button pressed. Attempting to change from avaialble to away");
-                    changeDriverStatus.setText("away");
+                    changeDriverStatus.setText(R.string.driver_inactive);
                     prefManager.setActive(false);
                     sendActive(0, prefManager.getCurrentLocation());
-                } else if (changeDriverStatus.getText().toString().equals("away")) {
+                } else if (changeDriverStatus.getText().toString().equals(getString(R.string.driver_inactive))) {
 //                } else{
                     Log.d(TAG,"changeDriverStatus button pressed. Attempting to change from away to available");
                     if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -212,7 +211,7 @@ public class MainActivity extends AppCompatActivity
                             mGoogleApiClient.connect();
                         }
                     }
-//                    changeDriverStatus.setText("available");
+//                    changeDriverStatus.setText(R.string.driver_active);
 //                    prefManager.setActive(true);
 //                    sendActive(1, prefManager.getCurrentLocation());
                 }
@@ -247,14 +246,14 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClick(View v) {
                     AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
-                    alerBuilder.setMessage("Are you sure you want to cancel this request?");
-                    alerBuilder.setPositiveButton("Yes, cancel the request", new DialogInterface.OnClickListener() {
+                    alerBuilder.setMessage(getString(R.string.cancel_current_request_message));
+                    alerBuilder.setPositiveButton(getString(R.string.cancel_current_request), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             sendCancel(current_request.getRequest_id());
                         }
                     });
-                    alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    alerBuilder.setNegativeButton(getString(R.string.dont_cancel_current_request), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
 
@@ -279,7 +278,7 @@ public class MainActivity extends AppCompatActivity
                         setUI(UI_STATE.SIMPLE);
                     } else
 
-                        nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
+                        nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
                 }
             });
         TextView current;
@@ -292,7 +291,7 @@ public class MainActivity extends AppCompatActivity
                 ((TextView) findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
                 ((TextView) findViewById(R.id.cr_passenger_phone)).setText(current_request.getPassenger_phone());
                 ((TextView) findViewById(R.id.cr_price)).setText(current_request.getPrice());
-                ((TextView) findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus()));
+                ((TextView) findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus(), MainActivity.this));
                 ((TextView) findViewById(R.id.cr_notes)).setText(current_request.getNotes());
                 ((TextView) findViewById(R.id.cr_pickup)).setText(current_request.getPickupText());
                 ((TextView) findViewById(R.id.cr_dest)).setText(current_request.getDestText());
@@ -310,8 +309,8 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(View view) {
                         AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
-                        alerBuilder.setMessage("Do you want to call the number " + current_request.getPassenger_phone() + "?");
-                        alerBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        alerBuilder.setMessage(getString(R.string.call_passenger_message) + current_request.getPassenger_phone() + "?");
+                        alerBuilder.setPositiveButton(getString(R.string.call_passenger), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 Intent intent = new Intent(Intent.ACTION_DIAL);
@@ -319,7 +318,7 @@ public class MainActivity extends AppCompatActivity
                                 startActivity(intent);
                             }
                         });
-                        alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        alerBuilder.setNegativeButton(getString(R.string.dont_call), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
@@ -362,7 +361,7 @@ public class MainActivity extends AppCompatActivity
                         // All location settings are satisfied. The client can
                         // initialize location requests here.
                         Log.d(TAG,"LocationSettingsStatusCodes.SUCCESS");
-                        ((Button) findViewById(R.id.driver_status)).setText("available");
+                        ((Button) findViewById(R.id.driver_status)).setText(R.string.driver_active);
                         prefManager.setActive(true);
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
@@ -406,10 +405,10 @@ public class MainActivity extends AppCompatActivity
 //        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
 //        linearLayout.setVisibility(View.INVISIBLE);
         if (res == REQUEST_SUCCESS)
-            Toast.makeText(MainActivity.this, "Thank you for your efforts! The request is complete",
+            Toast.makeText(MainActivity.this, R.string.current_request_completed,
                     Toast.LENGTH_LONG).show();
         else if (res == REQUEST_CANCELLED)
-            Toast.makeText(MainActivity.this, "The request has been canceled",
+            Toast.makeText(MainActivity.this, R.string.current_request_cancelled,
                     Toast.LENGTH_LONG).show();
         OngoingRequestsActivity.removeRequest(current_request.getRequest_id());
 //        current_request = new request();
@@ -449,7 +448,7 @@ public class MainActivity extends AppCompatActivity
         String password = prefManager.pref.getString("UserPassword", "");
 
         final ProgressDialog progress = new ProgressDialog(this);
-        progress.setMessage("Updating the request status ... ");
+        progress.setMessage(getString(R.string.updating_request_status));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
         progress.show();
@@ -471,7 +470,7 @@ public class MainActivity extends AppCompatActivity
                         setUI(UI_STATE.DOINGREQUEST);
                     }
                 } else if (response.code() == 401) {
-                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -479,7 +478,7 @@ public class MainActivity extends AppCompatActivity
                     MainActivity.super.finish();
                 } else {
 //                    clearHistoryEntries();
-                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "Unknown error occurred");
                 }
 
@@ -488,8 +487,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 if(progress.isShowing())progress.dismiss();
-                Toast.makeText(MainActivity.this, "Couldn't connect to the server", Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "Couldn't connect to the server");
+                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+                Log.d(TAG, getString(R.string.server_timeout));
             }
         });
     }
@@ -503,7 +502,7 @@ public class MainActivity extends AppCompatActivity
         String password = prefManager.pref.getString("UserPassword", "");
 
         final ProgressDialog progress = new ProgressDialog(this);
-        progress.setMessage("Changing your status ... ");
+        progress.setMessage(getString(R.string.updating_driver_status));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
         progress.show();
@@ -517,10 +516,10 @@ public class MainActivity extends AppCompatActivity
                 if(progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
-                    Toast.makeText(MainActivity.this, "Your status has been changed successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The driver status has been changed successfully");
                 } else if (response.code() == 401) {
-                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -529,7 +528,7 @@ public class MainActivity extends AppCompatActivity
                 } else {
 //                    clearHistoryEntries();
                     Log.i(TAG, "Unknown error occurred");
-                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -537,8 +536,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 if(progress.isShowing()) progress.dismiss();
-                Toast.makeText(MainActivity.this, "Couldn't connect to the server", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, "Couldn't connect to the server");
+                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+                Log.i(TAG, getString(R.string.server_timeout));
             }
         });
     }
@@ -552,7 +551,7 @@ public class MainActivity extends AppCompatActivity
         String password = prefManager.pref.getString("UserPassword", "");
 
         final ProgressDialog progress = new ProgressDialog(this);
-        progress.setMessage("Canceling the request ... ");
+        progress.setMessage(getString(R.string.cancelling_request));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
         progress.show();
@@ -569,10 +568,10 @@ public class MainActivity extends AppCompatActivity
                 if (response.isSuccess() && response.body() != null) {
                     endRequest(REQUEST_CANCELLED);
                     setUI(UI_STATE.SIMPLE);
-                    Toast.makeText(MainActivity.this, "The request has been cancelled successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
                 } else if (response.code() == 401) {
-                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResume: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -580,7 +579,7 @@ public class MainActivity extends AppCompatActivity
                     MainActivity.super.finish();
                 } else {
 //                    clearHistoryEntries();
-                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Unknown error occurred");
                 }
 
@@ -589,8 +588,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 if(progress.isShowing()) progress.dismiss();
-                Toast.makeText(MainActivity.this, "Couldn't connect to the server", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, "Couldn't connect to the server");
+                Toast.makeText(MainActivity.this,R.string.server_timeout , Toast.LENGTH_SHORT).show();
+                Log.i(TAG, getString(R.string.server_timeout));
             }
         });
     }
@@ -649,11 +648,11 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == LOCATION_REQUEST_CODE ) {
             if (resultCode != RESULT_OK) {
                 Log.d(TAG, "onActivityResult: the user didn't enable location");
-                ((Button) findViewById(R.id.driver_status)).setText("away");
+                ((Button) findViewById(R.id.driver_status)).setText(R.string.driver_inactive);
                 prefManager.setActive(false);
             } else{
                 Log.d(TAG, "onActivityResult: the user enabled location");
-                ((Button) findViewById(R.id.driver_status)).setText("available");
+                ((Button) findViewById(R.id.driver_status)).setText(R.string.driver_active);
                 prefManager.setActive(true);
             }
         }
@@ -769,8 +768,8 @@ public class MainActivity extends AppCompatActivity
                 linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
                 nextState = (Button) findViewById(R.id.next_state);
                 current = (TextView) findViewById(R.id.current_status);
-                current.setText(current_request.getDisplayStatus(current_request.getStatus()));
-                nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
+                current.setText(current_request.getDisplayStatus(current_request.getStatus(), MainActivity.this));
+                nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
                 linearLayout.setVisibility(View.VISIBLE);
                 if(current_request.getStatus().equals("passenger_onboard") ||
                         current_request.getStatus().equals("arrived_dest")||
@@ -1221,7 +1220,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onDirectionFailure(Throwable t) {
                         // Do something here
-                        Toast.makeText(MainActivity.this, "Pickup to Destination Route Failed ", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, R.string.pickup_to_dest_route_failed, Toast.LENGTH_SHORT).show();
                         Log.d(TAG, "showRoute:Pickup to Destination Route Failed ");
                     }
                 });
@@ -1262,7 +1261,7 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void onDirectionFailure(Throwable t) {
                             // Do something here
-                            Toast.makeText(MainActivity.this, "Driver to Pickup Route Failed ", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, R.string.driver_to_pickup_route_failed, Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
                         }
                     });

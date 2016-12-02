@@ -133,7 +133,7 @@ public class LocationService extends IntentService {
 //                    MainActivity.super.finish();
                 } else {
 //                    clearHistoryEntries();
-//                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Unknown error occurred");
                 }
 
@@ -191,7 +191,7 @@ public class LocationService extends IntentService {
 //                    MainActivity.super.finish();
                 } else {
 //                    clearHistoryEntries();
-//                    Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "sendActive: Unknown error occurred");
                 }
 

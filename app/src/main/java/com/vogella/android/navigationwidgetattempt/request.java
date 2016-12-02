@@ -1,5 +1,6 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.annotations.SerializedName;
@@ -233,18 +234,22 @@ public class request {
                 return "error";
         }
     }
-    public String getDisplayStatus(String status){
+    public String getDisplayStatus(String status, Context context){
         switch (status) {
+            case "accepted":
+                return context.getString(R.string.accepted);
+            case "canceled":
+                return context.getString(R.string.canceled);
             case "on_the_way":
-                return "On The Way";
+                return context.getString(R.string.on_the_way);
             case "arrived_pickup":
-                return "Arrived At Pickup Point";
+                return context.getString(R.string.arrived_pickup);
             case "passenger_onboard":
-                return "Passenger On Board";
+                return context.getString(R.string.passenger_onboard);
             case "arrived_dest":
-                return "Arrived At The Destination";
+                return context.getString(R.string.arrived_dest);
             case "completed":
-                return "Completed";
+                return context.getString(R.string.completed);
             default:
                 return status;
         }

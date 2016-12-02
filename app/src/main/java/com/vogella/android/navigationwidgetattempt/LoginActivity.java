@@ -269,10 +269,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 } else if (response.code() == 401){
                     mPasswordView.setError(getString(R.string.error_incorrect_password));
                     mPasswordView.requestFocus();
-                    Toast.makeText(LoginActivity.this, "Authentication failure", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, R.string.authentication_failure, Toast.LENGTH_SHORT).show();
                     showProgress(false);
                 } else {
-                    Toast.makeText(LoginActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                     showProgress(false);
 
                 }
@@ -281,7 +281,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
 
-                Toast.makeText(LoginActivity.this, "Failed to connect to the server", Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 showProgress(false);
             }
         });

@@ -83,7 +83,7 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
                 if (response.isSuccess() && response.body() != null){
                     Log.d(TAG, "The token has been sent successfully");
                 } else if (response.code() == 401){
-                    Toast.makeText(getBaseContext(), "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getBaseContext(), R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(getBaseContext(), LoginActivity.class);
@@ -91,7 +91,7 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
                     //getBaseContext().finish();
                 } else {
 //                    clearHistoryEntries();
-                    Toast.makeText(getBaseContext(), "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getBaseContext(), R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
 
             }

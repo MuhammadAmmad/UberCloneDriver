@@ -66,7 +66,7 @@ public class HistoryActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         previous_requests.setLayoutManager(layoutManager);
 //        RequestAdapter ca = new RequestAdapter(createList(30));
-        ca = new RequestAdapter(History);
+        ca = new RequestAdapter(History, this);
         previous_requests.setAdapter(ca);
         serverRequest();
 //        RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.ongoing_request);
@@ -137,7 +137,7 @@ public class HistoryActivity extends AppCompatActivity {
                     }
                     HistoryActivity.this.setRequestsList(history);
                 } else if (response.code() == 401){
-                    Toast.makeText(HistoryActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(HistoryActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
@@ -145,7 +145,7 @@ public class HistoryActivity extends AppCompatActivity {
                     finish();
                 } else {
 //                    clearHistoryEntries();
-                    Toast.makeText(HistoryActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(HistoryActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
 
             }

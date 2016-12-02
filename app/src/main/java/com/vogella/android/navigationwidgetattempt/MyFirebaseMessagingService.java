@@ -134,7 +134,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         prefManager.setRequestStatus("canceled");
                         EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
                         OngoingRequestsActivity.removeRequest(field.getValue());
-                        sendNotification("The passenger Canceled the request no." + field.getValue());
+                        sendNotification(getString(R.string.passenger_cancelled_notification) + field.getValue());
                         break;
                     }
                 }
@@ -142,7 +142,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             else if (status.equals("2")){ // Passenger Arrived
                 for (Map.Entry<String, String> field : request.entrySet()) {
                     if (field.getKey().equals("request_id")) {
-                        sendNotification("The request has been completed");
+                        sendNotification(getString(R.string.passenger_completed_notification));
                         prefManager.setRequestStatus("completed");
                         EventBus.getDefault().post(new PassengerArrived(field.getValue()));
                         OngoingRequestsActivity.removeRequest(field.getValue());
@@ -151,8 +151,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 }
             }
             else if (status.equals("3")){ // Driver logged out
-                sendNotification("You are logged out of this device." +
-                        "Note that you can be loggedin on one device only");
+                sendNotification(getString(R.string.logged_elsewhere));
                 prefManager.setIsLoggedIn(false);
                 EventBus.getDefault().post(new DriverLoggedout());
             }

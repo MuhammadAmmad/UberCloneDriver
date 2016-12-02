@@ -141,7 +141,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                     }
                     OngoingRequestsActivity.this.setRequestsList(upcoming);
                 } else if (response.code() == 401){
-                    Toast.makeText(OngoingRequestsActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(OngoingRequestsActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
@@ -149,14 +149,14 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                     finish();
                 } else {
 //                    clearHistoryEntries();
-                    Toast.makeText(OngoingRequestsActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(OngoingRequestsActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
 
             }
 
             @Override
             public void onFailure(Call<RequestsResponse> call, Throwable t) {
-                Toast.makeText(OngoingRequestsActivity.this, "Failed to receive", Toast.LENGTH_SHORT).show();
+                Toast.makeText(OngoingRequestsActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 finish();
             }
         });
@@ -238,7 +238,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     @Override
     public void onResume() {
         super.onResume();
-        if (prefManager.isLoggedIn() == false) {
+        if (!prefManager.isLoggedIn()) {
             Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
             OngoingRequestsActivity.this.startActivity(intent);
             OngoingRequestsActivity.super.finish();

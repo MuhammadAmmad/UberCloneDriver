@@ -12,6 +12,8 @@
     <!--<item> Carrying Passengers</item>-->
     <!--</string-array>-->
 
+    <string name="canceled">Canceled</string>
+    <string name="accepted">Accepted</string>
     <string name="on_the_way">On The Way</string>
     <string name="arrived_pickup">Arrived At The Pickup Point</string>
     <string name="passenger_onboard">Passenger On Board</string>
@@ -23,7 +25,7 @@
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
-    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in">Sign in</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
@@ -38,4 +40,56 @@
     <string name="developed_by">Driver is developed by Favicon</string>
     <string name="contact_us_content">Phone: 0232\nEmail: wisam.app.temp@gmail.com</string>
     <string name="contact_us">Contact us</string>
+    <string name="FCM_accepted_new_request">You have accepted this request.\nYou can now view it in the ongoing requests tab</string>
+    <string name="FCM_another_driver_accepted">Another driver has alread accepted this request</string>
+    <string name="FCM_rejected_request">You have rejected the request</string>
+    <string name="authorization_error">Please login to continue</string>
+    <string name="server_unknown_error">Unknown error occurred</string>
+    <string name="FCMRequest_waiting_for_server">Connecting …</string>
+    <string name="logged_elsewhere">You are logged out of this device. Note that you can be loggedin on one device only</string>
+    <string name="fcm_ignored">You didn\'t accept</string>
+    <string name="request_cancelled_successfully">The request has been cancelled successfully</string>
+    <string name="server_timeout">Couldn\'t connect to the server</string>
+    <string name="already_doing_request">You are already doing a request. Cancel it first and then start this one</string>
+    <string name="upcoming_request_options">Do you want to start or cancel this request?</string>
+    <string name="start_upcoming_request">Start</string>
+    <string name="cancel_upcoming_request">Cancel</string>
+    <string name="upcoming_request_do_nothing">Not now</string>
+    <string name="cancelling_request">Canceling the request …</string>
+    <string name="driver_inactive">away</string>
+    <string name="driver_active">available</string>
+    <string name="cancel_current_request_message">Are you sure you want to cancel this request?</string>
+    <string name="cancel_current_request">Yes, cancel the request</string>
+    <string name="dont_cancel_current_request">No</string>
+    <string name="call_passenger_message">Do you want to call the number</string>
+    <string name="call_passenger">Yes</string>
+    <string name="dont_call">No</string>
+    <string name="current_request_completed">Thank you for your efforts! The request is complete</string>
+    <string name="current_request_cancelled">The request has been canceled</string>
+    <string name="updating_request_status">Updating the request status …</string>
+    <string name="updating_driver_status">Changing your status …</string>
+    <string name="driver_status_changed_successfully">Your status has been changed successfully</string>
+    <string name="pickup_to_dest_route_failed">Pickup to Destination Route Failed</string>
+    <string name="driver_to_pickup_route_failed">Driver to Pickup Route Failed</string>
+    <string name="authentication_failure">Authentication failure</string>
+    <string name="passenger_cancelled_notification">The passenger Canceled the request no. </string>
+    <string name="passenger_completed_notification">The request has been completed</string>
+    <string name="accept">Accept</string>
+    <string name="reject">reject</string>
+    <string name="sdg">  SDG</string>
+    <string name="account_info">Account info</string>
+    <string name="full_name">Full name</string>
+    <string name="email">Email</string>
+    <string name="gender">Gender</string>
+    <string name="phone_number">Phone number</string>
+    <string name="cancel">Cancel</string>
+    <string name="from">From:  </string>
+    <string name="to">To:</string>
+    <string name="notes">Notes:</string>
+    <string name="close">close</string>
+    <string name="history">History</string>
+    <string name="upcoming_requests">Upcoming Requests</string>
+    <string name="profile">Profile</string>
+    <string name="about">About</string>
+    <string name="sign_out">Sign Out</string>
 </resources>

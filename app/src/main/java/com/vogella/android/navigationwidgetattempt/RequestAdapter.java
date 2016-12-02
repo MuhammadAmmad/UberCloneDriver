@@ -1,5 +1,6 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,9 +16,11 @@ import java.util.List;
 public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.RequestViewHolder> {
 
     private List<request> RequestList;
+    private Context context;
 
-    public RequestAdapter(List<request> RequestList) {
+    public RequestAdapter(List<request> RequestList, Context context) {
         this.RequestList = RequestList;
+        this.context = context;
     }
 
 
@@ -31,7 +34,7 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
         request ci = RequestList.get(i);
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.date.setText(ci.getTime());
-        RequestViewHolder.status.setText(ci.getStatus());
+        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
         RequestViewHolder.pickup.setText(ci.getPickupText());
         RequestViewHolder.dest.setText(ci.getDestText());
 //        RequestViewHolder.pickup.setText(String.valueOf(ci.getPickup()[0]) + "," + String.valueOf(ci.getPickup()[1]));

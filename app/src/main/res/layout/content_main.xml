@@ -29,7 +29,7 @@
         android:layout_centerHorizontal="true"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:text="available"/>
+        android:text="@string/driver_active"/>
 <!--
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -75,7 +75,7 @@
                 android:id="@+id/cancel_request"
                 android:layout_width="180dp"
                 android:layout_height="wrap_content"
-                android:text="Cancel"
+                android:text="@string/cancel"
                 android:textColor="@android:color/holo_red_dark"
                 android:textSize="12sp" />
             <View

@@ -60,7 +60,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.date.setText(ci.getTime());
-        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus()));
+        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
         RequestViewHolder.pickup.setText(ci.getPickupText());
 //        RequestViewHolder.pickup.setText(ci.getPickupString());
 //        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
@@ -83,12 +83,12 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
             @Override
             public void onClick(View v) {
                     AlertDialog.Builder alerBuilder = new AlertDialog.Builder(context);
-                    alerBuilder.setMessage("Do you want to start or cancel this request?");
-                    alerBuilder.setPositiveButton("Start", new DialogInterface.OnClickListener() {
+                    alerBuilder.setMessage(context.getString(R.string.upcoming_request_options));
+                    alerBuilder.setPositiveButton(context.getString(R.string.start_upcoming_request), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             if (prefManager.isDoingRequest())
-                                Toast.makeText(context, "You are already doing a request. Cancel it first and then start this one", Toast.LENGTH_LONG).show();
+                                Toast.makeText(context, R.string.already_doing_request, Toast.LENGTH_LONG).show();
                             else {
                                 Intent intent = new Intent();
                                 intent.putExtra("passenger_name", ci.getPassenger_name());
@@ -113,14 +113,14 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                             }
                         }
                     });
-                    alerBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    alerBuilder.setNegativeButton(context.getString(R.string.cancel_upcoming_request), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             EventBus.getDefault().post(new PassengerCanceled(ci.getRequest_id()));
                             sendCancel(ci.getRequest_id());
                         }
                     });
-                    alerBuilder.setNeutralButton("Not now", new DialogInterface.OnClickListener() {
+                    alerBuilder.setNeutralButton(context.getString(R.string.upcoming_request_do_nothing), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
 
@@ -195,7 +195,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         String password = prefManager.pref.getString("UserPassword", "");
 
         final ProgressDialog progress = new ProgressDialog(context);
-        progress.setMessage("Canceling the request ... ");
+        progress.setMessage(context.getString(R.string.cancelling_request));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
         progress.show();
@@ -214,10 +214,10 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 //                    setUI(MainActivity.UI_STATE.SIMPLE);
                     OngoingRequestsActivity.removeRequest(request_id);
                     OngoingRequestAdapter.this.notifyDataSetChanged();
-                    Toast.makeText(context, "The request has been cancelled successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
                 } else if (response.code() == 401) {
-                    Toast.makeText(context, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResume: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(context, LoginActivity.class);
@@ -225,7 +225,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 //                    finish();
                 } else {
 //                    clearHistoryEntries();
-                    Toast.makeText(context, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Unknown error occurred");
                 }
 
@@ -234,7 +234,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 if(progress.isShowing()) progress.dismiss();
-                Toast.makeText(context, "Couldn't connect to the server", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, "Couldn't connect to the server");
             }
         });
