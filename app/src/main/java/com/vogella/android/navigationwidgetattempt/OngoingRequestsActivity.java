@@ -78,6 +78,10 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 //        OngoingRequestAdapter ca = new OngoingRequestAdapter(this, recyclerViewListClicked, createList(5));
 //        if(!initialized) {
 //            requestList.addAll(createList(5));
+        requestList = new ArrayList<request>(){
+            {
+            }
+        };
             ca = new OngoingRequestAdapter(requestList, this);
 //            initialized = true;
 //        }

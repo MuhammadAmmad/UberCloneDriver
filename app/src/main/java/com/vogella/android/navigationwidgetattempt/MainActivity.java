@@ -241,8 +241,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void setCurrentRequestOnClickListeners(boolean cancel) {
-        if(cancel) {
+    private void setCurrentRequestOnClickListeners() {
             Button cancelRequest = (Button) findViewById(R.id.cancel_request);
             cancelRequest.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -264,9 +263,7 @@ public class MainActivity extends AppCompatActivity
                     alerBuilder.show();
                 }
             });
-        }
         final Button nextState;
-        if (cancel) {
             nextState = (Button) findViewById(R.id.next_state);
             nextState.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -276,36 +273,17 @@ public class MainActivity extends AppCompatActivity
                     current_request.nextStatus();
                     sendStatus(current_request.getRequest_id(), current_request.getStatus());
                     if (current_request.getStatus().equals("passenger_onboard")) {
-                        ((LinearLayout) findViewById(R.id.ongoing_request)).setVisibility(View.INVISIBLE);
-//                        ((LinearLayout) findViewById(R.id.ongoing_request_no_cancel)).setVisibility(View.VISIBLE);
                         setUI(UI_STATE.DOINGREQUEST);
-                    } else
-                        nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
-                }
-            });
-        }
-        else {
-            nextState = (Button) findViewById(R.id.next_state_no_cancel);
-            nextState.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    TextView current = (TextView) findViewById(R.id.current_status_no_cancel);
-                    current.setText(nextState.getText().toString());
-                    current_request.nextStatus();
-                    sendStatus(current_request.getRequest_id(), current_request.getStatus());
-                    if (current_request.getStatus().equals("completed")) {
+                    } else if (current_request.getStatus().equals("completed")) {
                         endRequest(REQUEST_SUCCESS);
                         setUI(UI_STATE.SIMPLE);
                     } else
+
                         nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
                 }
             });
-        }
         TextView current;
-        if(cancel)
             current = (TextView) findViewById(R.id.current_status);
-        else
-            current = (TextView) findViewById(R.id.current_status_no_cancel);
         current.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -316,15 +294,8 @@ public class MainActivity extends AppCompatActivity
                 ((TextView) findViewById(R.id.cr_price)).setText(current_request.getPrice());
                 ((TextView) findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus()));
                 ((TextView) findViewById(R.id.cr_notes)).setText(current_request.getNotes());
-//                ((TextView) findViewById(R.id.cr_pickup)).setText(current_request.pickup);
                 ((TextView) findViewById(R.id.cr_pickup)).setText(current_request.getPickupText());
-//                ((TextView) findViewById(R.id.cr_pickup)).
-//                    setText(String.valueOf(current_request.getPickup()[0]) + " , " +
-//                    String.valueOf(current_request.getPickup()[1]));
                 ((TextView) findViewById(R.id.cr_dest)).setText(current_request.getDestText());
-//                ((TextView) findViewById(R.id.cr_dest)).
-//                        setText(String.valueOf(current_request.getDest()[0]) + " , " +
-//                                String.valueOf(current_request.getDest()[1]));
                 ((TextView) findViewById(R.id.cr_time)).setText(current_request.getTime());
 
                 Button hide_request = (Button) findViewById(R.id.cr_close);
@@ -757,7 +728,6 @@ public class MainActivity extends AppCompatActivity
             case SIMPLE:
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
                 linearLayout.setVisibility(View.INVISIBLE);
-                ((LinearLayout) findViewById(R.id.ongoing_request_no_cancel)).setVisibility(View.INVISIBLE);
                 if (pickupMarker != null) {
                     pickupMarker.remove();
                 }
@@ -787,25 +757,24 @@ public class MainActivity extends AppCompatActivity
                 //set values for the different views
                 Button nextState;
                 TextView current;
-                boolean cancel;
-                if(current_request.getStatus().equals("passenger_onboard") ||
-                        current_request.getStatus().equals("arrived_dest")||
-                        current_request.getStatus().equals("completed")) {
-                    linearLayout = (LinearLayout) findViewById(R.id.ongoing_request_no_cancel);
-                    nextState = (Button) findViewById(R.id.next_state_no_cancel);
-                    current = (TextView) findViewById(R.id.current_status_no_cancel);
-                    cancel = false;
-                }
-                else {
-                    linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
-                    nextState = (Button) findViewById(R.id.next_state);
-                    current = (TextView) findViewById(R.id.current_status);
-                    cancel = true;
-                }
+                linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
+                nextState = (Button) findViewById(R.id.next_state);
+                current = (TextView) findViewById(R.id.current_status);
                 current.setText(current_request.getDisplayStatus(current_request.getStatus()));
                 nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus()));
                 linearLayout.setVisibility(View.VISIBLE);
-                setCurrentRequestOnClickListeners(cancel);
+                if(current_request.getStatus().equals("passenger_onboard") ||
+                        current_request.getStatus().equals("arrived_dest")||
+                        current_request.getStatus().equals("completed")) {
+                    ((Button) findViewById(R.id.cancel_request)).setVisibility(View.GONE);
+                    ((View) findViewById(R.id.current_request_separator)).setVisibility(View.GONE);
+                }
+                else {
+                    ((Button) findViewById(R.id.cancel_request)).setVisibility(View.VISIBLE);
+                    ((View) findViewById(R.id.current_request_separator)).setVisibility(View.VISIBLE);
+                }
+
+                setCurrentRequestOnClickListeners();
         }
     }
 
@@ -1057,6 +1026,14 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.current_requests) {
             Intent intent = new Intent(this, OngoingRequestsActivity.class);
             startActivityForResult(intent, ONGOING_REQUESTS_CODE);
+
+        } else if (id == R.id.profile) {
+            Intent intent = new Intent(this, ProfileActivity.class);
+            startActivity(intent);
+
+        } else if (id == R.id.about) {
+            Intent intent = new Intent(this, AboutActivity.class);
+            startActivity(intent);
 
         } else if (id == R.id.sign_out) {
             prefManager.setIsLoggedIn(false);

@@ -13,6 +13,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.Wisam.Events.PassengerCanceled;
+
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.List;
 
 /**
@@ -72,8 +76,8 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                     Toast.makeText(context, "You are already doing a request. Cancel it first and then start this one", Toast.LENGTH_LONG).show();
                 else {
                     AlertDialog.Builder alerBuilder = new AlertDialog.Builder(context);
-                    alerBuilder.setMessage("Do you want to start this request?");
-                    alerBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    alerBuilder.setMessage("What do you want to do with this request?");
+                    alerBuilder.setPositiveButton("Start", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             Intent intent = new Intent();
@@ -98,9 +102,16 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 
                         }
                     });
-                    alerBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    alerBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            EventBus.getDefault().post(new PassengerCanceled(ci.getRequest_id()));
+                            OngoingRequestsActivity.removeRequest(ci.getRequest_id());
+                        }
+                    });
+                    alerBuilder.setNeutralButton("Not now", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
 
                         }
                     });
@@ -164,6 +175,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 */
         }
     }
+
 
 }
 
