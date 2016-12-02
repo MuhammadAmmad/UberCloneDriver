@@ -3,6 +3,7 @@ package com.vogella.android.navigationwidgetattempt;
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -476,14 +477,23 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setMessage("Updating the request status ... ");
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
+
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.status("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
                 request_id, status);
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                if(progress.isShowing())progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
+//                    Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The status has been sent successfully");
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
@@ -495,13 +505,16 @@ public class MainActivity extends AppCompatActivity
                 } else {
 //                    clearHistoryEntries();
                     Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Unknown error occurred");
                 }
 
             }
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-
+                if(progress.isShowing())progress.dismiss();
+                Toast.makeText(MainActivity.this, "Couldn't connect to the server", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Couldn't connect to the server");
             }
         });
     }
@@ -514,24 +527,33 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setMessage("Changing your status ... ");
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.active("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
                 active, location);
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                if(progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
-                    Log.d(TAG, "The status has been changed successfully");
+                    Toast.makeText(MainActivity.this, "Your status has been changed successfully", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "The driver status has been changed successfully");
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onCreate: User not logged in");
+                    Log.i(TAG, "onResponse: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                     MainActivity.this.startActivity(intent);
                     MainActivity.super.finish();
                 } else {
 //                    clearHistoryEntries();
+                    Log.i(TAG, "Unknown error occurred");
                     Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
                 }
 
@@ -539,7 +561,9 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-
+                if(progress.isShowing()) progress.dismiss();
+                Toast.makeText(MainActivity.this, "Couldn't connect to the server", Toast.LENGTH_SHORT).show();
+                Log.i(TAG, "Couldn't connect to the server");
             }
         });
     }
@@ -552,20 +576,29 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setMessage("Canceling the request ... ");
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
+
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.cancel("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
                 request_id);
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                if(progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
                     endRequest(REQUEST_CANCELLED);
                     setUI(UI_STATE.SIMPLE);
+                    Toast.makeText(MainActivity.this, "The request has been cancelled successfully", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onCreate: User not logged in");
+                    Log.i(TAG, "onResume: User not logged in");
                     prefManager.setIsLoggedIn(false);
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                     MainActivity.this.startActivity(intent);
@@ -573,13 +606,16 @@ public class MainActivity extends AppCompatActivity
                 } else {
 //                    clearHistoryEntries();
                     Toast.makeText(MainActivity.this, "Unknown error occurred", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "Unknown error occurred");
                 }
 
             }
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-
+                if(progress.isShowing()) progress.dismiss();
+                Toast.makeText(MainActivity.this, "Couldn't connect to the server", Toast.LENGTH_SHORT).show();
+                Log.i(TAG, "Couldn't connect to the server");
             }
         });
     }
