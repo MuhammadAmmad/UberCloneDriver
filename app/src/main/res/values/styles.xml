@@ -10,6 +10,13 @@
         <!--<item name="actionBarStyle">@style/MyActionBar</item>-->
     </style>
 
+    <style name="LoginTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+        <!--...-->
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
     <style name="MyEditTextTheme">
         <!-- Used for the bottom line when not selected / focused -->
         <item name="colorControlNormal">@color/colorPrimary</item>
@@ -35,6 +42,14 @@
     </style>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="AppTheme.Drawer">
+        <item name="android:textSize">18sp</item><!-- text size in menu-->
+        <!--<item name="android:drawablePadding">0dp</item>-->
+        <item name="android:listPreferredItemPaddingRight">100dp</item>
+        <item name="android:listPreferredItemHeightSmall">40dp</item><!-- item size in menu-->
+        <item name="android:textStyle">normal</item>
+    </style>
 
 
 </resources>

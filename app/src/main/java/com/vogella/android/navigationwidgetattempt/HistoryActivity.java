@@ -5,11 +5,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.text.format.DateUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.Wisam.Events.DriverLoggedout;
@@ -62,7 +65,16 @@ public class HistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         prefManager = new PrefManager(this);
         setContentView(R.layout.activity_history);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.history_toolbar);
+        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
+//        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+//        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+//        toolbar.setTitle(R.string.history);
+        setSupportActionBar(toolbar);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         previous_requests = (RecyclerView) findViewById(R.id.past_requests);
         previous_requests.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
@@ -131,7 +143,7 @@ public class HistoryActivity extends AppCompatActivity {
                     List <request> rides = response.body().getRides();
                     List <request> history = new ArrayList<request>(){{}};
                     for (request i : rides){
-                        if (i.getStatus().equals("completed") || i.getStatus().equals("canceled")) {
+                        if (i.getStatus().equals("completed") || i.getStatus().equals("canceled") || i.getStatus().equals("missed")) {
                             long unixTime;
                             if(i.getTime().equals("now"))
                                 unixTime = System.currentTimeMillis();
@@ -139,11 +151,13 @@ public class HistoryActivity extends AppCompatActivity {
                                 Log.d(TAG,"Time is :" + i.getTime());
                                 unixTime = Long.valueOf(i.getTime()) * 1000; // In this case, the server sends the time in seconds while unix time needs milliseconds
                             }
-                            Date df = new java.util.Date(unixTime);
-                            SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
-                            sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
-                            i.setTime(sdf.format(df));
+                            i.setTime(String.valueOf(DateUtils.getRelativeTimeSpanString(unixTime, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)));
+//                            Date df = new java.util.Date(unixTime);
+//                            SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
+//                            sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
+//                            i.setTime(sdf.format(df));
 
+                            i.setPrice(i.getPrice() + " SDG");
                             history.add(history.size(), i);
                         }
                     }

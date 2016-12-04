@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -34,9 +35,22 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
         request ci = RequestList.get(i);
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.date.setText(ci.getTime());
-        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
-        RequestViewHolder.pickup.setText(ci.getPickupText());
-        RequestViewHolder.dest.setText(ci.getDestText());
+//        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
+        switch (ci.getStatus()){
+            case "completed":
+                RequestViewHolder.status.setBackgroundColor(context.getResources().getColor(R.color.colorPrimary));
+                break;
+            case "canceled":
+                RequestViewHolder.status.setBackgroundColor(context.getResources().getColor(R.color.red));
+                break;
+            case "missed":
+//                RequestViewHolder.status.setBackground(context.getResources().getColor(R.color.colorAccent));
+                RequestViewHolder.status.setBackgroundColor(context.getResources().getColor(R.color.colorAccent));
+                break;
+
+        }
+        RequestViewHolder.pickup.setText(ci.getPickupText().replaceAll("\n", " "));
+//        RequestViewHolder.dest.setText(ci.getDestText());
 //        RequestViewHolder.pickup.setText(String.valueOf(ci.getPickup()[0]) + "," + String.valueOf(ci.getPickup()[1]));
 //        RequestViewHolder.dest.setText(String.valueOf(ci.getDest()[0]) + "," + String.valueOf(ci.getDest()[1]));
 //        RequestViewHolder.request_time.setText(ci.time);
@@ -56,17 +70,19 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
     public static class RequestViewHolder extends RecyclerView.ViewHolder{
         protected TextView price;
         protected TextView date;
-        protected TextView status;
+//        protected TextView status;
+        protected ImageView status;
         protected TextView pickup;
-        protected TextView dest;
+//        protected TextView dest;
 
         public RequestViewHolder(View v){
             super(v);
 
             date = (TextView) v.findViewById(R.id.entry_date);
-            status = (TextView) v.findViewById(R.id.entry_status);
+//            status = (TextView) v.findViewById(R.id.entry_status);
+            status = (ImageView) v.findViewById(R.id.entry_status);
             pickup = (TextView) v.findViewById(R.id.entry_from);
-            dest = (TextView) v.findViewById(R.id.entry_to);
+//            dest = (TextView) v.findViewById(R.id.entry_to);
             price = (TextView) v.findViewById(R.id.entry_price);
         }
     }

@@ -48,7 +48,7 @@
 
         <activity
             android:name=".LoginActivity"
-            android:theme="@style/AppTheme">
+            android:theme="@style/LoginTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -56,11 +56,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".HistoryActivity"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar"
             android:label="@string/history"/>
         <activity android:name=".OngoingRequestsActivity"
             android:theme="@style/AppTheme"
-            android:label="@string/upcoming_requests"/>
+            android:label="@string/Incoming_requests"/>
         <activity android:name=".FCMRequest"
             android:theme="@style/AppTheme"
             android:label="@string/fcm_request"/>
@@ -78,7 +78,7 @@
             android:theme="@style/AppTheme"
             android:label="@string/about"/>
         <activity android:name=".SelectedRequest"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar"
            android:label="@string/request_details" />
     </application>
 

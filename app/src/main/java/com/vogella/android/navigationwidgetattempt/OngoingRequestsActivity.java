@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
@@ -151,10 +152,14 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                                 Log.d(TAG, "Time is :" + i.getTime());
                                 unixTime = Long.valueOf(i.getTime()) * 1000; // In this case, the server sends the time in seconds while unix time needs milliseconds
 
-                                Date df = new java.util.Date(unixTime);
-                                SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
-                                sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
-                                i.setTime(sdf.format(df));
+                                i.setTime(String.valueOf(DateUtils.getRelativeTimeSpanString(unixTime, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)));
+
+//                                Date df = new java.util.Date(unixTime);
+//                                SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
+//                                sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
+//                                i.setTime(sdf.format(df));
+
+                            i.setPrice(i.getPrice() + " SDG");
                             }
                             upcoming.add(upcoming.size(), i);
                         }

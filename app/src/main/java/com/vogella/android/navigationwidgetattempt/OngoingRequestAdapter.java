@@ -3,23 +3,19 @@ package com.vogella.android.navigationwidgetattempt;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.Wisam.Events.PassengerCanceled;
 import com.Wisam.POJO.StatusResponse;
-
-import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
@@ -60,12 +56,14 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         final request ci = RequestList.get(i);
 
         RequestViewHolder.price.setText(ci.getPrice());
+        RequestViewHolder.price.setTextColor(context.getResources().getColor(R.color.colorPrimary));
         RequestViewHolder.date.setText(ci.getTime());
-        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
+//        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
+        RequestViewHolder.status.setVisibility(View.GONE);
         RequestViewHolder.pickup.setText(ci.getPickupText());
 //        RequestViewHolder.pickup.setText(ci.getPickupString());
 //        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
-        RequestViewHolder.dest.setText(ci.getDestText());
+//        RequestViewHolder.dest.setText(ci.getDestText());
 //        RequestViewHolder.dest.setText(ci.getDestString());
 //        RequestViewHolder.dest.setText(String.valueOf(ci.dest[0]) + "," + String.valueOf(ci.dest[1]));
 
@@ -80,7 +78,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 
         prefManager = new PrefManager(context);
 
-        RequestViewHolder.card.setOnClickListener(new View.OnClickListener() {
+        RequestViewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(context, SelectedRequest.class);
@@ -171,10 +169,11 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 
         protected TextView price;
         protected TextView date;
-        protected TextView status;
+//        protected TextView status;
+        protected ImageView status;
         protected TextView pickup;
-        protected TextView dest;
-        protected CardView card;
+//        protected TextView dest;
+        protected LinearLayout linearLayout;
 
 /*
         protected TextView passenger_name;
@@ -183,17 +182,17 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         protected TextView status;
         protected TextView pickup;
         protected TextView dest;
-        RelativeLayout card;
+        RelativeLayout linearLayout;
 */
 
         public OngoingRequestViewHolder(View v){
             super(v);
             date = (TextView) v.findViewById(R.id.entry_date);
-            status = (TextView) v.findViewById(R.id.entry_status);
+            status = (ImageView) v.findViewById(R.id.entry_status);
             pickup = (TextView) v.findViewById(R.id.entry_from);
-            dest = (TextView) v.findViewById(R.id.entry_to);
+//            dest = (TextView) v.findViewById(R.id.entry_to);
             price = (TextView) v.findViewById(R.id.entry_price);
-            card = (CardView) itemView.findViewById(R.id.history_card_view);
+            linearLayout = (LinearLayout) itemView.findViewById(R.id.history_card_view);
 
 
 /*
@@ -203,7 +202,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
             status = (TextView) v.findViewById(R.id.card_status);
             pickup = (TextView) v.findViewById(R.id.card_pickup);
             dest = (TextView) v.findViewById(R.id.card_dest);
-            card = (RelativeLayout) itemView.findViewById(R.id.card_view);
+            linearLayout = (RelativeLayout) itemView.findViewById(R.id.card_view);
 */
         }
     }

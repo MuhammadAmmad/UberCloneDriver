@@ -1,10 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+<android.support.v7.widget.CardView
+
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:id="@+id/history_card_view"
     android:layout_marginBottom="16dp"
     android:elevation="2dp">
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width= "match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/history_card_view"
+    android:elevation="2dp">
+        <ImageView
+            android:id="@+id/entry_status"
+            android:layout_width="10dp"
+            android:layout_height="match_parent"
+            android:background="@color/red"/>
+        <LinearLayout
+            android:layout_width="230dp"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/entry_from"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:textSize="16sp"
+                android:maxLines="1"
+                android:textColor="@color/colorAccent"
+                android:text="Where everybody knows your name."/>
+            <TextView
+                android:id="@+id/entry_price"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="@color/colorAccent"
+                android:paddingBottom="20dp"
+                android:text="23 SDG"/>
+            
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="bottom">
+            <TextView
+                android:id="@+id/entry_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewEnd"
+                android:layout_gravity="end"
+                android:textSize="16sp"
+                android:textColor="@color/colorAccent"
+                android:paddingRight="10dp"
+                android:paddingBottom="10dp"
+                android:text="Yesterday"/>
+        </LinearLayout>
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#c4c4c4"/>
+</LinearLayout>
+    <!--
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -131,5 +200,6 @@
         </LinearLayout>
 
     </LinearLayout>
+-->
 
-</android.support.v7.widget.CardView>
+<!--</android.support.v7.widget.CardView>-->

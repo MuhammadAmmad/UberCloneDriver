@@ -87,11 +87,11 @@
     <string name="to">To:</string>
     <string name="notes">Notes:</string>
     <string name="close">close</string>
-    <string name="history">History</string>
-    <string name="upcoming_requests">Upcoming Requests</string>
+    <string name="history">Previous requests</string>
+    <string name="Incoming_requests">Incoming Requests</string>
     <string name="profile">Profile</string>
-    <string name="about">About</string>
-    <string name="sign_out">Sign Out</string>
+    <string name="about">About Driver</string>
+    <string name="sign_out">Logout</string>
     <string name="request_details">Request details</string>
     <string name="fcm_request">New Request</string>
     <string name="go_inactive">Go inactive</string>

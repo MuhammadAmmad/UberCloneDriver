@@ -163,9 +163,12 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setBackgroundColor(getResources().getColor(R.color.white));
-        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-        toolbar.setTitle(R.string.driver_active);
+        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+//        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+//        toolbar.setTitle(R.string.driver_active);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -174,8 +177,8 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        ((TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
-                .findViewById(R.id.show_username)).setText(driver.getUsername());
+//        ((TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
+//                .findViewById(R.id.show_username)).setText(driver.getUsername());
         navigationView.setNavigationItemSelectedListener(this);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -198,9 +201,11 @@ public class MainActivity extends AppCompatActivity
                     ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
                     ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
                     ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                    toolbar.setTitle(R.string.driver_inactive);
-                    toolbar.setTitleTextColor(getResources().getColor(R.color.colorAccent));
-                    setSupportActionBar(toolbar);
+//                    toolbar.setTitle(R.string.driver_inactive);
+//                    toolbar.setTitleTextColor(getResources().getColor(R.color.colorAccent));
+                    ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
+                    ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
+//                    setSupportActionBar(toolbar);
                     prefManager.setActive(false);
                     sendActive(0, prefManager.getCurrentLocation());
                 } else if (changeDriverStatus.getText().toString().equals(getString(R.string.go_active))) {
@@ -374,9 +379,12 @@ public class MainActivity extends AppCompatActivity
                         ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
                         ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
                         ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
-                        toolbar.setTitle(R.string.driver_active);
-                        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-                        setSupportActionBar(toolbar);
+//                        toolbar.setTitle(R.string.driver_active);
+//                        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+
+                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+//                        setSupportActionBar(toolbar);
                         prefManager.setActive(true);
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
@@ -666,19 +674,24 @@ public class MainActivity extends AppCompatActivity
                 ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
                 ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
                 ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                toolbar.setTitle(R.string.driver_inactive);
-                toolbar.setTitleTextColor(getResources().getColor(R.color.colorAccent));
-                setSupportActionBar(toolbar);
+//                toolbar.setTitle(R.string.driver_inactive);
+//                toolbar.setTitleTextColor(getResources().getColor(R.color.colorAccent));
+//                setSupportActionBar(toolbar);
 
+                ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
+                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
                 prefManager.setActive(false);
             } else{
                 Log.d(TAG, "onActivityResult: the user enabled location");
                 ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
                 ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
                 ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
-                toolbar.setTitle(R.string.driver_active);
-                toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-                setSupportActionBar(toolbar);
+//                toolbar.setTitle(R.string.driver_active);
+//                toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+//                setSupportActionBar(toolbar);
+
+                ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 prefManager.setActive(true);
             }
         }

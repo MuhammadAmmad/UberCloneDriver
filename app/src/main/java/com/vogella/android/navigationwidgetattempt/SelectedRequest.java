@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
@@ -32,6 +33,15 @@ public class SelectedRequest extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selected_request);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.request_details_toolbar);
+        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
+        ((TextView) findViewById(R.id.request_details_toolbar_title)).setText(getString(R.string.driver_active));
+        ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+//        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+//        toolbar.setTitle(R.string.driver_active);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         prefManager = new PrefManager(this);
 
