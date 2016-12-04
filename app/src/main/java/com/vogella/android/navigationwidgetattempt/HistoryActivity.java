@@ -7,6 +7,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -61,6 +62,7 @@ public class HistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         prefManager = new PrefManager(this);
         setContentView(R.layout.activity_history);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         previous_requests = (RecyclerView) findViewById(R.id.past_requests);
         previous_requests.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
@@ -73,6 +75,16 @@ public class HistoryActivity extends AppCompatActivity {
 //        relativeLayout.setVisibility(View.INVISIBLE);
 
 
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+
+        if (id==android.R.id.home) {
+            finish();
+            return true;
+        }
+        return false;
     }
 
     private List<request> createList(int size) {

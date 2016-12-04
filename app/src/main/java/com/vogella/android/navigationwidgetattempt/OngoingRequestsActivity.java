@@ -1,5 +1,6 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -7,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -55,13 +57,12 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     private RecyclerView.Adapter RVadapter;
     private RecyclerView.LayoutManager layoutManager;
     private  OngoingRequestAdapter ca;
-    private static List<request> requestList = new ArrayList<request>(){
-        {
-//            add(new request());
-        }
-    };
+    private static List<request> requestList = new ArrayList<request>(){{}};
     private static boolean initialized = false;
     private PrefManager prefManager;
+
+    private static final int SELECTED_REQUEST_CODE = 43542;
+
 //    @Override
 //    public void recyclerViewListClicked(View v, int position){
 //        Toast.makeText(this,"Everything is awesome", Toast.LENGTH_SHORT).show();
@@ -71,6 +72,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ongoing_requests);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         previous_requests = (RecyclerView) findViewById(R.id.future_requests);
         previous_requests.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
@@ -92,6 +94,23 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
         // Server request
         serverRequest();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SELECTED_REQUEST_CODE && resultCode == RESULT_OK) {
+//            Toast.makeText(this,data.getExtras().getString("passenger_name"), Toast.LENGTH_LONG).show();
+            if (data.hasExtra("request_id")) {
+                setResult(Activity.RESULT_OK, data);
+                finish();
+            }
+            else {
+                requestList = new ArrayList<request>(){{}};
+                ca.updateRequestsList(requestList);
+                ca.notifyDataSetChanged();
+                serverRequest();
+            }
+        }
     }
 
     private void serverRequest() {
@@ -126,16 +145,17 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                         if (i.getStatus().equals("accepted")) {
                             long unixTime;
                             if(i.getTime().equals("now"))
-                                unixTime = System.currentTimeMillis();
+//                                unixTime = System.currentTimeMillis();
+                                i.setTime("Now");
                             else {
-                                Log.d(TAG,"Time is :" + i.getTime());
-                                unixTime = Long.valueOf(i.getTime())  * 1000; // In this case, the server sends the time in seconds while unix time needs milliseconds
-                            }
-                            Date df = new java.util.Date(unixTime);
-                            SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
-                            sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
-                            i.setTime(sdf.format(df));
+                                Log.d(TAG, "Time is :" + i.getTime());
+                                unixTime = Long.valueOf(i.getTime()) * 1000; // In this case, the server sends the time in seconds while unix time needs milliseconds
 
+                                Date df = new java.util.Date(unixTime);
+                                SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
+                                sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
+                                i.setTime(sdf.format(df));
+                            }
                             upcoming.add(upcoming.size(), i);
                         }
                     }
@@ -213,6 +233,16 @@ public class OngoingRequestsActivity extends AppCompatActivity{
             }
         }
         return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+
+        if (id==android.R.id.home) {
+            finish();
+            return true;
+        }
+        return false;
     }
 
     @Override

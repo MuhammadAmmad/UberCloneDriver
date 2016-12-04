@@ -36,6 +36,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder> {
 
     private static final String TAG = "UbDriver";
+    private static final int SELECTED_REQUEST_CODE = 43542;
     private List<request> RequestList;
     private Context context;
     private PrefManager prefManager;
@@ -82,52 +83,73 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         RequestViewHolder.card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    AlertDialog.Builder alerBuilder = new AlertDialog.Builder(context);
-                    alerBuilder.setMessage(context.getString(R.string.upcoming_request_options));
-                    alerBuilder.setPositiveButton(context.getString(R.string.start_upcoming_request), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (prefManager.isDoingRequest())
-                                Toast.makeText(context, R.string.already_doing_request, Toast.LENGTH_LONG).show();
-                            else {
-                                Intent intent = new Intent();
-                                intent.putExtra("passenger_name", ci.getPassenger_name());
-                                intent.putExtra("passenger_phone", ci.getPassenger_phone());
-                                intent.putExtra("status", "on_the_way");
+                Intent intent = new Intent(context, SelectedRequest.class);
+                intent.putExtra("passenger_name", ci.getPassenger_name());
+                intent.putExtra("passenger_phone", ci.getPassenger_phone());
+                intent.putExtra("status", "on_the_way");
 //                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
-                                intent.putExtra("pickup_longitude", ci.getPickup()[0]);
-                                intent.putExtra("pickup_latitude", ci.getPickup()[1]);
+                intent.putExtra("pickup_longitude", ci.getPickup()[0]);
+                intent.putExtra("pickup_latitude", ci.getPickup()[1]);
 //                        temp = RequestViewHolder.dest.getText().toString().split(",");
-                                intent.putExtra("dest_longitude", ci.getDest()[0]);
-                                intent.putExtra("dest_latitude", ci.getDest()[1]);
-                                intent.putExtra("time", ci.getTime());
-                                intent.putExtra("price", ci.getPrice());
-                                intent.putExtra("notes", ci.getNotes());
-                                intent.putExtra("request_id", ci.getRequest_id());
-                                intent.putExtra("pickup_text", ci.getPickupText());
-                                intent.putExtra("dest_text", ci.getDestText());
+                intent.putExtra("dest_longitude", ci.getDest()[0]);
+                intent.putExtra("dest_latitude", ci.getDest()[1]);
+                intent.putExtra("time", ci.getTime());
+                intent.putExtra("price", ci.getPrice());
+                intent.putExtra("notes", ci.getNotes());
+                intent.putExtra("request_id", ci.getRequest_id());
+                intent.putExtra("pickup_text", ci.getPickupText());
+                intent.putExtra("dest_text", ci.getDestText());
 
-                                ((Activity) context).setResult(Activity.RESULT_OK, intent);
-                                ((Activity) context).finish();
+                ((Activity) context).startActivityForResult(intent,SELECTED_REQUEST_CODE);
 
-                            }
-                        }
-                    });
-                    alerBuilder.setNegativeButton(context.getString(R.string.cancel_upcoming_request), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            EventBus.getDefault().post(new PassengerCanceled(ci.getRequest_id()));
-                            sendCancel(ci.getRequest_id());
-                        }
-                    });
-                    alerBuilder.setNeutralButton(context.getString(R.string.upcoming_request_do_nothing), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
 
-                        }
-                    });
-                    alerBuilder.show();
-
+//
+//                    AlertDialog.Builder alerBuilder = new AlertDialog.Builder(context);
+//                    alerBuilder.setMessage(context.getString(R.string.upcoming_request_options));
+//                    alerBuilder.setPositiveButton(context.getString(R.string.start_upcoming_request), new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            if (prefManager.isDoingRequest())
+//                                Toast.makeText(context, R.string.already_doing_request, Toast.LENGTH_LONG).show();
+//                            else {
+//                                Intent intent = new Intent();
+//                                intent.putExtra("passenger_name", ci.getPassenger_name());
+//                                intent.putExtra("passenger_phone", ci.getPassenger_phone());
+//                                intent.putExtra("status", "on_the_way");
+////                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
+//                                intent.putExtra("pickup_longitude", ci.getPickup()[0]);
+//                                intent.putExtra("pickup_latitude", ci.getPickup()[1]);
+////                        temp = RequestViewHolder.dest.getText().toString().split(",");
+//                                intent.putExtra("dest_longitude", ci.getDest()[0]);
+//                                intent.putExtra("dest_latitude", ci.getDest()[1]);
+//                                intent.putExtra("time", ci.getTime());
+//                                intent.putExtra("price", ci.getPrice());
+//                                intent.putExtra("notes", ci.getNotes());
+//                                intent.putExtra("request_id", ci.getRequest_id());
+//                                intent.putExtra("pickup_text", ci.getPickupText());
+//                                intent.putExtra("dest_text", ci.getDestText());
+//
+//                                ((Activity) context).setResult(Activity.RESULT_OK, intent);
+//                                ((Activity) context).finish();
+//
+//                            }
+//                        }
+//                    });
+//                    alerBuilder.setNegativeButton(context.getString(R.string.cancel_upcoming_request), new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            EventBus.getDefault().post(new PassengerCanceled(ci.getRequest_id()));
+//                            sendCancel(ci.getRequest_id());
+//                        }
+//                    });
+//                    alerBuilder.setNeutralButton(context.getString(R.string.upcoming_request_do_nothing), new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialogInterface, int i) {
+//
+//                        }
+//                    });
+//                    alerBuilder.show();
+//
                 }
         });
     }

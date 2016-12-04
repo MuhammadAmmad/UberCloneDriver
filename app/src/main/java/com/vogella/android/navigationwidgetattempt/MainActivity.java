@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -153,13 +154,17 @@ public class MainActivity extends AppCompatActivity
     private boolean mapIsReady;
     private boolean setWhenReady = false;
     private boolean firstLocationToDriverRouting;
+    private Toolbar toolbar;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
+        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+        toolbar.setTitle(R.string.driver_active);
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -183,17 +188,22 @@ public class MainActivity extends AppCompatActivity
         String msg = getString(R.string.msg_token_fmt, token);
         Log.d(TAG, msg);
 
-        final Button changeDriverStatus = (Button) findViewById(R.id.driver_status);
+        final TextView changeDriverStatus = (TextView) findViewById(R.id.change_driver_status);
         changeDriverStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (changeDriverStatus.getText().toString().equals(getString(R.string.driver_active))) {
+                if (changeDriverStatus.getText().toString().equals(getString(R.string.go_inactive))) {
 //                if (prefManager.isActive()) {
                     Log.d(TAG,"changeDriverStatus button pressed. Attempting to change from avaialble to away");
-                    changeDriverStatus.setText(R.string.driver_inactive);
+                    ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
+                    ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
+                    ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                    toolbar.setTitle(R.string.driver_inactive);
+                    toolbar.setTitleTextColor(getResources().getColor(R.color.colorAccent));
+                    setSupportActionBar(toolbar);
                     prefManager.setActive(false);
                     sendActive(0, prefManager.getCurrentLocation());
-                } else if (changeDriverStatus.getText().toString().equals(getString(R.string.driver_inactive))) {
+                } else if (changeDriverStatus.getText().toString().equals(getString(R.string.go_active))) {
 //                } else{
                     Log.d(TAG,"changeDriverStatus button pressed. Attempting to change from away to available");
                     if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -361,7 +371,12 @@ public class MainActivity extends AppCompatActivity
                         // All location settings are satisfied. The client can
                         // initialize location requests here.
                         Log.d(TAG,"LocationSettingsStatusCodes.SUCCESS");
-                        ((Button) findViewById(R.id.driver_status)).setText(R.string.driver_active);
+                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
+                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
+                        ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
+                        toolbar.setTitle(R.string.driver_active);
+                        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+                        setSupportActionBar(toolbar);
                         prefManager.setActive(true);
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
@@ -648,11 +663,22 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == LOCATION_REQUEST_CODE ) {
             if (resultCode != RESULT_OK) {
                 Log.d(TAG, "onActivityResult: the user didn't enable location");
-                ((Button) findViewById(R.id.driver_status)).setText(R.string.driver_inactive);
+                ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
+                ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
+                ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                toolbar.setTitle(R.string.driver_inactive);
+                toolbar.setTitleTextColor(getResources().getColor(R.color.colorAccent));
+                setSupportActionBar(toolbar);
+
                 prefManager.setActive(false);
             } else{
                 Log.d(TAG, "onActivityResult: the user enabled location");
-                ((Button) findViewById(R.id.driver_status)).setText(R.string.driver_active);
+                ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
+                ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
+                ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
+                toolbar.setTitle(R.string.driver_active);
+                toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+                setSupportActionBar(toolbar);
                 prefManager.setActive(true);
             }
         }
@@ -992,6 +1018,7 @@ public class MainActivity extends AppCompatActivity
         super.onStop();
     }
 
+/*
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -1019,6 +1046,7 @@ public class MainActivity extends AppCompatActivity
 
         return super.onOptionsItemSelected(item);
     }
+*/
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -1081,9 +1109,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
         mMap.setMyLocationEnabled(true);
-
-
-
+        mMap.setPadding(0, 150, 0, 0);
     }
 
 

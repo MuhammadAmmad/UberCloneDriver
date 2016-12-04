@@ -77,16 +77,17 @@ public class FCMRequest extends AppCompatActivity {
 //                request.dest[1] = Double.parseDouble(data.getStringExtra("dest").split(",")[1]);
                 long unixTime;
                 if(request.getTime().equals("now"))
-                    unixTime = System.currentTimeMillis();
+//                    unixTime = System.currentTimeMillis();
+                    request.setTime("Now");
                 else {
-                    Log.d(TAG,"Time is :" + request.getTime());
+                    Log.d(TAG, "Time is :" + request.getTime());
                     unixTime = Long.valueOf(request.getTime()); // In this case, the server sends the time in milliseconds just as expected from unixTime.
-                }
-                Date df = new java.util.Date(unixTime);
-                SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
-                sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
-                request.setTime(sdf.format(df));
 
+                    Date df = new java.util.Date(unixTime);
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
+                    sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
+                    request.setTime(sdf.format(df));
+                }
                 ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(request.getPickupText());
                 ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.getPrice());
                 ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.getTime());
