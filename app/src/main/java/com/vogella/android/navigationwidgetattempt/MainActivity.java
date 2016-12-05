@@ -19,6 +19,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -29,7 +30,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -256,34 +259,79 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setCurrentRequestOnClickListeners() {
-            Button cancelRequest = (Button) findViewById(R.id.cancel_request);
+            TextView cancelRequest = (TextView) findViewById(R.id.cancel_request);
             cancelRequest.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
-                    alerBuilder.setMessage(getString(R.string.cancel_current_request_message));
-                    alerBuilder.setPositiveButton(getString(R.string.cancel_current_request), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            sendCancel(current_request.getRequest_id());
-                        }
-                    });
-                    alerBuilder.setNegativeButton(getString(R.string.dont_cancel_current_request), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
+                    if(current_request.getStatus().equals("passenger_onboard") ||
+                            current_request.getStatus().equals("arrived_dest")||
+                            current_request.getStatus().equals("completed")){
+                        findViewById(R.id.current_request_view).setVisibility(View.VISIBLE);
+                        ((TextView) findViewById(R.id.cr_price)).setText(current_request.getPrice());
+                        ((TextView) findViewById(R.id.cr_notes)).setText(current_request.getNotes());
 
-                        }
-                    });
-                    alerBuilder.show();
+                        TextView hide_request = (TextView) findViewById(R.id.cr_close);
+                        hide_request.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                findViewById(R.id.current_request_view).setVisibility(View.INVISIBLE);
+                            }
+                        });
+                        ImageView passengerPhone = (ImageView) findViewById(R.id.cr_passenger_phone);
+                        passengerPhone.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
+                                alerBuilder.setMessage(getString(R.string.call_passenger_message) + current_request.getPassenger_phone() + "?");
+                                alerBuilder.setPositiveButton(getString(R.string.call_passenger), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent(Intent.ACTION_DIAL);
+                                        intent.setData(Uri.parse("tel:".concat(current_request.getPassenger_phone())));
+                                        startActivity(intent);
+                                    }
+                                });
+                                alerBuilder.setNegativeButton(getString(R.string.dont_call), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                });
+                                alerBuilder.show();
+                            }
+                        });
+
+
+                    }
+                    else {
+                        AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
+                        alerBuilder.setMessage(getString(R.string.cancel_current_request_message));
+                        alerBuilder.setPositiveButton(getString(R.string.cancel_current_request), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                sendCancel(current_request.getRequest_id());
+                            }
+                        });
+                        alerBuilder.setNegativeButton(getString(R.string.dont_cancel_current_request), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+                        alerBuilder.show();
+                    }
+
                 }
             });
-        final Button nextState;
-            nextState = (Button) findViewById(R.id.next_state);
+        final TextView nextState;
+            nextState = (TextView) findViewById(R.id.next_state);
             nextState.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    TextView current = (TextView) findViewById(R.id.current_status);
-                    current.setText(nextState.getText().toString());
+//                    TextView current = (TextView) findViewById(R.id.current_status);
+//                    current.setText(nextState.getText().toString());
+                    ((TextView) findViewById(R.id.toolbar_title)).setText(((nextState.getText().toString())));
+                    ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
                     current_request.nextStatus();
                     sendStatus(current_request.getRequest_id(), current_request.getStatus());
                     if (current_request.getStatus().equals("passenger_onboard")) {
@@ -296,30 +344,30 @@ public class MainActivity extends AppCompatActivity
                         nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
                 }
             });
-        TextView current;
-            current = (TextView) findViewById(R.id.current_status);
-        current.setOnClickListener(new View.OnClickListener() {
+        ImageView details;
+            details = (ImageView) findViewById(R.id.view_details);
+        details.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 findViewById(R.id.current_request_view).setVisibility(View.VISIBLE);
-                ((TextView) findViewById(R.id.cr_time)).setText(current_request.getTime());
-                ((TextView) findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
-                ((TextView) findViewById(R.id.cr_passenger_phone)).setText(current_request.getPassenger_phone());
+//                ((TextView) findViewById(R.id.cr_time)).setText(current_request.getTime());
+//                ((TextView) findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
+//                ((TextView) findViewById(R.id.cr_passenger_phone)).setText(current_request.getPassenger_phone());
                 ((TextView) findViewById(R.id.cr_price)).setText(current_request.getPrice());
-                ((TextView) findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus(), MainActivity.this));
+//                ((TextView) findViewById(R.id.cr_status)).setText(current_request.getDisplayStatus(current_request.getStatus(), MainActivity.this));
                 ((TextView) findViewById(R.id.cr_notes)).setText(current_request.getNotes());
-                ((TextView) findViewById(R.id.cr_pickup)).setText(current_request.getPickupText());
-                ((TextView) findViewById(R.id.cr_dest)).setText(current_request.getDestText());
-                ((TextView) findViewById(R.id.cr_time)).setText(current_request.getTime());
+//                ((TextView) findViewById(R.id.cr_pickup)).setText(current_request.getPickupText());
+//                ((TextView) findViewById(R.id.cr_dest)).setText(current_request.getDestText());
+//                ((TextView) findViewById(R.id.cr_time)).setText(current_request.getTime());
 
-                Button hide_request = (Button) findViewById(R.id.cr_close);
+                TextView hide_request = (TextView) findViewById(R.id.cr_close);
                 hide_request.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         findViewById(R.id.current_request_view).setVisibility(View.INVISIBLE);
                     }
                 });
-                TextView passengerPhone = (TextView) findViewById(R.id.cr_passenger_phone);
+                ImageView passengerPhone = (ImageView) findViewById(R.id.cr_passenger_phone);
                 passengerPhone.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -376,16 +424,20 @@ public class MainActivity extends AppCompatActivity
                         // All location settings are satisfied. The client can
                         // initialize location requests here.
                         Log.d(TAG,"LocationSettingsStatusCodes.SUCCESS");
-                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
-                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
-                        ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
-//                        toolbar.setTitle(R.string.driver_active);
-//                        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-
-                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
-                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+//                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
+//                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
+//                        ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
+////                        toolbar.setTitle(R.string.driver_active);
+////                        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+//
+//                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+//                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
 //                        setSupportActionBar(toolbar);
                         prefManager.setActive(true);
+                        if(prefManager.isDoingRequest())
+                            setUI(UI_STATE.DOINGREQUEST);
+                        else
+                            setUI(UI_STATE.SIMPLE);
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         // Location settings are not satisfied, but this can be fixed
@@ -489,7 +541,7 @@ public class MainActivity extends AppCompatActivity
 //                    Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The status has been sent successfully");
                     if(status.equals("on_the_way")){
-                        prefManager.isDoingRequest();
+                        prefManager.setDoingRequest(true);
                         setUI(UI_STATE.DOINGREQUEST);
                     }
                 } else if (response.code() == 401) {
@@ -671,28 +723,18 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == LOCATION_REQUEST_CODE ) {
             if (resultCode != RESULT_OK) {
                 Log.d(TAG, "onActivityResult: the user didn't enable location");
-                ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
-                ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
-                ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-//                toolbar.setTitle(R.string.driver_inactive);
-//                toolbar.setTitleTextColor(getResources().getColor(R.color.colorAccent));
-//                setSupportActionBar(toolbar);
-
-                ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
-                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
                 prefManager.setActive(false);
+                if(prefManager.isDoingRequest())
+                    setUI(UI_STATE.DOINGREQUEST);
+                else
+                    setUI(UI_STATE.SIMPLE);
             } else{
                 Log.d(TAG, "onActivityResult: the user enabled location");
-                ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
-                ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
-                ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
-//                toolbar.setTitle(R.string.driver_active);
-//                toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-//                setSupportActionBar(toolbar);
-
-                ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
-                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 prefManager.setActive(true);
+                if(prefManager.isDoingRequest())
+                    setUI(UI_STATE.DOINGREQUEST);
+                else
+                    setUI(UI_STATE.SIMPLE);
             }
         }
     }
@@ -775,6 +817,7 @@ public class MainActivity extends AppCompatActivity
             case SIMPLE:
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
                 linearLayout.setVisibility(View.INVISIBLE);
+                ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.VISIBLE);
                 if (pickupMarker != null) {
                     pickupMarker.remove();
                 }
@@ -790,7 +833,34 @@ public class MainActivity extends AppCompatActivity
                 if (driverToPickupRoute != null) {
                     driverToPickupRoute.remove();
                 }
+
+            if(prefManager.isActive()) {
+
+                ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
+                ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
+                ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
+//                toolbar.setTitle(R.string.driver_active);
+//                toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+//                setSupportActionBar(toolbar);
+
+                ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+
+            }
+                else{
+                ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
+                ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
+                ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+//                toolbar.setTitle(R.string.driver_inactive);
+//                toolbar.setTitleTextColor(getResources().getColor(R.color.colorAccent));
+//                setSupportActionBar(toolbar);
+
+                ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
+                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
+
+            }
                 break;
+
             case DOINGREQUEST:
                 pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
                 destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
@@ -802,23 +872,30 @@ public class MainActivity extends AppCompatActivity
 
 
                 //set values for the different views
-                Button nextState;
+                TextView nextState;
                 TextView current;
                 linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
-                nextState = (Button) findViewById(R.id.next_state);
-                current = (TextView) findViewById(R.id.current_status);
-                current.setText(current_request.getDisplayStatus(current_request.getStatus(), MainActivity.this));
+                nextState = (TextView) findViewById(R.id.next_state);
+//                current = (TextView) findViewById(R.id.current_status);
+//                current.setText(current_request.getDisplayStatus(current_request.getStatus(), MainActivity.this));
+                ((TextView) findViewById(R.id.toolbar_title)).setText((current_request.getDisplayStatus(current_request.getStatus(), MainActivity.this)));
+                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
                 linearLayout.setVisibility(View.VISIBLE);
+                ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.INVISIBLE);
                 if(current_request.getStatus().equals("passenger_onboard") ||
                         current_request.getStatus().equals("arrived_dest")||
                         current_request.getStatus().equals("completed")) {
-                    ((Button) findViewById(R.id.cancel_request)).setVisibility(View.GONE);
-                    ((View) findViewById(R.id.current_request_separator)).setVisibility(View.GONE);
+                    ((LinearLayout) findViewById(R.id.request_view_top)).setVisibility(View.GONE);
+//                    ((Button) findViewById(R.id.cancel_request)).setVisibility(View.GONE);
+//                    ((View) findViewById(R.id.current_request_separator)).setVisibility(View.GONE);
+                    ((TextView) findViewById(R.id.cancel_request)).setText("Ride info");
+                    ((TextView) findViewById(R.id.cancel_request)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 }
                 else {
-                    ((Button) findViewById(R.id.cancel_request)).setVisibility(View.VISIBLE);
-                    ((View) findViewById(R.id.current_request_separator)).setVisibility(View.VISIBLE);
+                    ((LinearLayout) findViewById(R.id.request_view_top)).setVisibility(View.VISIBLE);
+                    ((TextView) findViewById(R.id.cancel_request)).setText(getString(R.string.cancel));
+                    ((TextView) findViewById(R.id.cancel_request)).setTextColor(getResources().getColor(R.color.red2));
                 }
 
                 setCurrentRequestOnClickListeners();
@@ -1122,7 +1199,18 @@ public class MainActivity extends AppCompatActivity
             return;
         }
         mMap.setMyLocationEnabled(true);
-        mMap.setPadding(0, 150, 0, 0);
+//        mMap.setPadding(0, 150, 0, 0);
+        // Get the button view
+        View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+
+        // and next place it, for exemple, on bottom right (as Google Maps app)
+        RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+        // position on right bottom
+        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+        rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+        int bottom = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 100, getResources().getDisplayMetrics());
+        int right = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+        rlp.setMargins(0, 0, right, bottom);
     }
 
 
@@ -1170,6 +1258,8 @@ public class MainActivity extends AppCompatActivity
             return;
         }
         Log.d(TAG, "onConnected: Connected");
+
+
 //        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
 //                mGoogleApiClient);
 //        if (mLastLocation != null) {

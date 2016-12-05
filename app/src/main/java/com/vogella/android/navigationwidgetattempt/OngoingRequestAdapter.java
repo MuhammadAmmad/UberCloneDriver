@@ -59,8 +59,10 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         RequestViewHolder.price.setTextColor(context.getResources().getColor(R.color.colorPrimary));
         RequestViewHolder.date.setText(ci.getTime());
 //        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
-        RequestViewHolder.status.setVisibility(View.GONE);
+        RequestViewHolder.status.setBackgroundColor(context.getResources().getColor(R.color.white));
+//        RequestViewHolder.status.setVisibility(View.INVISIBLE);
         RequestViewHolder.pickup.setText(ci.getPickupText());
+
 //        RequestViewHolder.pickup.setText(ci.getPickupString());
 //        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
 //        RequestViewHolder.dest.setText(ci.getDestText());
@@ -97,6 +99,9 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                 intent.putExtra("request_id", ci.getRequest_id());
                 intent.putExtra("pickup_text", ci.getPickupText());
                 intent.putExtra("dest_text", ci.getDestText());
+
+                intent.putExtra("source", "incoming");
+
 
                 ((Activity) context).startActivityForResult(intent,SELECTED_REQUEST_CODE);
 
@@ -174,6 +179,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         protected TextView pickup;
 //        protected TextView dest;
         protected LinearLayout linearLayout;
+
 
 /*
         protected TextView passenger_name;

@@ -83,8 +83,8 @@
     <string name="gender">Gender</string>
     <string name="phone_number">Phone number</string>
     <string name="cancel">Cancel</string>
-    <string name="from">From:  </string>
-    <string name="to">To:</string>
+    <string name="from">From  </string>
+    <string name="to">To </string>
     <string name="notes">Notes:</string>
     <string name="close">close</string>
     <string name="history">Previous requests</string>

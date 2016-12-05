@@ -33,6 +33,18 @@ public class SelectedRequest extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        intent = getIntent();
+
+        if(intent.hasExtra("source")) {
+            if (intent.getStringExtra("source").equals("history")) {
+                if (intent.getStringExtra("status").equals("completed"))
+                    setTheme(R.style.AppTheme_details_completed);
+                else if (intent.getStringExtra("status").equals("missed"))
+                    setTheme(R.style.AppTheme_details_missed);
+                else if (intent.getStringExtra("status").equals("canceled"))
+                    setTheme(R.style.AppTheme_details_canceled);
+            }
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selected_request);
         Toolbar toolbar = (Toolbar) findViewById(R.id.request_details_toolbar);
@@ -40,36 +52,46 @@ public class SelectedRequest extends AppCompatActivity {
         ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.white));
 //        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
 //        toolbar.setTitle(R.string.driver_active);
+//        toolbar.setContentInsetsAbsolute(0,0);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         prefManager = new PrefManager(this);
 
-        intent = getIntent();
 
-        if(intent.hasExtra("source"))
-            if(intent.getStringExtra("source").equals("history")){
+        if(intent.hasExtra("source")) {
+            if (intent.getStringExtra("source").equals("history")) {
                 ((LinearLayout) findViewById(R.id.request_details_buttons)).setVisibility(View.GONE);
                 ImageView icon = (ImageView) findViewById(R.id.derails_icon);
-                if(intent.getStringExtra("status").equals("completed")) {
+                ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.white));
+                if (intent.getStringExtra("status").equals("completed")) {
+//                    getTheme().applyStyle(R.style.AppTheme_details_completed,true);
                     toolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
                     icon.setImageDrawable(getResources().getDrawable(R.drawable.ic_request_completed));
                     ((TextView) findViewById(R.id.request_details_toolbar_title)).setText("Completed");
 
 //                    icon.setBackground(getResources().getDrawable(R.drawable.ic_request_completed));
-                }
-                else if (intent.getStringExtra("status").equals("canceled")){
+                } else if (intent.getStringExtra("status").equals("canceled")) {
+//                    getTheme().applyStyle(R.style.AppTheme_details_canceled,true);
                     toolbar.setBackgroundColor(getResources().getColor(R.color.red2));
                     icon.setImageDrawable(getResources().getDrawable(R.drawable.ic_request_canceled));
                     ((TextView) findViewById(R.id.request_details_toolbar_title)).setText("Cancelled");
-                }
-                else if (intent.getStringExtra("status").equals("missed")){
+                } else if (intent.getStringExtra("status").equals("missed")) {
+                    getTheme().applyStyle(R.style.AppTheme_details_missed,true);
                     toolbar.setBackgroundColor(getResources().getColor(R.color.colorAccent));
                     icon.setImageDrawable(getResources().getDrawable(R.drawable.request_missed));
                     ((TextView) findViewById(R.id.request_details_toolbar_title)).setText("Missed");
                 }
             }
+            else if (intent.getStringExtra("source").equals("incoming")){
+//                getTheme().applyStyle(R.style.AppTheme_NoActionBar2,true);
+                ImageView icon = (ImageView) findViewById(R.id.derails_icon);
+                icon.setVisibility(View.GONE);
+                ((TextView) findViewById(R.id.request_details_toolbar_title)).setPadding(0, 15, 0, 15);
+                ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+            }
+        }
 
         ((TextView) findViewById(R.id.request_details_pickup)).setText(intent.getStringExtra("pickup_text"));
         ((TextView) findViewById(R.id.request_details_dest)).setText(intent.getStringExtra("dest_text"));

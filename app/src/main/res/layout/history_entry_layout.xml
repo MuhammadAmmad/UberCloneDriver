@@ -26,6 +26,7 @@
             android:layout_height="match_parent"
             android:background="@color/red"/>
         <LinearLayout
+            android:id="@+id/entry_left"
             android:layout_width="230dp"
             android:layout_height="wrap_content"
             android:paddingLeft="10dp"

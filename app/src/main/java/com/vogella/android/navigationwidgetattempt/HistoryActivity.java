@@ -66,9 +66,10 @@ public class HistoryActivity extends AppCompatActivity {
         prefManager = new PrefManager(this);
         setContentView(R.layout.activity_history);
         Toolbar toolbar = (Toolbar) findViewById(R.id.history_toolbar);
-        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
+//        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
 //        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
 //        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+//        toolbar.setTitleTextColor(getResources().getColor(R.color.white));
         toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
 //        toolbar.setTitle(R.string.history);
         setSupportActionBar(toolbar);

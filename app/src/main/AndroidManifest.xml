@@ -20,7 +20,7 @@
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.MainActivity" />
 
         <service
             android:name=".MyFirebaseMessagingService"
@@ -56,10 +56,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".HistoryActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppTheme.NoActionBar2"
             android:label="@string/history"/>
         <activity android:name=".OngoingRequestsActivity"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar2"
             android:label="@string/Incoming_requests"/>
         <activity android:name=".FCMRequest"
             android:theme="@style/AppTheme"
@@ -72,13 +72,13 @@
         <receiver android:name=".UpdateLocation_Active" />
 
         <activity android:name=".ProfileActivity"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar2"
             android:label="@string/profile"/>
         <activity android:name=".AboutActivity"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar2"
             android:label="@string/about"/>
         <activity android:name=".SelectedRequest"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppTheme.NoActionBar2"
            android:label="@string/request_details" />
     </application>
 
