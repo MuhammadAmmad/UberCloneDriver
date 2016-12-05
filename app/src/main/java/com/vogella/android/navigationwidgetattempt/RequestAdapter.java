@@ -1,11 +1,14 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.List;
 
 public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.RequestViewHolder> {
 
+    private static final int FROM_HISTORY_CODE = 899;
     private List<request> RequestList;
     private Context context;
 
@@ -32,7 +36,7 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
 
     @Override
     public void onBindViewHolder(RequestViewHolder RequestViewHolder, int i) {
-        request ci = RequestList.get(i);
+        final request ci = RequestList.get(i);
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.date.setText(ci.getTime());
 //        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
@@ -54,6 +58,32 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
 //        RequestViewHolder.pickup.setText(String.valueOf(ci.getPickup()[0]) + "," + String.valueOf(ci.getPickup()[1]));
 //        RequestViewHolder.dest.setText(String.valueOf(ci.getDest()[0]) + "," + String.valueOf(ci.getDest()[1]));
 //        RequestViewHolder.request_time.setText(ci.time);
+
+        RequestViewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, SelectedRequest.class);
+                intent.putExtra("passenger_name", ci.getPassenger_name());
+                intent.putExtra("passenger_phone", ci.getPassenger_phone());
+                intent.putExtra("status", ci.getStatus());
+//                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
+                intent.putExtra("pickup_longitude", ci.getPickup()[0]);
+                intent.putExtra("pickup_latitude", ci.getPickup()[1]);
+//                        temp = RequestViewHolder.dest.getText().toString().split(",");
+                intent.putExtra("dest_longitude", ci.getDest()[0]);
+                intent.putExtra("dest_latitude", ci.getDest()[1]);
+                intent.putExtra("time", ci.getTime());
+                intent.putExtra("price", ci.getPrice());
+                intent.putExtra("notes", ci.getNotes());
+                intent.putExtra("request_id", ci.getRequest_id());
+                intent.putExtra("pickup_text", ci.getPickupText());
+                intent.putExtra("dest_text", ci.getDestText());
+
+                intent.putExtra("source", "history");
+
+                ((Activity) context).startActivityForResult(intent, FROM_HISTORY_CODE);
+            }
+        });
     }
 
     @Override
@@ -74,6 +104,8 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
         protected ImageView status;
         protected TextView pickup;
 //        protected TextView dest;
+        protected LinearLayout linearLayout;
+
 
         public RequestViewHolder(View v){
             super(v);
@@ -84,6 +116,8 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
             pickup = (TextView) v.findViewById(R.id.entry_from);
 //            dest = (TextView) v.findViewById(R.id.entry_to);
             price = (TextView) v.findViewById(R.id.entry_price);
+            linearLayout = (LinearLayout) itemView.findViewById(R.id.history_card_view);
+
         }
     }
 
