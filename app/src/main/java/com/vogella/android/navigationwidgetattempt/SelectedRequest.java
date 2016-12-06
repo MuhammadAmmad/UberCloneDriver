@@ -85,12 +85,18 @@ public class SelectedRequest extends AppCompatActivity {
                 }
             }
             else if (intent.getStringExtra("source").equals("incoming")){
-//                getTheme().applyStyle(R.style.AppTheme_NoActionBar2,true);
                 ImageView icon = (ImageView) findViewById(R.id.derails_icon);
                 icon.setVisibility(View.GONE);
                 ((TextView) findViewById(R.id.request_details_toolbar_title)).setPadding(0, 15, 0, 15);
                 ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
             }
+        }
+        else {
+            ImageView icon = (ImageView) findViewById(R.id.derails_icon);
+            icon.setVisibility(View.GONE);
+            ((TextView) findViewById(R.id.request_details_toolbar_title)).setPadding(0, 15, 0, 15);
+            ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+
         }
 
         ((TextView) findViewById(R.id.request_details_pickup)).setText(intent.getStringExtra("pickup_text"));
@@ -102,8 +108,11 @@ public class SelectedRequest extends AppCompatActivity {
         ((TextView) findViewById(R.id.request_details_start)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setResult(RESULT_OK, intent);
-                finish();
+//                setResult(RESULT_OK, intent);
+                Intent intent2 = new Intent(SelectedRequest.this, MainActivity.class);
+                intent2.putExtras(intent);
+                startActivity(intent2);
+//                finish();
             }
         });
         ((TextView) findViewById(R.id.request_details_cancel)).setOnClickListener(new View.OnClickListener() {

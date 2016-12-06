@@ -37,6 +37,7 @@ public class FCMRequest extends AppCompatActivity {
     private static final int TIMEOUT = 1;
     private static int reason = TIMEOUT;
     private PowerManager.WakeLock wl;
+    private Intent data;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +52,7 @@ public class FCMRequest extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
                 WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
 
-        Intent data = getIntent();
+        data = getIntent();
         setContentView(R.layout.activity_fcmrequest);
         final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressbar_timerview);
 //        Animation an = new RotateAnimation(0.0f, 90.0f, 250f, 273f);
@@ -153,7 +154,13 @@ public class FCMRequest extends AppCompatActivity {
                         if(response.body().getStatus() == 0) {
                             Toast.makeText(getBaseContext(), R.string.FCM_accepted_new_request, Toast.LENGTH_LONG).show();
                             Log.d(TAG, "You have accepted the request");
-                            OngoingRequestsActivity.addRequest(request);
+//                            OngoingRequestsActivity.addRequest(request);
+                            if(data.getStringExtra("time").equals("now")) {
+                                Intent intent = new Intent(FCMRequest.this, SelectedRequest.class);
+                                intent.putExtras(data);
+                                intent.putExtra("status", "on_the_way");
+                                startActivity(intent);
+                            }
                             FCMRequest.super.finish();
                         }
                         else if(response.body().getStatus() == 3){

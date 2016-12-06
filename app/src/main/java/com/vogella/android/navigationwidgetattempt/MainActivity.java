@@ -240,6 +240,10 @@ public class MainActivity extends AppCompatActivity
 
         prefManager.setActive(false);
 
+        setAlarms();
+
+        getCurrentRequest(getIntent());
+
         buildGoogleApiClient();
         createLocationRequest();
         buildLocationSettingsRequest();
@@ -402,29 +406,29 @@ public class MainActivity extends AppCompatActivity
                             findViewById(R.id.current_request_view).setVisibility(View.INVISIBLE);
                         }
                     });
-                    ImageView passengerPhone = (ImageView) findViewById(R.id.cr_passenger_phone);
-                    passengerPhone.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
-                            alerBuilder.setMessage(getString(R.string.call_passenger_message) + current_request.getPassenger_phone() + "?");
-                            alerBuilder.setPositiveButton(getString(R.string.call_passenger), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Intent intent = new Intent(Intent.ACTION_DIAL);
-                                    intent.setData(Uri.parse("tel:".concat(current_request.getPassenger_phone())));
-                                    startActivity(intent);
-                                }
-                            });
-                            alerBuilder.setNegativeButton(getString(R.string.dont_call), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                }
-                            });
-                            alerBuilder.show();
-                        }
-                    });
+//                    ImageView passengerPhone = (ImageView) findViewById(R.id.cr_passenger_phone);
+//                    passengerPhone.setOnClickListener(new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View view) {
+//                            AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
+//                            alerBuilder.setMessage(getString(R.string.call_passenger_message) + " " + current_request.getPassenger_phone() + " ?");
+//                            alerBuilder.setPositiveButton(getString(R.string.call_passenger), new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//                                    Intent intent = new Intent(Intent.ACTION_DIAL);
+//                                    intent.setData(Uri.parse("tel:".concat(current_request.getPassenger_phone())));
+//                                    startActivity(intent);
+//                                }
+//                            });
+//                            alerBuilder.setNegativeButton(getString(R.string.dont_call), new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//
+//                                }
+//                            });
+//                            alerBuilder.show();
+//                        }
+//                    });
 
 
                 } else {
@@ -447,6 +451,7 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+
         final TextView nextState;
         nextState = (TextView) findViewById(R.id.next_state);
         nextState.setOnClickListener(new View.OnClickListener() {
@@ -454,20 +459,21 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
 //                    TextView current = (TextView) findViewById(R.id.current_status);
 //                    current.setText(nextState.getText().toString());
-                ((TextView) findViewById(R.id.toolbar_title)).setText(((nextState.getText().toString())));
-                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
-                current_request.nextStatus();
-                sendStatus(current_request.getRequest_id(), current_request.getStatus());
-                if (current_request.getStatus().equals("passenger_onboard")) {
-                    setUI(UI_STATE.DOINGREQUEST);
-                } else if (current_request.getStatus().equals("completed")) {
-                    endRequest(REQUEST_SUCCESS);
-                    setUI(UI_STATE.SIMPLE);
-                } else
-
-                    nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
+//                ((TextView) findViewById(R.id.toolbar_title)).setText(((nextState.getText().toString())));
+//                ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+//                current_request.nextStatus();
+                sendStatus(current_request.getRequest_id(), current_request.getNextStatus());
+//                if (current_request.getStatus().equals("passenger_onboard")) {
+//                    setUI(UI_STATE.DOINGREQUEST);
+//                } else if (current_request.getStatus().equals("completed")) {
+//                    endRequest(REQUEST_SUCCESS);
+//                    setUI(UI_STATE.SIMPLE);
+//                } else
+//
+//                    nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
             }
         });
+
         ImageView details;
         details = (ImageView) findViewById(R.id.view_details);
         details.setOnClickListener(new View.OnClickListener() {
@@ -491,116 +497,35 @@ public class MainActivity extends AppCompatActivity
                         findViewById(R.id.current_request_view).setVisibility(View.INVISIBLE);
                     }
                 });
-                ImageView passengerPhone = (ImageView) findViewById(R.id.cr_passenger_phone);
-                passengerPhone.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
-                        alerBuilder.setMessage(getString(R.string.call_passenger_message) + current_request.getPassenger_phone() + "?");
-                        alerBuilder.setPositiveButton(getString(R.string.call_passenger), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent intent = new Intent(Intent.ACTION_DIAL);
-                                intent.setData(Uri.parse("tel:".concat(current_request.getPassenger_phone())));
-                                startActivity(intent);
-                            }
-                        });
-                        alerBuilder.setNegativeButton(getString(R.string.dont_call), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
 
-                            }
-                        });
-                        alerBuilder.show();
+        ImageView passengerPhone = (ImageView) findViewById(R.id.cr_passenger_phone);
+        passengerPhone.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
+                alerBuilder.setMessage(getString(R.string.call_passenger_message) + " " + current_request.getPassenger_phone() + " ?");
+                alerBuilder.setPositiveButton(getString(R.string.call_passenger), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(Intent.ACTION_DIAL);
+                        intent.setData(Uri.parse("tel:".concat(current_request.getPassenger_phone())));
+                        startActivity(intent);
                     }
                 });
+                alerBuilder.setNegativeButton(getString(R.string.dont_call), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
 
-            }
-        });
-    }
-
-/*
-        private void initializeLocation() {
-        // Location Request
-        mLocationRequest = new LocationRequest();
-        // Use high accuracy
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        // Set the update interval to 5 seconds
-        mLocationRequest.setInterval(1000);
-        // Set the fastest update interval to 1 second
-        mLocationRequest.setFastestInterval(500);
-
-
-        // Check device location settings
-        LocationSettingsRequest.Builder locationSettingsReqBuilder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(mLocationRequest);
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
-                        locationSettingsReqBuilder.build());
-        Log.d(TAG,"initializeLocation: checking location settings .. ");
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-            @Override
-            public void onResult(@NonNull LocationSettingsResult result) {
-                final Status status = result.getStatus();
-//                final LocationSettingsStates = result.getLocationSettingsStates();
-                Log.d(TAG,"LocationSettingsResult called onResult");
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-                        // All location settings are satisfied. The client can
-                        // initialize location requests here.
-                        Log.d(TAG,"LocationSettingsStatusCodes.SUCCESS");
-//                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
-//                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
-//                        ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
-////                        toolbar.setTitle(R.string.driver_active);
-////                        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-//
-//                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
-//                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
-//                        setSupportActionBar(toolbar);
-                        prefManager.setActive(true);
-                        if(prefManager.isDoingRequest())
-                            setUI(UI_STATE.DOINGREQUEST);
-                        else
-                            setUI(UI_STATE.SIMPLE);
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied, but this can be fixed
-                        // by showing the user a dialog.
-                        Log.d(TAG,"LocationSettingsStatusCodes.RESOLUTION_REQUIRED");
-                        try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
-                            status.startResolutionForResult(
-                                    MainActivity.this,
-                                    LOCATION_REQUEST_CODE);
-                        } catch (IntentSender.SendIntentException e) {
-                            // Ignore the error.
-                        }
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        // Location settings are not satisfied. However, we have no way
-                        // to fix the settings so we won't show the dialog.
-                        Log.d(TAG,"LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE");
-
-                        break;
-                }
+                    }
+                });
+                alerBuilder.show();
             }
         });
 
-        // Set UI
-//        setUI(UI_STATE.CONFIRM_PICKUP);
-//
-//        ride = new Ride();
-//
-//
-//        Intent intent = new Intent(this, RideRequestService.class);
-//        startService(intent);
-//        // getDrivers
-//        ride.getDrivers(this, KHARTOUM_CORDS);
-//        mGoogleApiClient.connect();
     }
-*/
+
 
     void endRequest(int res) {
 //        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
@@ -611,7 +536,7 @@ public class MainActivity extends AppCompatActivity
         else if (res == REQUEST_CANCELLED)
             Toast.makeText(MainActivity.this, R.string.current_request_cancelled,
                     Toast.LENGTH_LONG).show();
-        OngoingRequestsActivity.removeRequest(current_request.getRequest_id());
+//        OngoingRequestsActivity.removeRequest(current_request.getRequest_id());
 //        current_request = new request();
 //        if (pickupMarker != null) {
 //            pickupMarker.remove();
@@ -640,7 +565,7 @@ public class MainActivity extends AppCompatActivity
 //                alarmIntent);
     }
 
-    private void sendStatus(String request_id, final String status) {
+    private void sendStatus(final String request_id, final String status) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -668,8 +593,16 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "The status has been sent successfully");
                     if (status.equals("on_the_way")) {
                         prefManager.setDoingRequest(true);
-                        setUI(UI_STATE.DOINGREQUEST);
+//                        setUI(UI_STATE.DOINGREQUEST);
                     }
+                    else {
+                        current_request.nextStatus();
+                        if (status.equals("completed")) {
+                            endRequest(REQUEST_SUCCESS);
+                        }
+                    }
+                    setUI();
+
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
@@ -799,52 +732,7 @@ public class MainActivity extends AppCompatActivity
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == ONGOING_REQUESTS_CODE && resultCode == RESULT_OK) {
 //            Toast.makeText(this,data.getExtras().getString("passenger_name"), Toast.LENGTH_LONG).show();
-            if (data.hasExtra("request_id")) {
-                //set the data
-                //TODO: check if you are already doing a request
-                request temp = new request();
-                temp.setPassenger_name(data.getExtras().getString("passenger_name"));
-                temp.setPassenger_phone(data.getExtras().getString("passenger_phone"));
-                temp.setStatus(data.getExtras().getString("status"));
-                double pickup[] = new double[2];
-                pickup[0] = data.getExtras().getDouble("pickup_longitude");
-                pickup[1] = data.getExtras().getDouble("pickup_latitude");
-                temp.setPickup(pickup);
-                double dest[] = new double[2];
-                dest[0] = data.getExtras().getDouble("dest_longitude");
-                dest[1] = data.getExtras().getDouble("dest_latitude");
-                temp.setDest(dest);
-                temp.setTime(data.getExtras().getString("time"));
-                temp.setNotes(data.getExtras().getString("notes"));
-                temp.setPrice(data.getExtras().getString("price"));
-                temp.setDestText(data.getStringExtra("dest_text"));
-                temp.setPickupText(data.getStringExtra("pickup_text"));
-                temp.setRequest_id(data.getStringExtra("request_id"));
-                prefManager.setRequest(temp);
-//                current_request = new request();
-//                current_request.setPassenger_name(data.getExtras().getString("passenger_name"));
-//                current_request.setPassenger_phone(data.getExtras().getString("passenger_phone"));
-//                current_request.setStatus(data.getExtras().getString("status"));
-//                double pickup[] = new double[2];
-//                pickup[0] = data.getExtras().getDouble("pickup_longitude");
-//                pickup[1] = data.getExtras().getDouble("pickup_latitude");
-//                current_request.setPickup(pickup);
-//                double dest[] = new double[2];
-//                dest[0] = data.getExtras().getDouble("dest_longitude");
-//                dest[1] = data.getExtras().getDouble("dest_latitude");
-//                current_request.setDest(dest);
-//                current_request.setTime(data.getExtras().getString("time"));
-//                current_request.setNotes(data.getExtras().getString("notes"));
-//                current_request.setPrice(data.getExtras().getString("price"));
-//                current_request.setRequest_id(data.getExtras().getString("request_id"));
-                startRequest();
-//                Gson gson = new Gson();
-//                String json = gson.toJson(current_request);
-//                prefManager.editor.putString("current_request", json);
-//                prefManager.setDoingRequest(true);
-
-
-            }
+            getCurrentRequest(data);
         }
 
         if (requestCode == REQUEST_CHECK_SETTINGS) {
@@ -878,6 +766,34 @@ public class MainActivity extends AppCompatActivity
             }
         }
 */
+    }
+
+    private void getCurrentRequest(Intent data) {
+        if (data.hasExtra("request_id")) {
+            //set the data
+            request temp = new request();
+            temp.setPassenger_name(data.getExtras().getString("passenger_name"));
+            temp.setPassenger_phone(data.getExtras().getString("passenger_phone"));
+            temp.setStatus(data.getExtras().getString("status"));
+//            double pickup[] = new double[2];
+//            pickup[0] = data.getExtras().getDouble("pickup_longitude");
+//            pickup[1] = data.getExtras().getDouble("pickup_latitude");
+//            temp.setPickup(pickup);
+            temp.setPickupString(data.getStringExtra("pickup"));
+//            double dest[] = new double[2];
+//            dest[0] = data.getExtras().getDouble("dest_longitude");
+//            dest[1] = data.getExtras().getDouble("dest_latitude");
+//            temp.setDest(dest);
+            temp.setDestString(data.getStringExtra("dest"));
+            temp.setTime(data.getExtras().getString("time"));
+            temp.setNotes(data.getExtras().getString("notes"));
+            temp.setPrice(data.getExtras().getString("price"));
+            temp.setDestText(data.getStringExtra("dest_text"));
+            temp.setPickupText(data.getStringExtra("pickup_text"));
+            temp.setRequest_id(data.getStringExtra("request_id"));
+            prefManager.setRequest(temp);
+            startRequest();
+        }
     }
 
     private void startRequest() {
@@ -1123,6 +1039,34 @@ public class MainActivity extends AppCompatActivity
         if(prefManager.isDoingRequest() || wasActive)
             checkLocationSettings();
 
+
+//        } //end of if(isActive)
+
+        //Setup the UI based on whether there is a current request
+        if (prefManager.isDoingRequest()) {
+            current_request = prefManager.getRequest();
+            if (current_request.getStatus().equals("completed")) {
+                Log.d(TAG, "The passenger marked the request as complete");
+                endRequest(REQUEST_SUCCESS);
+                setUI(UI_STATE.SIMPLE);
+                current_request = new request();
+            } else if (current_request.getStatus().equals("canceled")) {
+                Log.d(TAG, "The passenger canceled the request");
+                endRequest(REQUEST_CANCELLED);
+                setUI(UI_STATE.SIMPLE);
+                current_request = new request();
+            } else {
+                Log.d(TAG, "The driver is doing a request");
+//                    current_request = prefManager.getRequest();
+                setUI(UI_STATE.DOINGREQUEST);
+            }
+        } else {
+            setUI(UI_STATE.SIMPLE);
+        }
+
+    }
+
+    private void setAlarms() {
         //setup location alarm
 
         alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -1160,31 +1104,6 @@ public class MainActivity extends AppCompatActivity
 //                        SystemClock.elapsedRealtime(), intervalTimeMillis,
 //                        alarmIntent);
 ////            }
-
-//        } //end of if(isActive)
-
-        //Setup the UI based on whether there is a current request
-        if (prefManager.isDoingRequest()) {
-            current_request = prefManager.getRequest();
-            if (current_request.getStatus().equals("completed")) {
-                Log.d(TAG, "The passenger marked the request as complete");
-                endRequest(REQUEST_SUCCESS);
-                setUI(UI_STATE.SIMPLE);
-                current_request = new request();
-            } else if (current_request.getStatus().equals("canceled")) {
-                Log.d(TAG, "The passenger canceled the request");
-                endRequest(REQUEST_CANCELLED);
-                setUI(UI_STATE.SIMPLE);
-                current_request = new request();
-            } else {
-                Log.d(TAG, "The driver is doing a request");
-//                    current_request = prefManager.getRequest();
-                setUI(UI_STATE.DOINGREQUEST);
-            }
-        } else {
-            setUI(UI_STATE.SIMPLE);
-        }
-
     }
 
 
@@ -1274,7 +1193,8 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.current_requests) {
             Intent intent = new Intent(this, OngoingRequestsActivity.class);
-            startActivityForResult(intent, ONGOING_REQUESTS_CODE);
+//            startActivityForResult(intent, ONGOING_REQUESTS_CODE);
+            startActivity(intent);
 
         } else if (id == R.id.profile) {
             Intent intent = new Intent(this, ProfileActivity.class);
