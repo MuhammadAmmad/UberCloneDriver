@@ -628,7 +628,7 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void sendActive(int active, final String location) {
+    private void sendActive(final int active, final String location) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -652,8 +652,11 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
                     Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "The driver status has been changed successfully");
-                    prefManager.setActive(!prefManager.isActive());
+                    Log.d(TAG, "The driver status has been set successfully");
+                    if(active == 1)
+                        prefManager.setActive(true);
+                    else
+                        prefManager.setActive(false);
                     setUI();
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();

@@ -103,8 +103,8 @@ public class FCMRequest extends AppCompatActivity {
                     public void onFinish() {
                         if(reason == TIMEOUT) {
                             Toast.makeText(getBaseContext(), R.string.fcm_ignored, Toast.LENGTH_LONG).show();
-                            FCMRequest.super.finish();
                         }
+                        FCMRequest.super.finish();
                     }
                 }.start();
                 progressBar.setOnClickListener(new View.OnClickListener() {
@@ -188,7 +188,6 @@ public class FCMRequest extends AppCompatActivity {
 //                    clearHistoryEntries();
                     Toast.makeText(FCMRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
-                reason = NOT_TIMEOUT;
                 FCMRequest.super.finish();
             }
 
