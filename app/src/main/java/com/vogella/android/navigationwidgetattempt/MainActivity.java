@@ -187,9 +187,9 @@ public class MainActivity extends AppCompatActivity
                 if (changeDriverStatus.getText().toString().equals(getString(R.string.go_inactive))) {
 //                if (prefManager.isActive()) {
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from avaialble to away");
-                    prefManager.setActive(false);
+//                    prefManager.setActive(false);
                     sendActive(0, prefManager.getCurrentLocation());
-                    setUI();
+//                    setUI();
                 } else if (changeDriverStatus.getText().toString().equals(getString(R.string.go_active))) {
 //                } else{
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from away to available");
@@ -378,8 +378,9 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onResult(Status status) {
                 mRequestingLocationUpdates = true;
-                prefManager.setActive(true);
-                setUI();
+                sendActive(1, prefManager.getCurrentLocation());
+//                prefManager.setActive(true);
+//                setUI();
 //                setButtonsEnabledState();
             }
         });
@@ -505,7 +506,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
-                alerBuilder.setMessage(getString(R.string.call_passenger_message) + " " + current_request.getPassenger_phone() + " ?");
+                alerBuilder.setMessage(getString(R.string.call_passenger_message));
                 alerBuilder.setPositiveButton(getString(R.string.call_passenger), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -652,6 +653,8 @@ public class MainActivity extends AppCompatActivity
                 if (response.isSuccess() && response.body() != null) {
                     Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The driver status has been changed successfully");
+                    prefManager.setActive(!prefManager.isActive());
+                    setUI();
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");

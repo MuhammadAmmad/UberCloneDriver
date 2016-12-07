@@ -159,7 +159,7 @@ public class HistoryActivity extends AppCompatActivity {
 //                            i.setTime(sdf.format(df));
 
                             i.setPrice(i.getPrice() + " SDG");
-                            history.add(history.size(), i);
+                            history.add(0, i);
                         }
                     }
                     HistoryActivity.this.setRequestsList(history);

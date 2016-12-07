@@ -61,8 +61,8 @@
     <string name="cancel_current_request_message">Are you sure you want to cancel this request?</string>
     <string name="cancel_current_request">Yes, cancel the request</string>
     <string name="dont_cancel_current_request">No</string>
-    <string name="call_passenger_message">Do you want to call the number</string>
-    <string name="call_passenger">Yes</string>
+    <string name="call_passenger_message">Do you want to call the passenger?</string>
+    <string name="call_passenger">Call passenger</string>
     <string name="dont_call">No</string>
     <string name="current_request_completed">Thank you for your efforts! The request is complete</string>
     <string name="current_request_cancelled">The request has been canceled</string>

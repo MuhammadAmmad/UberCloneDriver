@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -60,6 +60,7 @@
         <item name="android:windowNoTitle">true</item>
         <item name="windowNoTitle">true</item>
         <item name="colorControlNormal">@color/colorPrimary</item>
+        <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
         <!--<item name="toolbarStyle">@style/Widget.Toolbar</item>-->
     </style>
     <style name="AppTheme.details.completed" parent="@style/Theme.AppCompat.Light.NoActionBar">

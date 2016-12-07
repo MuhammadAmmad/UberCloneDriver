@@ -101,8 +101,10 @@ public class FCMRequest extends AppCompatActivity {
 
                     @Override
                     public void onFinish() {
-                        if(reason == TIMEOUT)
+                        if(reason == TIMEOUT) {
                             Toast.makeText(getBaseContext(), R.string.fcm_ignored, Toast.LENGTH_LONG).show();
+                            FCMRequest.super.finish();
+                        }
                     }
                 }.start();
                 progressBar.setOnClickListener(new View.OnClickListener() {
