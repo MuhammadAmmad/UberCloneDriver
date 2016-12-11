@@ -62,7 +62,7 @@
             android:theme="@style/AppTheme.NoActionBar2"
             android:label="@string/Incoming_requests"/>
         <activity android:name=".FCMRequest"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.details.completed"
             android:label="@string/fcm_request"/>
 
         <service

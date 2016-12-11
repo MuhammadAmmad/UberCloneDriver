@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity
 //    private Dialog myDialog;
 
     private static final String TAG = "MainActivity";
-    private static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
+    static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
 
     private PrefManager prefManager;
     private AlarmManager alarmMgr;
