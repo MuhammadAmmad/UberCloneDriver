@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NavigationWidgetAttempt</string>
+    <string name="app_name">باسنجر</string>
     <string name="about_driver">عن التطبيق</string>
     <string name="FCMRequest_waiting_for_server">يجري الاتصال ...</string>
     <string name="FCM_accepted_new_request">لقد قبلت هذه الرحلة. يمكنك الآن رؤيتها ضمن قائمة الرحلات القادمة</string>
@@ -78,4 +78,7 @@
     <string name="profile">الحساب</string>
     <string name="sign_out">تسجيل الخروج</string>
     <string name="authentication_failure"></string>
+    <string name="Incoming_requests">الرحلات القادمة</string>
+    <string name="Language">English</string>
+    <string name="go_active"></string>
 </resources>

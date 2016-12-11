@@ -57,6 +57,9 @@ public class PrefManager {
     private static final String ACTIVE = "ACTIVE";
 
 
+    private static final String OTHER_LANGUAGE = "OtherLanguage";
+
+
 
     private static final String CURRENT_LOCATION = "CurrentLocation";
 
@@ -90,6 +93,15 @@ public class PrefManager {
         return pref.getBoolean(ACTIVE, true);
     }
 
+    public void setOtherLanguage(boolean otherLanguage) {
+        editor.putBoolean(OTHER_LANGUAGE, otherLanguage);
+        editor.commit();
+    }
+
+    public boolean usingOtherLanguage() {
+        return pref.getBoolean(OTHER_LANGUAGE, false);
+    }
+
 
     public void setCurrentLocation(String Location) {
         editor.putString(CURRENT_LOCATION, Location);
@@ -100,11 +112,7 @@ public class PrefManager {
         return pref.getString(CURRENT_LOCATION, "No data");
     }
 
-//    public void setRequestId(String request_id) {
-//        editor.putString(REQUEST_ID, request_id);
-//        editor.apply();
-//    }
-//
+
     public String getRequestId() {
         return pref.getString(REQUEST_ID, "No data");
     }

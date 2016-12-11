@@ -10,9 +10,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.location.Location;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -81,6 +84,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -215,6 +219,7 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+
 //        ((TextView) (navigationView.inflateHeaderView(R.layout.nav_header_main))
 //                .findViewById(R.id.show_username)).setText(driver.getUsername());
         navigationView.setNavigationItemSelectedListener(this);
@@ -237,6 +242,37 @@ public class MainActivity extends AppCompatActivity
 //        previous_requests.setLayoutManager(layoutManager);
 
         prefManager = new PrefManager(this);
+
+
+//        navigationView.inflateMenu(R.menu.activity_main_drawer);
+//
+        Locale arabicLocale = new Locale("ar");
+        Locale englishLocale = new Locale("en");
+        Locale desiredLocale;
+        Resources res = getResources();
+        Configuration conf = res.getConfiguration();
+        Locale savedLocale = conf.locale;
+        if(savedLocale.equals(arabicLocale))
+            desiredLocale = englishLocale;
+        else
+            desiredLocale = arabicLocale;
+        conf.locale = desiredLocale; // whatever you want here
+        res.updateConfiguration(conf, null); // second arg null means don't change
+
+// retrieve resources from desired locale
+        String otherLanguage = res.getString(R.string.Language);
+
+// restore original locale
+        conf.locale = savedLocale;
+        res.updateConfiguration(conf, null);
+
+//        if (prefManager.getCurrentLanguage().equals("English"))
+//            ((MenuItem) navigationView.getMenu().getItem(5)).setTitle("عربي");
+//        if (prefManager.getCurrentLanguage().equals("Arabic"))
+//            ((MenuItem) navigationView.getMenu().getItem(5)).setTitle("English");
+        if(prefManager.usingOtherLanguage())
+            ((MenuItem) navigationView.getMenu().getItem(5)).setTitle(otherLanguage);
+
 
         // Kick off the process of building the GoogleApiClient, LocationRequest, and
         // LocationSettingsRequest objects.
@@ -1194,6 +1230,19 @@ public class MainActivity extends AppCompatActivity
     }
 */
 
+/*
+    @Override
+    public boolean onCreateNavigetionMenu(Menu menu) {
+        super.onCreateNavigationMenu(menu);
+
+        // Create your menu...
+
+        this.menu = menu;
+        return true;
+    }
+*/
+
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -1223,6 +1272,66 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, LoginActivity.class);
             startActivityForResult(intent, LOGIN_REQUEST_CODE);
             finish();
+        }else if (id == R.id.language) {
+//            if(prefManager.getCurrentLanguage().equals("Arabic")){
+            Configuration config = new Configuration();
+            if(item.getTitle().equals("English")){
+                String languageToLoad = "en";
+                Locale locale = new Locale(languageToLoad);
+                Locale.setDefault(locale);
+                config.locale = locale;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    config.setLayoutDirection(locale);
+                }
+//                item.setTitle("عربي");
+                if(item.getTitle().equals(R.string.Language))
+                    prefManager.setOtherLanguage(true);
+                else
+                    prefManager.setOtherLanguage(false);
+            }
+            else {
+                String languageToLoad = "ar";
+                Locale locale = new Locale(languageToLoad);
+                Locale.setDefault(locale);
+                config.locale = locale;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    config.setLayoutDirection(locale);
+                }
+//                item.setTitle("English");
+                if(item.getTitle().equals(R.string.Language))
+                    prefManager.setOtherLanguage(true);
+                else
+                    prefManager.setOtherLanguage(false);
+            }
+//            if(item.getTitle().equals("English")){
+//                String languageToLoad = "en";
+//                Locale locale = new Locale(languageToLoad);
+//                Locale.setDefault(locale);
+//                config.locale = locale;
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//                    config.setLayoutDirection(locale);
+//                }
+////                item.setTitle("عربي");
+//                prefManager.setCurrentLanguage("English");
+//            }
+//            else {
+//                String languageToLoad = "ar";
+//                Locale locale = new Locale(languageToLoad);
+//                Locale.setDefault(locale);
+//                config.locale = locale;
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//                    config.setLayoutDirection(locale);
+//                }
+////                item.setTitle("English");
+//                prefManager.setCurrentLanguage("Arabic");
+//            }
+
+            Context context = getApplicationContext();
+            context.getResources().updateConfiguration(config,context.getResources().getDisplayMetrics());
+            Intent intent = new Intent(MainActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -1247,13 +1356,6 @@ public class MainActivity extends AppCompatActivity
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         mMap.setMyLocationEnabled(true);
