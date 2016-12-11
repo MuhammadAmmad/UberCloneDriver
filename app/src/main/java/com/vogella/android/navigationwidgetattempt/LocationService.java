@@ -2,6 +2,7 @@ package com.vogella.android.navigationwidgetattempt;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -21,24 +22,16 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
+
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  * <p>
- * TODO: Customize class - update intent actions and extra parameters.
  */
 public class LocationService extends IntentService {
     private static final String TAG = "Location Service";
-    //    // TODO: Rename actions, choose action names that describe tasks that this
-//    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-//    public static final String ACTION_FOO = "com.vogella.android.navigationwidgetattempt.action.FOO";
-//    public static final String ACTION_BAZ = "com.vogella.android.navigationwidgetattempt.action.BAZ";
-//
-//    // TODO: Rename parameters
-//    public static final String EXTRA_PARAM1 = "com.vogella.android.navigationwidgetattempt.extra.PARAM1";
-//    public static final String EXTRA_PARAM2 = "com.vogella.android.navigationwidgetattempt.extra.PARAM2";
-//
     private PrefManager prefManager;
 
     public LocationService() {
@@ -51,11 +44,6 @@ public class LocationService extends IntentService {
         Log.d(TAG,"This has been called!");
         if(intent.hasExtra("alarmType")){
             Log.d(TAG,"intent has alarmType");
-//            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//            PendingIntent pi = PendingIntent.getService(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//            PendingIntent pi2 = PendingIntent.getService(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//            alarmManager.cancel(pi);
-//            alarmManager.cancel(pi2);
 
             if(isLocationEnabled(this)) {
                 Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
@@ -63,7 +51,6 @@ public class LocationService extends IntentService {
                 PendingIntent locationPI = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
                 AlarmManager m = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                ;
                 int intervalTimeMillis;
                 if (prefManager.isDoingRequest())
                     intervalTimeMillis = 10 * 1000;  // 10 seconds
@@ -76,6 +63,13 @@ public class LocationService extends IntentService {
                 PendingIntent activePI = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                 intervalTimeMillis = 30 * 1000;
                 m.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + intervalTimeMillis, activePI);
+            }
+            else {
+                NotificationManager notificationManager =
+                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
+
             }
 
             if(intent.getStringExtra("alarmType").equals("location")){
@@ -147,23 +141,6 @@ public class LocationService extends IntentService {
         });
     }
 
-//    /**
-//     * Handle action Foo in the provided background thread with the provided
-//     * parameters.
-//     */
-//    private void handleActionFoo(String param1, String param2) {
-//        // TODO: Handle action Foo
-//        throw new UnsupportedOperationException("Not yet implemented");
-//    }
-//
-//    /**
-//     * Handle action Baz in the provided background thread with the provided
-//     * parameters.
-//     */
-//    private void handleActionBaz(String param1, String param2) {
-//        // TODO: Handle action Baz
-//        throw new UnsupportedOperationException("Not yet implemented");
-//    }
 
     private void sendActive(int active, final String location) {
         Retrofit retrofit = new Retrofit.Builder()

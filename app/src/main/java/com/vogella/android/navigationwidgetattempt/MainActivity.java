@@ -2,6 +2,7 @@ package com.vogella.android.navigationwidgetattempt;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -10,9 +11,11 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
@@ -102,6 +105,7 @@ public class MainActivity extends AppCompatActivity
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 2000;
     private static final int ACCESS_FINE_LOCATION_CODE = 111;
+    static final int ACTIVE_NOTIFICATION_ID = 1024;
     private GoogleMap mMap;
 
     private GoogleApiClient mGoogleApiClient;
@@ -653,10 +657,14 @@ public class MainActivity extends AppCompatActivity
                 if (response.isSuccess() && response.body() != null) {
                     Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The driver status has been set successfully");
-                    if(active == 1)
+                    if(active == 1) {
                         prefManager.setActive(true);
-                    else
+                        activeNotification(true);
+                    }
+                    else {
                         prefManager.setActive(false);
+                        activeNotification(false);
+                    }
                     setUI();
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
@@ -1493,6 +1501,40 @@ public class MainActivity extends AppCompatActivity
                             Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
                         }
                     });
+        }
+    }
+
+    private void activeNotification(Boolean enable) {
+
+        if (enable) {
+
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                    PendingIntent.FLAG_ONE_SHOT);
+
+            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.ic_notification_logo)
+                    .setContentTitle(getString(R.string.app_name))
+                    .setContentText("Active")
+//                .setAutoCancel(true)
+                    .setSound(defaultSoundUri)
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true);
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            notificationManager.notify(ACTIVE_NOTIFICATION_ID /* ID of notification */, notificationBuilder.build());
+        }
+        else
+        {
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
+
         }
     }
 
