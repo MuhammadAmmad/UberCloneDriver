@@ -122,7 +122,7 @@ public class FCMRequest extends AppCompatActivity {
         ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(request.getPickupText());
         ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.getPrice() + "  SDG");
         ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.getTime());
-        final CountDownTimer countDownTimer = new CountDownTimer(20 * 1000, 500) {
+        final CountDownTimer countDownTimer = new CountDownTimer(30 * 1000, 500) {
             @Override
             public void onTick(long l) {
                 long seconds = l / 1000;

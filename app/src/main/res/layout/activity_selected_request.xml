@@ -60,6 +60,7 @@
 
 
     </android.support.v7.widget.Toolbar>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="450dp">
@@ -117,7 +118,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="13dp"
                 android:textColor="@color/colorPrimary"
-                android:text="Time"/>
+                android:text="@string/time"/>
 
             <TextView
                 android:id="@+id/request_details_time"
@@ -137,7 +138,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="13dp"
                 android:textColor="@color/colorPrimary"
-                android:text="Price"/>
+                android:text="@string/price"/>
 
             <TextView
                 android:id="@+id/request_details_price"
@@ -157,7 +158,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="13dp"
                 android:textColor="@color/colorPrimary"
-                android:text="Notes"/>
+                android:text="@string/request_details_notes"/>
 
             <TextView
                 android:id="@+id/request_details_notes"
@@ -171,6 +172,7 @@
 
         </LinearLayout>
     </ScrollView>
+
     <LinearLayout
         android:id="@+id/request_details_buttons"
         android:layout_width="match_parent"
@@ -185,8 +187,10 @@
             android:textAllCaps="false"
             android:background="@color/red2"
             android:textColor="@color/white"
-            android:text="Remove"
+            style="?android:attr/buttonBarButtonStyle"
+            android:text="@string/remove"
             android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"
             android:textSize="18sp"
             android:textAlignment="center"/>
         <!--<view-->
@@ -200,8 +204,9 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textAllCaps="false"
+            style="?android:attr/buttonBarButtonStyle"
             android:background="@color/colorPrimary"
-            android:text="On The way"
+            android:text="@string/on_the_way"
             android:textAlignment="center"/>
     </LinearLayout>
 </LinearLayout>

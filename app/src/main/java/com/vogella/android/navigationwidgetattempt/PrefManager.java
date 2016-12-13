@@ -175,8 +175,8 @@ public class PrefManager {
                 pref.getString(USER_FULLNAME, "No data"),
                 pref.getString(USER_EMAIL, "No data"),
                 pref.getString(USER_GENDER, "No data"),
-                pref.getString(USER_PASSWORD, "No data"),
-                pref.getString(USER_PHONE, "No data")
+                pref.getString(USER_PHONE, "No data"),
+                pref.getString(USER_PASSWORD, "No data")
         );
     }
     public void setPlacesList(String placesList){

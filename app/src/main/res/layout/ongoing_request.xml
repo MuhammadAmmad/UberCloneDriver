@@ -7,13 +7,14 @@
     android:layout_marginBottom="16dp"
     android:foregroundGravity="center"
     android:layout_marginLeft="40dp"
+    android:layout_marginStart="40dp"
     android:elevation="2dp">
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="20dp"
-        android:paddingStart="20dp"
+        android:paddingRight="20dp"
         android:paddingTop="10dp"
         android:paddingBottom="15dp"
         android:background="@android:color/white">
@@ -22,7 +23,7 @@
             android:layout_height="wrap_content"
             android:paddingTop="13dp"
             android:textColor="@color/colorPrimary"
-            android:text="Price"/>
+            android:text="@string/price"/>
 
         <TextView
             android:id="@+id/cr_price"
@@ -37,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/colorPrimary"
-            android:text="Notes"/>
+            android:text="@string/notes"/>
 
         <TextView
             android:id="@+id/cr_notes"
@@ -51,12 +52,13 @@
             android:id="@+id/cr_close"
             android:paddingTop="10dp"
             android:paddingRight="15dp"
+            android:paddingLeft="15dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/white"
             android:layout_gravity="end"
             android:textColor="@color/colorPrimary"
-            android:text="Done"/>
+            android:text="@string/done"/>
 
     </LinearLayout>
 

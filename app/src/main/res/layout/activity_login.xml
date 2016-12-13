@@ -15,7 +15,7 @@
         android:layout_width="127dp"
         android:layout_height="80dp"
         android:background="@drawable/logo"
-        android:contentDescription="Driver" />
+        android:contentDescription="@string/driver" />
 
     <!-- Login progress -->
     <ProgressBar

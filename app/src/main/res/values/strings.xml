@@ -97,4 +97,12 @@
     <string name="go_inactive">Go inactive</string>
     <string name="go_active">Go active</string>
     <string name="Language">عربي</string>
+    <string name="decline">Decline</string>
+    <string name="click_anywhere_to_accept">Click anywhere to accept</string>
+    <string name="driver">Driver</string>
+    <string name="time">Time</string>
+    <string name="price">Price</string>
+    <string name="request_details_notes">Notes</string>
+    <string name="remove">Remove</string>
+    <string name="done">Done</string>
 </resources>
