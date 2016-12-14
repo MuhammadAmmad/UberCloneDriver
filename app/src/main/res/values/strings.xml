@@ -85,7 +85,7 @@
     <string name="cancel">Cancel</string>
     <string name="from">From  </string>
     <string name="to">To </string>
-    <string name="notes">Notes:</string>
+    <string name="notes">Notes</string>
     <string name="close">close</string>
     <string name="history">Previous requests</string>
     <string name="Incoming_requests">Incoming Requests</string>
@@ -105,4 +105,7 @@
     <string name="request_details_notes">Notes</string>
     <string name="remove">Remove</string>
     <string name="done">Done</string>
+    <string name="upcoming_requests">Incoming Requests</string>
+    <string name="no_incoming_requests">You have no Incoming requests</string>
+    <string name="no_previous_requests">You have no Previous requests</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.vogella.android.navigationwidgetattempt;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -136,6 +137,13 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         String password = prefManager.pref.getString("UserPassword","");
 //        String password = prefManager.pref.getString("USER_PASSWORD","");
 
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
+
         RestService service = retrofit.create(RestService.class);
         Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
         call.enqueue(new Callback<RequestsResponse>() {
@@ -143,6 +151,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
             public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 Log.d(TAG, "onResponse: code: " + response.code());
+                if(progress.isShowing())progress.dismiss();
                 if (response.isSuccess() && response.body() != null){
                     List <request> rides = response.body().getRides();
                     List <request> upcoming = new ArrayList<request>(){{}};
@@ -169,6 +178,8 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                         }
                     }
                     OngoingRequestsActivity.this.setRequestsList(upcoming);
+                    if(upcoming.size() == 0)
+                        Toast.makeText(OngoingRequestsActivity.this, R.string.no_incoming_requests,Toast.LENGTH_LONG).show();
                 } else if (response.code() == 401){
                     Toast.makeText(OngoingRequestsActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
@@ -185,6 +196,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
             @Override
             public void onFailure(Call<RequestsResponse> call, Throwable t) {
+                if(progress.isShowing())progress.dismiss();
                 Toast.makeText(OngoingRequestsActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 finish();
             }

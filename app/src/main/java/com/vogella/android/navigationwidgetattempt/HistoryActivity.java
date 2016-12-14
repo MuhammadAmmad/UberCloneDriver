@@ -1,5 +1,6 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -134,12 +135,19 @@ public class HistoryActivity extends AppCompatActivity {
               String email = prefManager.pref.getString("UserEmail","");
         String password = prefManager.pref.getString("UserPassword","");
 
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
         RestService service = retrofit.create(RestService.class);
         Call<RequestsResponse> call = service.requests("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP));
         call.enqueue(new Callback<RequestsResponse>() {
             @Override
             public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
+                if(progress.isShowing())progress.dismiss();
                 if (response.isSuccess() && response.body() != null){
                     List <request> rides = response.body().getRides();
                     List <request> history = new ArrayList<request>(){{}};
@@ -162,6 +170,8 @@ public class HistoryActivity extends AppCompatActivity {
                             history.add(0, i);
                         }
                     }
+                    if(history.size() == 0)
+                        Toast.makeText(HistoryActivity.this, R.string.no_previous_requests,Toast.LENGTH_LONG).show();
                     HistoryActivity.this.setRequestsList(history);
                 } else if (response.code() == 401){
                     Toast.makeText(HistoryActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
@@ -179,6 +189,8 @@ public class HistoryActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<RequestsResponse> call, Throwable t) {
+                if(progress.isShowing())progress.dismiss();
+                Toast.makeText(HistoryActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
 
             }
         });
