@@ -56,6 +56,8 @@ public class FCMRequest extends AppCompatActivity {
     private LatLng driverLocation;
     private Ringtone r;
 
+    private ProgressDialog progress;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,13 +113,13 @@ public class FCMRequest extends AppCompatActivity {
                 Double.parseDouble(prefManager.getCurrentLocation().split(",")[1]));
 
 
-        calculate_distance();
 
         Uri tone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         r = RingtoneManager.getRingtone(getApplicationContext(), tone);
         r.play();
 
         setContentView(R.layout.activity_fcmrequest);
+        calculate_distance();
         final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressbar_timerview);
         ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(request.getPickupText());
         ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.getPrice() + "  SDG");
@@ -171,7 +173,7 @@ public class FCMRequest extends AppCompatActivity {
               String email = prefManager.pref.getString("UserEmail","");
         String password = prefManager.pref.getString("UserPassword","");
 
-        final ProgressDialog progress = new ProgressDialog(this);
+        progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
@@ -185,7 +187,7 @@ public class FCMRequest extends AppCompatActivity {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
-                if(progress.isShowing())progress.dismiss();
+                if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
                 if (response.isSuccess() && response.body() != null){
                     if(accepted == 1) {
                         if(response.body().getStatus() == 0) {
@@ -228,7 +230,7 @@ public class FCMRequest extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if(progress.isShowing())progress.dismiss();
+                if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
                 Log.d(TAG, "The response is onFailure");
                 FCMRequest.super.finish();
             }
@@ -247,7 +249,7 @@ public class FCMRequest extends AppCompatActivity {
 
     private void calculate_distance()
     {
-        final ProgressDialog progress = new ProgressDialog(this);
+        progress = new ProgressDialog(this);
 //        progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
         progress.setMessage("Calculating distance..");
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -266,7 +268,7 @@ public class FCMRequest extends AppCompatActivity {
 //                        toast.show();
 //                        Log.d(TAG, "showRoute: Route successfully computed ");
 //
-                        if(progress.isShowing())progress.dismiss();
+                        if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
 
                         if(direction.isOK()) {
 //                            // Check if user hasn't cancelled:
@@ -307,9 +309,16 @@ public class FCMRequest extends AppCompatActivity {
 //                        showRoute();
 //                        Log.d(TAG, "showRoute: Route Failed ");
 
-                        if(progress.isShowing())progress.dismiss();
+                        if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
 
                     }
                 });
     }
+    @Override
+    protected void onDestroy() {
+        if (!FCMRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+        r.stop();
+        super.onDestroy();
+    }
+
 }

@@ -112,6 +112,8 @@ public class MainActivity extends AppCompatActivity
     static final int ACTIVE_NOTIFICATION_ID = 1024;
     private GoogleMap mMap;
 
+    private ProgressDialog progress;
+
     private GoogleApiClient mGoogleApiClient;
     protected LocationSettingsRequest mLocationSettingsRequest;
     private LocationRequest mLocationRequest;
@@ -614,7 +616,7 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
-        final ProgressDialog progress = new ProgressDialog(this);
+        progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.updating_request_status));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
@@ -627,7 +629,7 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if (progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
 //                    Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
@@ -661,7 +663,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if (progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, getString(R.string.server_timeout));
             }
@@ -676,7 +678,7 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
-        final ProgressDialog progress = new ProgressDialog(this);
+        progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.updating_driver_status));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
@@ -688,7 +690,8 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if (progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+//                if (progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
                     Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
@@ -719,7 +722,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if (progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, getString(R.string.server_timeout));
             }
@@ -734,7 +737,7 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
-        final ProgressDialog progress = new ProgressDialog(this);
+        progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.cancelling_request));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
@@ -747,7 +750,7 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if (progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
                     endRequest(REQUEST_CANCELLED);
@@ -771,7 +774,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if (progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, getString(R.string.server_timeout));
             }
@@ -1639,5 +1642,12 @@ public class MainActivity extends AppCompatActivity
 
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+        super.onDestroy();
+    }
+
 
 }
