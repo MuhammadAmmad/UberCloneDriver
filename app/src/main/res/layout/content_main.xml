@@ -52,6 +52,17 @@
         android:id="@+id/current_request_view">
     </include>
 
+    <ImageView
+            android:id="@+id/nav_button"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="bottom|start"
+            android:layout_marginTop="70dp"
+            android:src="@drawable/navigation_001"
+        />
+
     <TextView
         android:id="@+id/change_driver_status"
         android:layout_width="match_parent"

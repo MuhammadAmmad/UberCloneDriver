@@ -191,7 +191,8 @@ public class MainActivity extends AppCompatActivity
 
     private CameraUpdate cu;
     private boolean zoomToRoute = false;
-        private LatLngBounds bounds;
+    private LatLngBounds bounds;
+    private boolean createdFromNewRequest;
 
 
         @Override
@@ -303,6 +304,9 @@ public class MainActivity extends AppCompatActivity
 //        prefManager.setActive(false);
 
         mRequestingLocationUpdates = false;
+
+
+        createdFromNewRequest = false;
 
 
 
@@ -649,6 +653,30 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        ImageView navigation = (ImageView) findViewById(R.id.nav_button);
+        navigation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Uri gmmIntentUri;
+                if (current_request.getStatus().equals("passenger_onboard") ||
+                        current_request.getStatus().equals("arrived_dest") ||
+                        current_request.getStatus().equals("completed")) {
+
+                    gmmIntentUri = Uri.parse("google.navigation:q=" + String.valueOf(destPoint.latitude)
+                            + "," + String.valueOf(destPoint.longitude) );
+
+                }
+                else{
+                    gmmIntentUri = Uri.parse("google.navigation:q=" + String.valueOf(pickupPoint.latitude)
+                            + "," + String.valueOf(pickupPoint.longitude));
+                }
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                startActivity(mapIntent);
+
+                }
+        });
+
     }
 
 
@@ -946,6 +974,7 @@ public class MainActivity extends AppCompatActivity
             temp.setDestText(data.getStringExtra("dest_text"));
             temp.setPickupText(data.getStringExtra("pickup_text"));
             temp.setRequest_id(data.getStringExtra("request_id"));
+            createdFromNewRequest = true;
             prefManager.setRequest(temp);
             startRequest();
         }
@@ -1059,6 +1088,8 @@ public class MainActivity extends AppCompatActivity
                     driverToPickupRoute.remove();
                 }
 
+                ((ImageView) findViewById(R.id.nav_button)).setVisibility(View.GONE);
+
                 if (prefManager.isActive()) {
 
                     ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
@@ -1102,6 +1133,9 @@ public class MainActivity extends AppCompatActivity
                 ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
                 linearLayout.setVisibility(View.VISIBLE);
+
+                ((ImageView) findViewById(R.id.nav_button)).setVisibility(View.VISIBLE);
+
                 ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.INVISIBLE);
                 if (current_request.getStatus().equals("passenger_onboard") ||
                         current_request.getStatus().equals("arrived_dest") ||
@@ -1597,7 +1631,8 @@ public class MainActivity extends AppCompatActivity
 
         if (setWhenReady) {
             setWhenReady = false;
-//            setMarkers();
+            if(!createdFromNewRequest)
+                setMarkers();
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
