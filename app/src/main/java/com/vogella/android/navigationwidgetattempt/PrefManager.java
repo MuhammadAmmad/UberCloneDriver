@@ -50,6 +50,10 @@ public class PrefManager {
     private static final String USER_GENDER = "UserGender";
 
 
+    private static final String LAST_PASSWORD = "LastPassword";
+    private static final String LAST_EMAIL = "LastEmail";
+
+
     private static final String PLACES_LIST = "PlacesList";
 
     private static final String EXTERNAL_LOGOUT = "ExternalLogout";
@@ -63,6 +67,24 @@ public class PrefManager {
 
 
     private static final String CURRENT_LOCATION = "CurrentLocation";
+
+    public void setLastEmail(String email) {
+        editor.putString(LAST_EMAIL, email);
+        editor.apply();
+    }
+
+    public String getLastEmail() {
+        return pref.getString(LAST_EMAIL, "No data");
+    }
+
+    public void setLastPassword(String password) {
+        editor.putString(LAST_PASSWORD, password);
+        editor.apply();
+    }
+
+    public String getLastPassword() {
+        return pref.getString(LAST_PASSWORD, "No data");
+    }
 
 
 //    private static final String TICKETS_LIST = "TicketsList";

@@ -96,9 +96,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         setContentView(R.layout.activity_login);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        if(!prefManager.getLastEmail().equals("No data"))
+            mEmailView.setText(prefManager.getLastEmail());
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
+        if(!prefManager.getLastPassword().equals("No data"))
+            mPasswordView.setText(prefManager.getLastPassword());
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -261,6 +265,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     driver.setPassword(password);
                     prefManager.setIsLoggedIn(true);
                     prefManager.setDriver(driver);
+
+                    prefManager.setLastEmail(email);
+                    prefManager.setLastPassword(password);
 
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
