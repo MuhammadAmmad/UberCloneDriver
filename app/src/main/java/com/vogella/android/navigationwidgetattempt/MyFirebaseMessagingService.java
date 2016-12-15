@@ -36,6 +36,11 @@ package com.vogella.android.navigationwidgetattempt;
         import java.util.Map;
         import java.util.Objects;
 
+        import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
+        import static com.vogella.android.navigationwidgetattempt.MainActivity.blsIntent;
+        import static com.vogella.android.navigationwidgetattempt.MainActivity.mConnection;
+        import static com.vogella.android.navigationwidgetattempt.MainActivity.mIsBound;
+
 //current token : dKkBmm8H48A:APA91bFQQR2f-ibM1EfuLXbIRTItS2M3l5oV4AosbyEDZLdWm9un_-CJArBXNHo-lAonoXAqrlEy-tgbik4K3Hd5NJeKjgVjSG0tavW1_swW38oUIHbRN9uwVCPE06ujZh6szCH5glgi
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
@@ -153,7 +158,28 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             }
             else if (status.equals("3")){ // Driver logged out
                 sendNotification(getString(R.string.logged_elsewhere));
+//                prefManager.setIsLoggedIn(false);
                 prefManager.setIsLoggedIn(false);
+
+                prefManager.setExternalLogout(true); //to distinguis between this case and when logging out from within the app
+
+//            prefManager.setDriver(driver);
+                if(mIsBound) {
+                    try {
+                        unbindService(mConnection);
+                    }
+                    catch (java.lang.IllegalArgumentException ignored){
+
+                    }
+                    mIsBound = false;
+                }
+                if(blsIntent != null)
+                    stopService(blsIntent);
+
+
+                activeNotification(false);
+
+
                 EventBus.getDefault().post(new DriverLoggedout());
             }
         }
@@ -178,13 +204,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
-        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+//        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_notification_logo)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(messageBody)
                 .setAutoCancel(true)
-                .setSound(defaultSoundUri)
+//                .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager =
@@ -192,4 +218,39 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
+
+    private void activeNotification(Boolean enable) {
+
+        if (enable) {
+
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                    PendingIntent.FLAG_ONE_SHOT);
+
+//            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.ic_notification_logo)
+                    .setContentTitle(getString(R.string.app_name))
+                    .setContentText("Active")
+//                .setAutoCancel(true)
+//                    .setSound(defaultSoundUri)
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true);
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            notificationManager.notify(ACTIVE_NOTIFICATION_ID /* ID of notification */, notificationBuilder.build());
+        }
+        else
+        {
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
+
+        }
+    }
+
 }

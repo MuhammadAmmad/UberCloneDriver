@@ -178,13 +178,14 @@ public class MainActivity extends AppCompatActivity
     protected static MainActivity context;
 
     private BackgroundLocationService backgroundLocationService;
-    private ServiceConnection mConnection;
+    protected static ServiceConnection mConnection;
 
     private boolean checkedlocation = false;
 
     private boolean goActive = false;
-        private Intent blsIntent;
-        private boolean mIsBound = false;
+
+    protected static Intent blsIntent;
+    protected static boolean mIsBound = false;
 
 
         @Override
@@ -687,12 +688,14 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
-        progress = new ProgressDialog(this);
-        progress.setMessage(getString(R.string.updating_request_status));
-        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progress.setIndeterminate(true);
-        progress.show();
+        if (!status.equals("on_the_way")) {
 
+            progress = new ProgressDialog(this);
+            progress.setMessage(getString(R.string.updating_request_status));
+            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setIndeterminate(true);
+            progress.show();
+        }
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.status("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
@@ -700,16 +703,18 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+                if (!status.equals("on_the_way"))
+                     if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
 //                    Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The status has been sent successfully");
                     if (status.equals("on_the_way")) {
-                        prefManager.setDoingRequest(true);
+//                        prefManager.setDoingRequest(true);
 //                        setUI(UI_STATE.DOINGREQUEST);
                     }
                     else {
+                        Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                         current_request.nextStatus();
                         if (status.equals("completed")) {
                             endRequest(REQUEST_SUCCESS);
@@ -719,24 +724,34 @@ public class MainActivity extends AppCompatActivity
 
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onCreate: User not logged in");
-                    prefManager.setIsLoggedIn(false);
-                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                    MainActivity.this.startActivity(intent);
-                    MainActivity.super.finish();
+                    Log.i(TAG, "sendStatus: User not logged in");
+//                    prefManager.setIsLoggedIn(false);
+//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//                    MainActivity.this.startActivity(intent);
+//                    MainActivity.super.finish();
+                    logout();
                 } else {
 //                    clearHistoryEntries();
                     Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "Unknown error occurred");
+                    if(status.equals("on_the_way")) {
+                        prefManager.setDoingRequest(false);
+                        setUI();
+                    }
                 }
 
             }
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+                if (!status.equals("on_the_way"))
+                    if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, getString(R.string.server_timeout));
+                if(status.equals("on_the_way")) {
+                    prefManager.setDoingRequest(false);
+                    setUI();
+                }
             }
         });
     }
@@ -780,10 +795,11 @@ public class MainActivity extends AppCompatActivity
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
-                    prefManager.setIsLoggedIn(false);
-                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                    MainActivity.this.startActivity(intent);
-                    MainActivity.super.finish();
+//                    prefManager.setIsLoggedIn(false);
+//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//                    MainActivity.this.startActivity(intent);
+//                    MainActivity.super.finish();
+                    logout();
                 } else {
 //                    clearHistoryEntries();
                     Log.i(TAG, "Unknown error occurred");
@@ -831,11 +847,12 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "The request has been cancelled successfully");
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onResume: User not logged in");
-                    prefManager.setIsLoggedIn(false);
-                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                    MainActivity.this.startActivity(intent);
-                    MainActivity.super.finish();
+                    Log.i(TAG, "sendCancel: User not logged in");
+//                    prefManager.setIsLoggedIn(false);
+//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//                    MainActivity.this.startActivity(intent);
+//                    MainActivity.super.finish();
+                    logout();
                 } else {
 //                    clearHistoryEntries();
                     Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
@@ -941,6 +958,10 @@ public class MainActivity extends AppCompatActivity
 //                SystemClock.elapsedRealtime(), UPDATE_DURING_REQUEST,
 //                alarmIntent);
         current_request = prefManager.getRequest();
+
+        prefManager.setDoingRequest(true);
+
+        setUI();
 
         sendStatus(current_request.getRequest_id(), current_request.getStatus());
 //        while(no_response);
@@ -1464,19 +1485,7 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
 
         } else if (id == R.id.sign_out) {
-            prefManager.setIsLoggedIn(false);
-            driver = new driver();
-//            prefManager.setDriver(driver);
-            if(mIsBound) {
-                unbindService(mConnection);
-                mIsBound = false;
-            }
-            if(blsIntent != null)
-                stopService(blsIntent);
-            Intent intent = new Intent(this, LoginActivity.class);
-            activeNotification(false);
-            startActivity(intent);
-            finish();
+            logout();
         }else if (id == R.id.language) {
 //            if(prefManager.getCurrentLanguage().equals("Arabic")){
             Configuration config = new Configuration();
@@ -1544,7 +1553,23 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
+        private void logout() {
+            prefManager.setIsLoggedIn(false);
+            driver = new driver();
+//            prefManager.setDriver(driver);
+            if(mIsBound) {
+                unbindService(mConnection);
+                mIsBound = false;
+            }
+            if(blsIntent != null)
+                stopService(blsIntent);
+            Intent intent = new Intent(this, LoginActivity.class);
+            activeNotification(false);
+            startActivity(intent);
+            finish();
+        }
+
+        @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         // Add a marker in Sydney and move the camera
@@ -1830,13 +1855,13 @@ public class MainActivity extends AppCompatActivity
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                     PendingIntent.FLAG_ONE_SHOT);
 
-            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+//            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                     .setSmallIcon(R.drawable.ic_notification_logo)
                     .setContentTitle(getString(R.string.app_name))
                     .setContentText("Active")
 //                .setAutoCancel(true)
-                    .setSound(defaultSoundUri)
+//                    .setSound(defaultSoundUri)
                     .setContentIntent(pendingIntent)
                     .setOngoing(true);
 

@@ -52,6 +52,7 @@ public class PrefManager {
 
     private static final String PLACES_LIST = "PlacesList";
 
+    private static final String EXTERNAL_LOGOUT = "ExternalLogout";
 
 
     private static final String ACTIVE = "ACTIVE";
@@ -133,6 +134,15 @@ public class PrefManager {
 
     public boolean isLoggedIn() {
         return pref.getBoolean(IS_LOGGED_IN, false);
+    }
+
+    public void setExternalLogout(boolean externalLogout) {
+        editor.putBoolean(EXTERNAL_LOGOUT, externalLogout);
+        editor.apply();
+    }
+
+    public boolean isExtermalLogout() {
+        return pref.getBoolean(EXTERNAL_LOGOUT, false);
     }
 
     public void setDoingRequest(boolean DoingRequest) {
