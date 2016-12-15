@@ -166,7 +166,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 //            prefManager.setDriver(driver);
                 if(mIsBound) {
                     try {
-                        unbindService(mConnection);
+                        getApplicationContext().unbindService(mConnection);
                     }
                     catch (java.lang.IllegalArgumentException ignored){
 

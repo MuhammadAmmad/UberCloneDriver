@@ -1,6 +1,7 @@
 package com.vogella.android.navigationwidgetattempt;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -14,7 +15,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.location.Location;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,6 +35,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -55,10 +56,10 @@ import com.akexorcist.googledirection.model.Info;
 import com.akexorcist.googledirection.model.Leg;
 import com.akexorcist.googledirection.model.Route;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -66,6 +67,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -127,7 +129,7 @@ public class MainActivity extends AppCompatActivity
     private Marker pickupMarker;
     private LatLng destPoint;
     private Marker destMarker;
-    private LatLng currentLocationPoint = null;
+    private static LatLng currentLocationPoint = null;
     private Marker currentLocationMarker;
     private Polyline pickupToDestRoute;
     private Polyline driverToPickupRoute;
@@ -169,7 +171,7 @@ public class MainActivity extends AppCompatActivity
     private AlarmManager alarmMgr;
     private PendingIntent alarmIntent;
     private boolean firstMove = true;
-    private boolean mapIsReady;
+    private boolean mapIsReady = false;
     private boolean setWhenReady = false;
     private boolean firstLocationToDriverRouting;
     private Toolbar toolbar;
@@ -180,12 +182,16 @@ public class MainActivity extends AppCompatActivity
     private BackgroundLocationService backgroundLocationService;
     protected static ServiceConnection mConnection;
 
-    private boolean checkedlocation = false;
+    protected static boolean checkedLocation = false;
 
     private boolean goActive = false;
 
     protected static Intent blsIntent;
     protected static boolean mIsBound = false;
+
+    private CameraUpdate cu;
+    private boolean zoomToRoute = false;
+        private LatLngBounds bounds;
 
 
         @Override
@@ -321,8 +327,11 @@ public class MainActivity extends AppCompatActivity
                 // service that we know is running in our own process, we can
                 // cast its IBinder to a concrete class and directly access it.
                 MainActivity.this.backgroundLocationService = ((BackgroundLocationService.LocalBinder)service).getServerInstance();
-                if(!checkedlocation)
+                if(!checkedLocation) {
                     MainActivity.this.backgroundLocationService.checkLocationSettings();
+                    checkedLocation = true;
+                }
+                mIsBound = true;
 
                 // Tell the user about this for our demo.
     //            Toast.makeText(Binding.this, R.string.local_service_connected,
@@ -335,12 +344,14 @@ public class MainActivity extends AppCompatActivity
                 // Because it is running in our same process, we should never
                 // see this happen.
                 MainActivity.this.backgroundLocationService = null;
-    //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
+                mIsBound = false;
+
+                //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
     //                    Toast.LENGTH_SHORT).show();
             }
         };
 
-        bindService(blsIntent,mConnection, BIND_IMPORTANT);
+        getApplicationContext().bindService(blsIntent,mConnection, BIND_IMPORTANT);
 
         mIsBound = true;
 
@@ -961,7 +972,7 @@ public class MainActivity extends AppCompatActivity
 
         prefManager.setDoingRequest(true);
 
-        setUI();
+//        setUI();
 
         sendStatus(current_request.getRequest_id(), current_request.getStatus());
 //        while(no_response);
@@ -1078,10 +1089,6 @@ public class MainActivity extends AppCompatActivity
                 pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
                 destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
 
-                if (mapIsReady)
-                    setMarkers();
-                else
-                    setWhenReady = true;
 
 
                 //set values for the different views
@@ -1111,6 +1118,11 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 setOnClickListeners();
+                if (mapIsReady)
+                    setMarkers();
+                else
+                    setWhenReady = true;
+
         }
     }
 
@@ -1143,8 +1155,8 @@ public class MainActivity extends AppCompatActivity
 
 
         // For zooming automatically to the location of the marker
-        CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+//        CameraPosition cameraPosition = new CameraPosition.Builder().target(pickupPoint).zoom(12).build();
+//        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
     @Override
@@ -1170,12 +1182,14 @@ public class MainActivity extends AppCompatActivity
         if (prefManager.isDoingRequest()) {
             prefManager.setRequest(current_request);
         }
+        checkedLocation = false;
         wasActive = prefManager.isActive();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume called");
         if (!prefManager.isLoggedIn()) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             MainActivity.this.startActivity(intent);
@@ -1189,10 +1203,11 @@ public class MainActivity extends AppCompatActivity
         //ensure location is enabled
 //        if(prefManager.isDoingRequest() || wasActive)
         if(prefManager.isDoingRequest() || prefManager.isActive())
-            if(backgroundLocationService != null) {
-                backgroundLocationService.checkLocationSettings();
-                checkedlocation = true;
-            }
+            if(backgroundLocationService != null)
+                if (!checkedLocation){
+                    backgroundLocationService.checkLocationSettings();
+                    checkedLocation = true;
+                }
 
 
 //        } //end of if(isActive)
@@ -1558,7 +1573,8 @@ public class MainActivity extends AppCompatActivity
             driver = new driver();
 //            prefManager.setDriver(driver);
             if(mIsBound) {
-                unbindService(mConnection);
+                //TODO: Handle service leak
+                getApplicationContext().unbindService(mConnection);
                 mIsBound = false;
             }
             if(blsIntent != null)
@@ -1581,7 +1597,7 @@ public class MainActivity extends AppCompatActivity
 
         if (setWhenReady) {
             setWhenReady = false;
-            setMarkers();
+//            setMarkers();
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -1607,10 +1623,15 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         if (requestCode == ACCESS_FINE_LOCATION_CODE) {
+            Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult:");
             // If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                backgroundLocationService.checkLocationSettings();
+                Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult: Granted");
+                if(!checkedLocation) {
+                    backgroundLocationService.checkLocationSettings();
+                    checkedLocation = true;
+                }
             } else {
                 Toast.makeText(this, "You can't receive requests unless you enable this permission\n" +
                                 "if you want to receive requests, press the 'Go active' button below",
@@ -1762,57 +1783,160 @@ public class MainActivity extends AppCompatActivity
 //        if (routePolyline != null) {
 //            routePolyline.remove();
 //        }
-
-        GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
-                .from(pickupPoint)
-                .to(destPoint)
-                .execute(new DirectionCallback() {
-                    @Override
-                    public void onDirectionSuccess(Direction direction, String rawBody) {
-                        // Do something here
-//                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "showRoute:Pickup to Destination Route successfully computed ");
-
-                        if (direction.isOK()) {
-                            // Do
-                            Route route = direction.getRouteList().get(0);
-                            Leg leg = route.getLegList().get(0);
-
-                            // Distance info
-                            Info distanceInfo = leg.getDistance();
-                            Info durationInfo = leg.getDuration();
-                            String distance = distanceInfo.getText();
-                            String duration = durationInfo.getText();
-
-                            ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-                            PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
-                            if (pickupToDestRoute != null) {
-                                pickupToDestRoute.remove();
+/*
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        if(currentLocationPoint == null)
+            currentLocationPoint = new LatLng(Double.parseDouble(prefManager.getCurrentLocation().split(",")[0]),
+                    (Double.parseDouble(prefManager.getCurrentLocation().split(",")[1])));
+        builder.include(currentLocationPoint);
+        if (current_request.getStatus().equals("passenger_onboard") ||
+                current_request.getStatus().equals("arrived_dest") ||
+                current_request.getStatus().equals("completed")) {
+                builder.include(destPoint);
+        }
+        else{
+            builder.include(pickupPoint);
+        }
+        bounds = builder.build();
+        int padding = 300; // offset from edges of the map in pixels
+        cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+//        setWhenReady = true;
+//        if(mapIsReady)
+//          mMap.animateCamera(cu);
+//        else
+//            setWhenReady = true;
+        try {
+            this.mMap.moveCamera(cu);
+        } catch (IllegalStateException e) {
+            // layout not yet initialized
+            final View mapView = getFragmentManager()
+                    .findFragmentById(R.id.map).getView();
+            if (mapView.getViewTreeObserver().isAlive()) {
+                mapView.getViewTreeObserver().addOnGlobalLayoutListener(
+                        new ViewTreeObserver.OnGlobalLayoutListener() {
+                            @SuppressWarnings("deprecation")
+                            @SuppressLint("NewApi")
+                            // We check which build version we are using.
+                            @Override
+                            public void onGlobalLayout() {
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                                    mapView.getViewTreeObserver()
+                                            .removeGlobalOnLayoutListener(this);
+                                } else {
+                                    mapView.getViewTreeObserver()
+                                            .removeOnGlobalLayoutListener(this);
+                                }
+//                                cu = CameraUpdateFactory.newLatLngBounds(bounds, mapView.getHeight(), mapView.getWidth(), mapView.getWidth() / 3 );
+                                mMap.moveCamera(cu);
                             }
-                            pickupToDestRoute = mMap.addPolyline(polylineOptions);
+                        });
+            }
+        }
+*/
 
-                        }
-
-                    }
-
-                    @Override
-                    public void onDirectionFailure(Throwable t) {
-                        // Do something here
-                        Toast.makeText(MainActivity.this, R.string.pickup_to_dest_route_failed, Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "showRoute:Pickup to Destination Route Failed ");
-                    }
-                });
-        if (currentLocationPoint != null) {
-            GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
+        // Pan to see all markers in view.
+        if (current_request.getStatus().equals("passenger_onboard") ||
+                current_request.getStatus().equals("arrived_dest") ||
+                current_request.getStatus().equals("completed")) {
+            if (currentLocationPoint != null) {
+                GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
 //                .from(mCurrentLocation.)
-                    .from(currentLocationPoint)
-                    .to(pickupPoint)
+                        .from(currentLocationPoint)
+                        .to(destPoint)
+                        .execute(new DirectionCallback() {
+                            @Override
+                            public void onDirectionSuccess(Direction direction, String rawBody) {
+                                // Do something here
+//                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
+                                Log.d(TAG, "showRoute:Driver to Pickup Route successfully computed ");
+
+                                if (direction.isOK()) {
+                                    // Do
+                                    Route route = direction.getRouteList().get(0);
+                                    Leg leg = route.getLegList().get(0);
+
+                                    // Distance info
+                                    Info distanceInfo = leg.getDistance();
+                                    Info durationInfo = leg.getDuration();
+                                    String distance = distanceInfo.getText();
+                                    String duration = durationInfo.getText();
+
+                                    ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+                                    PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorAccent));
+                                    if (pickupToDestRoute != null) {
+                                        pickupToDestRoute.remove();
+                                    }
+                                    if (driverToPickupRoute != null) {
+                                        driverToPickupRoute.remove();
+                                    }
+
+                                    if(pickupMarker != null)
+                                        pickupMarker.remove();
+
+                                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                                    if(currentLocationPoint == null)
+                                        currentLocationPoint = new LatLng(Double.parseDouble(prefManager.getCurrentLocation().split(",")[0]),
+                                                (Double.parseDouble(prefManager.getCurrentLocation().split(",")[1])));
+                                    for (LatLng point: directionPositionList){
+                                        builder.include(point);
+                                    }
+                                    bounds = builder.build();
+                                    int padding = 300; // offset from edges of the map in pixels
+                                    cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+                                    try {
+                                        MainActivity.this.mMap.moveCamera(cu);
+                                    } catch (IllegalStateException e) {
+                                        // layout not yet initialized
+                                        final View mapView = getFragmentManager()
+                                                .findFragmentById(R.id.map).getView();
+                                        if (mapView.getViewTreeObserver().isAlive()) {
+                                            mapView.getViewTreeObserver().addOnGlobalLayoutListener(
+                                                    new ViewTreeObserver.OnGlobalLayoutListener() {
+                                                        @SuppressWarnings("deprecation")
+                                                        @SuppressLint("NewApi")
+                                                        // We check which build version we are using.
+                                                        @Override
+                                                        public void onGlobalLayout() {
+                                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                                                                mapView.getViewTreeObserver()
+                                                                        .removeGlobalOnLayoutListener(this);
+                                                            } else {
+                                                                mapView.getViewTreeObserver()
+                                                                        .removeOnGlobalLayoutListener(this);
+                                                            }
+                                                            mMap.moveCamera(cu);
+                                                        }
+                                                    });
+                                        }
+                                    }
+
+
+
+                                    driverToPickupRoute = mMap.addPolyline(polylineOptions);
+
+                                }
+
+                            }
+
+                            @Override
+                            public void onDirectionFailure(Throwable t) {
+                                // Do something here
+                                Toast.makeText(MainActivity.this, R.string.driver_to_pickup_route_failed, Toast.LENGTH_SHORT).show();
+                                Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
+                            }
+                        });
+            }
+
+        }else {
+            GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
+                    .from(pickupPoint)
+                    .to(destPoint)
                     .execute(new DirectionCallback() {
                         @Override
                         public void onDirectionSuccess(Direction direction, String rawBody) {
                             // Do something here
 //                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "showRoute:Driver to Pickup Route successfully computed ");
+                            Log.d(TAG, "showRoute:Pickup to Destination Route successfully computed ");
 
                             if (direction.isOK()) {
                                 // Do
@@ -1826,11 +1950,13 @@ public class MainActivity extends AppCompatActivity
                                 String duration = durationInfo.getText();
 
                                 ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-                                PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorAccent));
-                                if (driverToPickupRoute != null) {
-                                    driverToPickupRoute.remove();
+                                PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
+                                if (pickupToDestRoute != null) {
+                                    pickupToDestRoute.remove();
                                 }
-                                driverToPickupRoute = mMap.addPolyline(polylineOptions);
+
+
+                                pickupToDestRoute = mMap.addPolyline(polylineOptions);
 
                             }
 
@@ -1839,10 +1965,92 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void onDirectionFailure(Throwable t) {
                             // Do something here
-                            Toast.makeText(MainActivity.this, R.string.driver_to_pickup_route_failed, Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
+                            Toast.makeText(MainActivity.this, R.string.pickup_to_dest_route_failed, Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "showRoute:Pickup to Destination Route Failed ");
                         }
                     });
+            if (currentLocationPoint != null) {
+                GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
+//                .from(mCurrentLocation.)
+                        .from(currentLocationPoint)
+                        .to(pickupPoint)
+                        .execute(new DirectionCallback() {
+                            @Override
+                            public void onDirectionSuccess(Direction direction, String rawBody) {
+                                // Do something here
+//                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
+                                Log.d(TAG, "showRoute:Driver to Pickup Route successfully computed ");
+
+                                if (direction.isOK()) {
+                                    // Do
+                                    Route route = direction.getRouteList().get(0);
+                                    Leg leg = route.getLegList().get(0);
+
+                                    // Distance info
+                                    Info distanceInfo = leg.getDistance();
+                                    Info durationInfo = leg.getDuration();
+                                    String distance = distanceInfo.getText();
+                                    String duration = durationInfo.getText();
+
+                                    ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+                                    PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorAccent));
+                                    if (driverToPickupRoute != null) {
+                                        driverToPickupRoute.remove();
+                                    }
+
+                                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                                    if(currentLocationPoint == null)
+                                        currentLocationPoint = new LatLng(Double.parseDouble(prefManager.getCurrentLocation().split(",")[0]),
+                                                (Double.parseDouble(prefManager.getCurrentLocation().split(",")[1])));
+                                    for (LatLng point: directionPositionList){
+                                        builder.include(point);
+                                    }
+                                    bounds = builder.build();
+                                    int padding = 300; // offset from edges of the map in pixels
+                                    cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+                                    try {
+                                        MainActivity.this.mMap.moveCamera(cu);
+                                    } catch (IllegalStateException e) {
+                                        // layout not yet initialized
+                                        final View mapView = getFragmentManager()
+                                                .findFragmentById(R.id.map).getView();
+                                        if (mapView.getViewTreeObserver().isAlive()) {
+                                            mapView.getViewTreeObserver().addOnGlobalLayoutListener(
+                                                    new ViewTreeObserver.OnGlobalLayoutListener() {
+                                                        @SuppressWarnings("deprecation")
+                                                        @SuppressLint("NewApi")
+                                                        // We check which build version we are using.
+                                                        @Override
+                                                        public void onGlobalLayout() {
+                                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                                                                mapView.getViewTreeObserver()
+                                                                        .removeGlobalOnLayoutListener(this);
+                                                            } else {
+                                                                mapView.getViewTreeObserver()
+                                                                        .removeOnGlobalLayoutListener(this);
+                                                            }
+                                                            mMap.moveCamera(cu);
+                                                        }
+                                                    });
+                                        }
+                                    }
+
+
+
+                                    driverToPickupRoute = mMap.addPolyline(polylineOptions);
+
+                                }
+
+                            }
+
+                            @Override
+                            public void onDirectionFailure(Throwable t) {
+                                // Do something here
+                                Toast.makeText(MainActivity.this, R.string.driver_to_pickup_route_failed, Toast.LENGTH_SHORT).show();
+                                Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
+                            }
+                        });
+            }
         }
     }
 
@@ -1884,7 +2092,12 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
         if(mIsBound) {
-            unbindService(mConnection);
+            try {
+                getApplicationContext().unbindService(mConnection);
+            }
+            catch (java.lang.IllegalArgumentException ignored){
+                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
+            }
             mIsBound = false;
         }
         super.onDestroy();

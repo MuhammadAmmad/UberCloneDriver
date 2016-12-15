@@ -8,8 +8,6 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -45,6 +43,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
 import static com.vogella.android.navigationwidgetattempt.MainActivity.REQUEST_CHECK_SETTINGS;
+import static com.vogella.android.navigationwidgetattempt.MainActivity.checkedLocation;
 import static com.vogella.android.navigationwidgetattempt.MainActivity.mRequestingLocationUpdates;
 
 /**
@@ -189,6 +188,7 @@ public class BackgroundLocationService extends Service implements
             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                 Log.i(TAG, "Location settings are not satisfied. Show the user a dialog to" +
                         "upgrade location settings");
+                checkedLocation = false;
 
                 try {
                     // Show the dialog by calling startResolutionForResult(), and check the result
@@ -201,6 +201,7 @@ public class BackgroundLocationService extends Service implements
             case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                 Log.i(TAG, "Location settings are inadequate, and cannot be fixed here. Dialog " +
                         "not created.");
+                checkedLocation = false;
                 prefManager.setActive(false);
                 EventBus.getDefault().post(new DriverActive(false));
                 break;
@@ -536,8 +537,10 @@ public class BackgroundLocationService extends Service implements
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-
-        checkLocationSettings();
+        if(!checkedLocation) {
+            checkLocationSettings();
+            checkedLocation = true;
+        }
 //        LocationServices.FusedLocationApi.requestLocationUpdates(this.mGoogleApiClient,
 //                mLocationRequest, this); // This is the changed line.
 //        appendLog(DateFormat.getDateTimeInstance().format(new Date()) + ": Connected", Constants.LOG_FILE);
