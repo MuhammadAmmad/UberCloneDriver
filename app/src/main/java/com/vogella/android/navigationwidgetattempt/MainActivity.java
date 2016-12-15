@@ -1136,6 +1136,7 @@ public class MainActivity extends AppCompatActivity
                 linearLayout.setVisibility(View.VISIBLE);
 
                 ((ImageView) findViewById(R.id.nav_button)).setVisibility(View.VISIBLE);
+                ((TextView) findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
 
                 ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.INVISIBLE);
                 if (current_request.getStatus().equals("passenger_onboard") ||
