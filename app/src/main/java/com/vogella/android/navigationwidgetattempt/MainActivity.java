@@ -18,6 +18,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -1631,8 +1632,15 @@ public class MainActivity extends AppCompatActivity
 
         if (setWhenReady) {
             setWhenReady = false;
-            if(!createdFromNewRequest)
-                setMarkers();
+            if(!createdFromNewRequest) {
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        // Actions to do after 10 seconds
+                        setMarkers();
+                    }
+                }, 2000);
+            }
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
