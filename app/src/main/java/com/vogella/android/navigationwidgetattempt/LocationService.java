@@ -45,34 +45,42 @@ public class LocationService extends IntentService {
         if(intent.hasExtra("alarmType")){
             Log.d(TAG,"intent has alarmType");
 
-            if(isLocationEnabled(this)) {
-                Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-                locationIntent.putExtra("alarmType", "location");
-                PendingIntent locationPI = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            if(prefManager.isLoggedIn()) {
+                if (isLocationEnabled(this)) {
+                    Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+                    locationIntent.putExtra("alarmType", "location");
+                    PendingIntent locationPI = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                AlarmManager m = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                int intervalTimeMillis;
-                if (prefManager.isDoingRequest())
-                    intervalTimeMillis = 10 * 1000;  // 10 seconds
-                else
-                    intervalTimeMillis = 30 * 60 * 1000;//5 * 60 * 1000; // 5 minutes
-                m.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + intervalTimeMillis, locationPI);
-                Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-                activeIntent.putExtra("alarmType", "active");
+                    AlarmManager m = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                    int intervalTimeMillis;
+                    if (prefManager.isDoingRequest())
+                        intervalTimeMillis = 10 * 1000;  // 10 seconds
+                    else
+                        intervalTimeMillis = 30 * 60 * 1000;//5 * 60 * 1000; // 5 minutes
+                    m.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + intervalTimeMillis, locationPI);
+                    Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+                    activeIntent.putExtra("alarmType", "active");
 
-                PendingIntent activePI = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                intervalTimeMillis = 30 * 1000;
-                m.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + intervalTimeMillis, activePI);
-            }
-            else {
+                    PendingIntent activePI = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    intervalTimeMillis = 30 * 1000;
+                    m.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + intervalTimeMillis, activePI);
+                } else {
+                    NotificationManager notificationManager =
+                            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                    notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
+
+                }
+            }else { //!loggedin
                 NotificationManager notificationManager =
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
                 notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
-
             }
 
-            if(intent.getStringExtra("alarmType").equals("location")){
+
+
+                if(intent.getStringExtra("alarmType").equals("location")){
                 Log.d(TAG,"alarmType is location");
                 String location = prefManager.getCurrentLocation();
                 String request_id;
@@ -149,6 +157,8 @@ public class LocationService extends IntentService {
                 .build();
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
+
+        Log.i(TAG, "sendActive");
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.active("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),

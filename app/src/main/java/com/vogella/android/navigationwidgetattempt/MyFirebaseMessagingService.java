@@ -132,6 +132,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 for (Map.Entry<String, String> field : request.entrySet()) {
                     if (field.getKey().equals("request_id")) {
                         prefManager.setRequestStatus("canceled");
+                        prefManager.setDoingRequest(false);
                         EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
                         OngoingRequestsActivity.removeRequest(field.getValue());
                         sendNotification(getString(R.string.passenger_cancelled_notification) + field.getValue());

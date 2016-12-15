@@ -5,10 +5,11 @@ import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -17,6 +18,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
@@ -39,7 +41,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.Wisam.Events.DriverActive;
 import com.Wisam.Events.DriverLoggedout;
+import com.Wisam.Events.LocationUpdated;
 import com.Wisam.Events.PassengerArrived;
 import com.Wisam.Events.PassengerCanceled;
 import com.Wisam.POJO.StatusResponse;
@@ -54,16 +58,7 @@ import com.akexorcist.googledirection.model.Route;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-
 import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -92,20 +87,24 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+//import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mGoogleApiClient;
+//import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mLocationRequest;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener
-        , LocationListener,
-        ResultCallback<LocationSettingsResult> {
+        OnMapReadyCallback//,
+//        GoogleApiClient.ConnectionCallbacks,
+//        GoogleApiClient.OnConnectionFailedListener
+//        , LocationListener,
+//        ResultCallback<LocationSettingsResult>
+    {
 
-    private static final long UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
-    private static final long UPDATE_WHILE_IDLE = 30 * 60 * 1000;
+    private static final int UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
+    private static final int UPDATE_WHILE_IDLE = 5 * 60 * 1000;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2445;
     private static final int PERMISSION_REQUEST_LOCATION = 1432;
     private static final int PERMISSION_REQUEST_CLIENT_CONNECT = 365;
-    private static final int REQUEST_CHECK_SETTINGS = 21314;
+    protected static final int REQUEST_CHECK_SETTINGS = 21314;
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 2000;
     private static final int ACCESS_FINE_LOCATION_CODE = 111;
@@ -114,11 +113,11 @@ public class MainActivity extends AppCompatActivity
 
     private ProgressDialog progress;
 
-    private GoogleApiClient mGoogleApiClient;
-    protected LocationSettingsRequest mLocationSettingsRequest;
-    private LocationRequest mLocationRequest;
+//    private GoogleApiClient mGoogleApiClient;
+//    protected LocationSettingsRequest mLocationSettingsRequest;
+//    private LocationRequest mLocationRequest;
 
-    protected Boolean mRequestingLocationUpdates;
+    protected static Boolean mRequestingLocationUpdates;
 
     public Location mLastLocation;
     private Location mCurrentLocation;
@@ -176,8 +175,19 @@ public class MainActivity extends AppCompatActivity
     private Toolbar toolbar;
     private boolean wasActive;
 
+    protected static MainActivity context;
 
-    @Override
+    private BackgroundLocationService backgroundLocationService;
+    private ServiceConnection mConnection;
+
+    private boolean checkedlocation = false;
+
+    private boolean goActive = false;
+        private Intent blsIntent;
+        private boolean mIsBound = false;
+
+
+        @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -204,7 +214,9 @@ public class MainActivity extends AppCompatActivity
 //                } else{
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from away to available");
 
-                    checkLocationSettings();
+                    goActive = true;
+
+                    backgroundLocationService.checkLocationSettings();
 
 //                    changeDriverStatus.setText(R.string.driver_active);
 //                    prefManager.setActive(true);
@@ -278,26 +290,73 @@ public class MainActivity extends AppCompatActivity
 
         // Kick off the process of building the GoogleApiClient, LocationRequest, and
         // LocationSettingsRequest objects.
-        wasActive = prefManager.isActive();
 
-        prefManager.setActive(false);
 
-        setAlarms();
+//        wasActive = prefManager.isActive();
+//        prefManager.setActive(false);
+
+        mRequestingLocationUpdates = false;
+
+
 
         getCurrentRequest(getIntent());
 
-        buildGoogleApiClient();
-        createLocationRequest();
-        buildLocationSettingsRequest();
+//        buildGoogleApiClient();
+//        createLocationRequest();
+//        buildLocationSettingsRequest();
+
+        context = this;
+
+        blsIntent = new Intent(this, BackgroundLocationService.class);
+        startService(blsIntent);
 
 
-    }
+        mConnection = new ServiceConnection() {
+
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                // This is called when the connection with the service has been
+                // established, giving us the service object we can use to
+                // interact with the service.  Because we have bound to a explicit
+                // service that we know is running in our own process, we can
+                // cast its IBinder to a concrete class and directly access it.
+                MainActivity.this.backgroundLocationService = ((BackgroundLocationService.LocalBinder)service).getServerInstance();
+                if(!checkedlocation)
+                    MainActivity.this.backgroundLocationService.checkLocationSettings();
+
+                // Tell the user about this for our demo.
+    //            Toast.makeText(Binding.this, R.string.local_service_connected,
+    //                    Toast.LENGTH_SHORT).show();
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+                // This is called when the connection with the service has been
+                // unexpectedly disconnected -- that is, its process crashed.
+                // Because it is running in our same process, we should never
+                // see this happen.
+                MainActivity.this.backgroundLocationService = null;
+    //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
+    //                    Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        bindService(blsIntent,mConnection, BIND_IMPORTANT);
+
+        mIsBound = true;
+
+
+        setAlarms();
+
+
+
+
+        }
 
 
     /**
      * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
      * LocationServices API.
      */
+/*
     protected synchronized void buildGoogleApiClient() {
         Log.i(TAG, "Building GoogleApiClient");
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -306,6 +365,7 @@ public class MainActivity extends AppCompatActivity
                 .addApi(LocationServices.API)
                 .build();
     }
+*/
 
     /**
      * Sets up the location request. Android has two location request settings:
@@ -320,6 +380,7 @@ public class MainActivity extends AppCompatActivity
      * These settings are appropriate for mapping applications that show real-time location
      * updates.
      */
+/*
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
 
@@ -335,23 +396,28 @@ public class MainActivity extends AppCompatActivity
 
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
+*/
 
     /**
      * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
      * a {@link com.google.android.gms.location.LocationSettingsRequest} that is used for checking
      * if a device has the needed location settings.
      */
+/*
     protected void buildLocationSettingsRequest() {
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
         builder.addLocationRequest(mLocationRequest);
         mLocationSettingsRequest = builder.build();
     }
+*/
 
     /**
      * Check if the device's location settings are adequate for the app's needs using the
      * {@link com.google.android.gms.location.SettingsApi#checkLocationSettings(GoogleApiClient,
      * LocationSettingsRequest)} method, with the results provided through a {@code PendingResult}.
      */
+
+/*
     protected void checkLocationSettings() {
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(
@@ -360,7 +426,7 @@ public class MainActivity extends AppCompatActivity
                 );
         result.setResultCallback(this);
     }
-
+*/
     /**
      * The callback invoked when
      * {@link com.google.android.gms.location.SettingsApi#checkLocationSettings(GoogleApiClient,
@@ -369,6 +435,7 @@ public class MainActivity extends AppCompatActivity
      * location settings are adequate. If they are not, begins the process of presenting a location
      * settings dialog to the user.
      */
+/*
     @Override
     public void onResult(LocationSettingsResult locationSettingsResult) {
         final Status status = locationSettingsResult.getStatus();
@@ -395,11 +462,13 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
     }
+*/
 
 
     /**
      * Requests location updates from the FusedLocationApi.
      */
+/*
     protected void startLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
@@ -420,7 +489,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onResult(Status status) {
                 mRequestingLocationUpdates = true;
-                sendActive(1, prefManager.getCurrentLocation());
+//                sendActive(1, prefManager.getCurrentLocation());
 //                prefManager.setActive(true);
 //                setUI();
 //                setButtonsEnabledState();
@@ -428,6 +497,7 @@ public class MainActivity extends AppCompatActivity
         });
 
     }
+*/
 
 
     private void setOnClickListeners() {
@@ -600,9 +670,10 @@ public class MainActivity extends AppCompatActivity
         prefManager.setDoingRequest(false);
         Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
         locationIntent.putExtra("alarmType", "location");
-        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, UPDATE_WHILE_IDLE, alarmIntent);
+//        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//
+//        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, UPDATE_WHILE_IDLE, alarmIntent);
+        setAlarms();
 //        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
 //                SystemClock.elapsedRealtime(), UPDATE_WHILE_IDLE,
 //                alarmIntent);
@@ -671,6 +742,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void sendActive(final int active, final String location) {
+        Log.d(TAG, "sendActive");
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -792,10 +864,12 @@ public class MainActivity extends AppCompatActivity
             switch (resultCode) {
                 case RESULT_OK:
                     Log.i(TAG, "User agreed to make required location settings changes.");
-                    startLocationUpdates();
+                    backgroundLocationService.startLocationUpdates();
                     break;
                 case RESULT_CANCELED:
                     Log.i(TAG, "User chose not to make required location settings changes.");
+                    prefManager.setActive(false);
+                    setUI();
                     break;
             }
         }
@@ -856,9 +930,12 @@ public class MainActivity extends AppCompatActivity
 //        prefManager.setRequestId(current_request.getRequest_id());
         Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
         locationIntent.putExtra("alarmType", "location");
-        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, UPDATE_DURING_REQUEST, alarmIntent);
+        setAlarms();
+
+//        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+//        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, UPDATE_DURING_REQUEST, alarmIntent);
 
 //        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
 //                SystemClock.elapsedRealtime(), UPDATE_DURING_REQUEST,
@@ -1089,8 +1166,12 @@ public class MainActivity extends AppCompatActivity
         //if the driver is active, enable the location and schedule location and active requests.
 //        if(prefManager.isActive()){
         //ensure location is enabled
-        if(prefManager.isDoingRequest() || wasActive)
-            checkLocationSettings();
+//        if(prefManager.isDoingRequest() || wasActive)
+        if(prefManager.isDoingRequest() || prefManager.isActive())
+            if(backgroundLocationService != null) {
+                backgroundLocationService.checkLocationSettings();
+                checkedlocation = true;
+            }
 
 
 //        } //end of if(isActive)
@@ -1134,9 +1215,9 @@ public class MainActivity extends AppCompatActivity
 /* Setting alarm for every one hour from the current time.*/
         int intervalTimeMillis;
         if (prefManager.isDoingRequest())
-            intervalTimeMillis = 10 * 1000;  // 10 seconds
+            intervalTimeMillis = UPDATE_DURING_REQUEST;  // 10 seconds
         else
-            intervalTimeMillis = 5 * 60 * 1000;//5 * 60 * 1000; // 5 minutes
+            intervalTimeMillis = UPDATE_WHILE_IDLE;//5 * 60 * 1000; // 5 minutes
         alarmMgr.set(AlarmManager.RTC_WAKEUP, intervalTimeMillis, alarmIntent);
 //             alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
 //                        SystemClock.elapsedRealtime(), intervalTimeMillis,
@@ -1171,7 +1252,7 @@ public class MainActivity extends AppCompatActivity
 //                mGoogleApiClient.connect();
 //            }
 //        }
-        mGoogleApiClient.connect();
+//        mGoogleApiClient.connect();
         EventBus.getDefault().register(this);
         super.onStart();
     }
@@ -1196,9 +1277,121 @@ public class MainActivity extends AppCompatActivity
         endRequest(REQUEST_SUCCESS);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDriverActive(DriverActive event) {
+        Log.d(TAG, "onDriverActive has been invoked");
+//        endRequest(REQUEST_SUCCESS);
+//        activeNotification(event.getActive());
+//        if(event.getActive())
+        if(goActive) {
+            sendActive(1, prefManager.getCurrentLocation());
+            goActive = false;
+        }
+        else activeNotification(event.getActive());
+//        setAlarms();
+        setUI();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onLocationUpdated(LocationUpdated event) {
+        Log.d(TAG, "onLocationUpdated (Eventbus) has been invoked");
+
+        mCurrentLocation = event.getLocation();
+        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        Log.d(TAG, "onLocationChanged: mLocation: " + mCurrentLocation.toString());
+        if (firstMove && mLastLocation != null) {
+            Log.d(TAG, "onLocationChanged: Moving cam");
+            Log.d(TAG, "onLocationChanged: mLocation: " + mLastLocation.toString());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 12.0f));
+            firstMove = false;
+        }
+//        Log.d(TAG, "onConnected: Moving cam");
+//        prefManager.setCurrentLocation(String.valueOf(mCurrentLocation.getLatitude()) + "," + String.valueOf(mCurrentLocation.getLongitude()));
+        currentLocationPoint = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+        if (prefManager.isDoingRequest()) if (firstLocationToDriverRouting) {
+            showRoute();
+            firstLocationToDriverRouting = false;
+        }
+
+        if (!mMap.isMyLocationEnabled()) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            mMap.setMyLocationEnabled(true);
+            // Get the button view
+            View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+
+            // and next place it, for exemple, on bottom right (as Google Maps app)
+            RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+            // position on right bottom
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+            int bottom = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 100, getResources().getDisplayMetrics());
+            int right = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+            rlp.setMargins(0, 0, right, bottom);
+        }
+
+//        if(null!= mCurrentLocation)
+//        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+
+        ;
+        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        Log.d(TAG, "onLocationChanged: mLocation: " + mCurrentLocation.toString());
+        if (firstMove && mLastLocation != null) {
+            Log.d(TAG, "onLocationChanged: Moving cam");
+            Log.d(TAG, "onLocationChanged: mLocation: " + mLastLocation.toString());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 12.0f));
+            firstMove = false;
+        }
+//        Log.d(TAG, "onConnected: Moving cam");
+        prefManager.setCurrentLocation(String.valueOf(mCurrentLocation.getLatitude()) + "," + String.valueOf(mCurrentLocation.getLongitude()));
+        currentLocationPoint = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+        if (prefManager.isDoingRequest()) if (firstLocationToDriverRouting) {
+            showRoute();
+            firstLocationToDriverRouting = false;
+        }
+
+        if (!mMap.isMyLocationEnabled()) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            mMap.setMyLocationEnabled(true);
+            // Get the button view
+            View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+
+            // and next place it, for exemple, on bottom right (as Google Maps app)
+            RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+            // position on right bottom
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+            int bottom = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 100, getResources().getDisplayMetrics());
+            int right = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+            rlp.setMargins(0, 0, right, bottom);
+        }
+
+//        if(null!= mCurrentLocation)
+//        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+
+
+    }
+
     @Override
     public void onStop() {
-        mGoogleApiClient.disconnect();
+//        mGoogleApiClient.disconnect();
         EventBus.getDefault().unregister(this);
         super.onStop();
     }
@@ -1272,8 +1465,17 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.sign_out) {
             prefManager.setIsLoggedIn(false);
+            driver = new driver();
+//            prefManager.setDriver(driver);
+            if(mIsBound) {
+                unbindService(mConnection);
+                mIsBound = false;
+            }
+            if(blsIntent != null)
+                stopService(blsIntent);
             Intent intent = new Intent(this, LoginActivity.class);
-            startActivityForResult(intent, LOGIN_REQUEST_CODE);
+            activeNotification(false);
+            startActivity(intent);
             finish();
         }else if (id == R.id.language) {
 //            if(prefManager.getCurrentLanguage().equals("Arabic")){
@@ -1383,11 +1585,13 @@ public class MainActivity extends AppCompatActivity
             // If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                checkLocationSettings();
+                backgroundLocationService.checkLocationSettings();
             } else {
                 Toast.makeText(this, "You can't receive requests unless you enable this permission\n" +
                                 "if you want to receive requests, press the 'Go active' button below",
                         Toast.LENGTH_LONG).show();
+                prefManager.setActive(false);
+                setUI();
                 // permission denied, boo! Disable the
                 // functionality that depends on this permission.
             }
@@ -1420,6 +1624,7 @@ public class MainActivity extends AppCompatActivity
     }
 */
 
+/*
     @Override
     public void onConnected(Bundle bundle) {
 
@@ -1456,19 +1661,25 @@ public class MainActivity extends AppCompatActivity
 //        }
 
     }
+*/
 
+/*
     @Override
     public void onConnectionSuspended(int i) {
         Log.d(TAG, "onConnectionSuspended");
         mGoogleApiClient.connect();
 
     }
+*/
 
+/*
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + connectionResult.getErrorCode());
     }
+*/
 
+/*
     @Override
     public void onLocationChanged(Location location) {
 
@@ -1518,6 +1729,7 @@ public class MainActivity extends AppCompatActivity
 //        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
 
     }
+*/
 
     private void showRoute() {
         Log.d(TAG, "showRoute: Called");
@@ -1646,6 +1858,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+        if(mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
         super.onDestroy();
     }
 
