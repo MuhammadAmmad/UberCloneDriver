@@ -43,11 +43,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.Wisam.Events.ChangeActiveUpdateInterval;
 import com.Wisam.Events.DriverActive;
 import com.Wisam.Events.DriverLoggedout;
 import com.Wisam.Events.LocationUpdated;
 import com.Wisam.Events.PassengerArrived;
 import com.Wisam.Events.PassengerCanceled;
+import com.Wisam.Events.UnbindBackgroundLocationService;
 import com.Wisam.POJO.StatusResponse;
 import com.akexorcist.googledirection.util.DirectionConverter;
 import com.akexorcist.googledirection.DirectionCallback;
@@ -90,6 +92,11 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.ACCESS_FINE_LOCATION_CODE;
+import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.checkedLocation;
+import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mRequestingLocationUpdates;
+import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.permissionIsRequested;
+
 //import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mGoogleApiClient;
 //import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mLocationRequest;
 
@@ -102,15 +109,14 @@ public class MainActivity extends AppCompatActivity
 //        ResultCallback<LocationSettingsResult>
     {
 
-    private static final int UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
-    private static final int UPDATE_WHILE_IDLE = 5 * 60 * 1000;
+    protected static final int UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
+    protected static final int UPDATE_WHILE_IDLE = 2 * 60 * 1000;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2445;
     private static final int PERMISSION_REQUEST_LOCATION = 1432;
     private static final int PERMISSION_REQUEST_CLIENT_CONNECT = 365;
     protected static final int REQUEST_CHECK_SETTINGS = 21314;
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 2000;
-    private static final int ACCESS_FINE_LOCATION_CODE = 111;
     static final int ACTIVE_NOTIFICATION_ID = 1024;
     private GoogleMap mMap;
 
@@ -120,7 +126,6 @@ public class MainActivity extends AppCompatActivity
 //    protected LocationSettingsRequest mLocationSettingsRequest;
 //    private LocationRequest mLocationRequest;
 
-    protected static Boolean mRequestingLocationUpdates;
 
     public Location mLastLocation;
     private Location mCurrentLocation;
@@ -183,7 +188,6 @@ public class MainActivity extends AppCompatActivity
     private BackgroundLocationService backgroundLocationService;
     protected static ServiceConnection mConnection;
 
-    protected static boolean checkedLocation = false;
 
     private boolean goActive = false;
 
@@ -194,6 +198,8 @@ public class MainActivity extends AppCompatActivity
     private boolean zoomToRoute = false;
     private LatLngBounds bounds;
     private boolean createdFromNewRequest;
+    private Handler routingHandler;
+    private Runnable routingRunnable;
 
 
         @Override
@@ -225,7 +231,9 @@ public class MainActivity extends AppCompatActivity
 
                     goActive = true;
 
-                    backgroundLocationService.checkLocationSettings();
+                    startAndBindLocationService();
+
+//                    backgroundLocationService.checkLocationSettings();
 
 //                    changeDriverStatus.setText(R.string.driver_active);
 //                    prefManager.setActive(true);
@@ -304,7 +312,7 @@ public class MainActivity extends AppCompatActivity
 //        wasActive = prefManager.isActive();
 //        prefManager.setActive(false);
 
-        mRequestingLocationUpdates = false;
+//        mRequestingLocationUpdates = false;
 
 
         createdFromNewRequest = false;
@@ -319,57 +327,66 @@ public class MainActivity extends AppCompatActivity
 
         context = this;
 
-        blsIntent = new Intent(this, BackgroundLocationService.class);
-        startService(blsIntent);
+        blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+
+        if(prefManager.isActive()) {
+
+            startAndBindLocationService();
+
+        }
 
 
-        mConnection = new ServiceConnection() {
-
-            public void onServiceConnected(ComponentName className, IBinder service) {
-                // This is called when the connection with the service has been
-                // established, giving us the service object we can use to
-                // interact with the service.  Because we have bound to a explicit
-                // service that we know is running in our own process, we can
-                // cast its IBinder to a concrete class and directly access it.
-                MainActivity.this.backgroundLocationService = ((BackgroundLocationService.LocalBinder)service).getServerInstance();
-                if(!checkedLocation) {
-                    MainActivity.this.backgroundLocationService.checkLocationSettings();
-                    checkedLocation = true;
-                }
-                mIsBound = true;
-
-                // Tell the user about this for our demo.
-    //            Toast.makeText(Binding.this, R.string.local_service_connected,
-    //                    Toast.LENGTH_SHORT).show();
-            }
-
-            public void onServiceDisconnected(ComponentName className) {
-                // This is called when the connection with the service has been
-                // unexpectedly disconnected -- that is, its process crashed.
-                // Because it is running in our same process, we should never
-                // see this happen.
-                MainActivity.this.backgroundLocationService = null;
-                mIsBound = false;
-
-                //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
-    //                    Toast.LENGTH_SHORT).show();
-            }
-        };
-
-        getApplicationContext().bindService(blsIntent,mConnection, BIND_IMPORTANT);
-
-        mIsBound = true;
-
-
-        setAlarms();
+//        setAlarms();
 
 
 
 
         }
 
+        private void startAndBindLocationService() {
+            startService(blsIntent);
 
-    /**
+
+            mConnection = new ServiceConnection() {
+
+                public void onServiceConnected(ComponentName className, IBinder service) {
+                    // This is called when the connection with the service has been
+                    // established, giving us the service object we can use to
+                    // interact with the service.  Because we have bound to a explicit
+                    // service that we know is running in our own process, we can
+                    // cast its IBinder to a concrete class and directly access it.
+                    MainActivity.this.backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
+                    if (!checkedLocation) {
+                        MainActivity.this.backgroundLocationService.checkLocationSettings();
+                        checkedLocation = true;
+                    }
+                    mIsBound = true;
+
+                    // Tell the user about this for our demo.
+                    //            Toast.makeText(Binding.this, R.string.local_service_connected,
+                    //                    Toast.LENGTH_SHORT).show();
+                }
+
+                public void onServiceDisconnected(ComponentName className) {
+                    // This is called when the connection with the service has been
+                    // unexpectedly disconnected -- that is, its process crashed.
+                    // Because it is running in our same process, we should never
+                    // see this happen.
+                    MainActivity.this.backgroundLocationService = null;
+                    mIsBound = false;
+
+                    //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
+                    //                    Toast.LENGTH_SHORT).show();
+                }
+            };
+
+            getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
+
+            mIsBound = true;
+        }
+
+
+        /**
      * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
      * LocationServices API.
      */
@@ -654,7 +671,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        ImageView navigation = (ImageView) findViewById(R.id.nav_button);
+        LinearLayout navigation = (LinearLayout) findViewById(R.id.nav_button);
         navigation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -709,15 +726,13 @@ public class MainActivity extends AppCompatActivity
 //        }
 //        prefManager.setRequestId("");
         prefManager.setDoingRequest(false);
-        Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-        locationIntent.putExtra("alarmType", "location");
-//        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//
-//        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, UPDATE_WHILE_IDLE, alarmIntent);
-        setAlarms();
-//        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//                SystemClock.elapsedRealtime(), UPDATE_WHILE_IDLE,
-//                alarmIntent);
+
+
+//        setAlarms();
+
+        EventBus.getDefault().post(new ChangeActiveUpdateInterval());
+
+
     }
 
     private void sendStatus(final String request_id, final String status) {
@@ -825,11 +840,18 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "The driver status has been set successfully");
                     if(active == 1) {
                         prefManager.setActive(true);
-                        activeNotification(true);
+//                        activeNotification(true); //TODO ensure the service is always running before this point
                     }
                     else {
                         prefManager.setActive(false);
-                        activeNotification(false);
+//                        activeNotification(false);
+                        if(mIsBound) {
+                            //TODO: Handle service leak
+                            getApplicationContext().unbindService(mConnection);
+                            mIsBound = false;
+                        }
+                        if(blsIntent != null)
+                            stopService(blsIntent);
                     }
                     setUI();
                 } else if (response.code() == 401) {
@@ -986,10 +1008,10 @@ public class MainActivity extends AppCompatActivity
 
 
 //        prefManager.setRequestId(current_request.getRequest_id());
-        Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-        locationIntent.putExtra("alarmType", "location");
+//        Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+//        locationIntent.putExtra("alarmType", "location");
 
-        setAlarms();
+//        setAlarms();
 
 //        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -1003,6 +1025,9 @@ public class MainActivity extends AppCompatActivity
         prefManager.setDoingRequest(true);
 
 //        setUI();
+
+
+        EventBus.getDefault().post(new ChangeActiveUpdateInterval());
 
         sendStatus(current_request.getRequest_id(), current_request.getStatus());
 //        while(no_response);
@@ -1070,6 +1095,8 @@ public class MainActivity extends AppCompatActivity
     public void setUI(UI_STATE state) {
         switch (state) {
             case SIMPLE:
+                if(routingHandler != null)
+                    routingHandler.removeCallbacksAndMessages(null);
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
                 linearLayout.setVisibility(View.INVISIBLE);
                 ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.VISIBLE);
@@ -1089,7 +1116,7 @@ public class MainActivity extends AppCompatActivity
                     driverToPickupRoute.remove();
                 }
 
-                ((ImageView) findViewById(R.id.nav_button)).setVisibility(View.GONE);
+                ((LinearLayout) findViewById(R.id.nav_button)).setVisibility(View.GONE);
 
                 if (prefManager.isActive()) {
 
@@ -1135,7 +1162,7 @@ public class MainActivity extends AppCompatActivity
                 nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
                 linearLayout.setVisibility(View.VISIBLE);
 
-                ((ImageView) findViewById(R.id.nav_button)).setVisibility(View.VISIBLE);
+                ((LinearLayout) findViewById(R.id.nav_button)).setVisibility(View.VISIBLE);
                 ((TextView) findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
 
                 ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.INVISIBLE);
@@ -1186,8 +1213,25 @@ public class MainActivity extends AppCompatActivity
                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
         );
 
-
-        showRoute();
+        routingHandler = new Handler();
+        routingRunnable = new Runnable() {
+            public void run() {
+                //
+                // Do the stuff
+                //
+                try {
+                    showRoute();
+//                    updateStatus(); //this function can change value of mInterval.
+                } finally {
+                    // 100% guarantee that this always happens, even if
+                    // your update method throws an exception
+                    routingHandler.postDelayed(this, 30 * 1000);
+//                    mHandler.postDelayed(mStatusChecker, mInterval);
+                }
+            }
+        };
+        routingRunnable.run();
+//        showRoute();
 
 
         // For zooming automatically to the location of the marker
@@ -1219,6 +1263,8 @@ public class MainActivity extends AppCompatActivity
             prefManager.setRequest(current_request);
         }
         checkedLocation = false;
+        if(routingHandler != null)
+            routingHandler.removeCallbacksAndMessages(null);
         wasActive = prefManager.isActive();
     }
 
@@ -1238,12 +1284,17 @@ public class MainActivity extends AppCompatActivity
 //        if(prefManager.isActive()){
         //ensure location is enabled
 //        if(prefManager.isDoingRequest() || wasActive)
-        if(prefManager.isDoingRequest() || prefManager.isActive())
+//        if(prefManager.isDoingRequest() || prefManager.isActive())
+        if(prefManager.isActive())
             if(backgroundLocationService != null)
                 if (!checkedLocation){
                     backgroundLocationService.checkLocationSettings();
                     checkedLocation = true;
                 }
+        else
+            if(prefManager.isDoingRequest()){
+                startAndBindLocationService();
+            }
 
 
 //        } //end of if(isActive)
@@ -1272,6 +1323,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+/*
     private void setAlarms() {
         //setup location alarm
 
@@ -1280,16 +1332,20 @@ public class MainActivity extends AppCompatActivity
         Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
         locationIntent.putExtra("alarmType", "location");
         boolean locationFlag = (PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_NO_CREATE) == null);
-/*Register alarm if not registered already*/
+*/
+/*Register alarm if not registered already*//*
+
 //            if(locationFlag){
         alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-/* Setting alarm for every one hour from the current time.*/
+*/
+/* Setting alarm for every one hour from the current time.*//*
+
         int intervalTimeMillis;
         if (prefManager.isDoingRequest())
             intervalTimeMillis = UPDATE_DURING_REQUEST;  // 10 seconds
         else
-            intervalTimeMillis = UPDATE_WHILE_IDLE;//5 * 60 * 1000; // 5 minutes
+            intervalTimeMillis = UPDATE_WHILE_IDLE;// 2 minutes
         alarmMgr.set(AlarmManager.RTC_WAKEUP, intervalTimeMillis, alarmIntent);
 //             alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
 //                        SystemClock.elapsedRealtime(), intervalTimeMillis,
@@ -1298,19 +1354,24 @@ public class MainActivity extends AppCompatActivity
         Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
         activeIntent.putExtra("alarmType", "active");
         boolean activeFlag = (PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_NO_CREATE) == null);
-/*Register alarm if not registered already*/
+*/
+/*Register alarm if not registered already*//*
+
 //            if(activeFlag){
         alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-/* Setting alarm for every one hour from the current time.*/
+*/
+/* Setting alarm for every one hour from the current time.*//*
+
 //                int intervalTimeMillis;
-        intervalTimeMillis = 30 * 1000;//30 * 1000; // 30 seconds
+//        intervalTimeMillis = 30 * 1000;//30 * 1000; // 30 seconds
         alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, intervalTimeMillis, alarmIntent);
 //                alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
 //                        SystemClock.elapsedRealtime(), intervalTimeMillis,
 //                        alarmIntent);
 ////            }
     }
+*/
 
 
     @Override
@@ -1355,13 +1416,23 @@ public class MainActivity extends AppCompatActivity
 //        endRequest(REQUEST_SUCCESS);
 //        activeNotification(event.getActive());
 //        if(event.getActive())
-        if(goActive) {
+        if(goActive) { //if the user changed his status to active
             sendActive(1, prefManager.getCurrentLocation());
             goActive = false;
         }
-        else activeNotification(event.getActive());
+//        else activeNotification(event.getActive());
 //        setAlarms();
         setUI();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onUnbindBackgroundLocationService(UnbindBackgroundLocationService event) {
+        Log.d(TAG, "onUnbindBackgroundLocationService has been invoked");
+        if(mIsBound) {
+            getApplicationContext().unbindService(mConnection);
+            mIsBound = false;
+            setUI();
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1396,6 +1467,7 @@ public class MainActivity extends AppCompatActivity
                 // for ActivityCompat#requestPermissions for more details.
                 return;
             }
+            Log.d(TAG,"onLocationUpdated (Eventbus) mMap.setMyLocationEnabled(true)");
             mMap.setMyLocationEnabled(true);
             // Get the button view
             View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
@@ -1414,7 +1486,7 @@ public class MainActivity extends AppCompatActivity
 //        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
 
         ;
-        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+     /*   mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
         Log.d(TAG, "onLocationChanged: mLocation: " + mCurrentLocation.toString());
         if (firstMove && mLastLocation != null) {
             Log.d(TAG, "onLocationChanged: Moving cam");
@@ -1441,6 +1513,7 @@ public class MainActivity extends AppCompatActivity
                 // for ActivityCompat#requestPermissions for more details.
                 return;
             }
+            Log.d(TAG,"onLocationUpdated (Eventbus) mMap.setMyLocationEnabled(true)");
             mMap.setMyLocationEnabled(true);
             // Get the button view
             View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
@@ -1454,7 +1527,7 @@ public class MainActivity extends AppCompatActivity
             int right = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
             rlp.setMargins(0, 0, right, bottom);
         }
-
+*/
 //        if(null!= mCurrentLocation)
 //        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
 
@@ -1606,6 +1679,7 @@ public class MainActivity extends AppCompatActivity
 
         private void logout() {
             prefManager.setIsLoggedIn(false);
+            prefManager.setExternalLogout(false);
             driver = new driver();
 //            prefManager.setDriver(driver);
             if(mIsBound) {
@@ -1616,7 +1690,7 @@ public class MainActivity extends AppCompatActivity
             if(blsIntent != null)
                 stopService(blsIntent);
             Intent intent = new Intent(this, LoginActivity.class);
-            activeNotification(false);
+//            activeNotification(false);
             startActivity(intent);
             finish();
         }
@@ -1645,10 +1719,15 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
+//            if(!permissionIsRequested) {
+//                ActivityCompat.requestPermissions(MainActivity.context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
+//                permissionIsRequested = true;
+//            }
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
             return;
         }
-        mMap.setMyLocationEnabled(true);
+            Log.d(TAG,"onMapReady: mMap.setMyLocationEnabled(true)");
+            mMap.setMyLocationEnabled(true);
 //        mMap.setPadding(0, 150, 0, 0);
         // Get the button view
         View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
@@ -1668,6 +1747,7 @@ public class MainActivity extends AppCompatActivity
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         if (requestCode == ACCESS_FINE_LOCATION_CODE) {
             Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult:");
+            permissionIsRequested = false;
             // If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -1878,6 +1958,13 @@ public class MainActivity extends AppCompatActivity
         }
 */
 
+        if(currentLocationPoint == null)
+            currentLocationPoint = new LatLng(Double.parseDouble(prefManager.getCurrentLocation().split(",")[0]),
+                    (Double.parseDouble(prefManager.getCurrentLocation().split(",")[1])));
+//        mMap.moveCamera();
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocationPoint.latitude, currentLocationPoint.longitude), 15.0f));
+
+
         // Pan to see all markers in view.
         if (current_request.getStatus().equals("passenger_onboard") ||
                 current_request.getStatus().equals("arrived_dest") ||
@@ -1906,7 +1993,7 @@ public class MainActivity extends AppCompatActivity
                                     String duration = durationInfo.getText();
 
                                     ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-                                    PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorAccent));
+                                    PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.red2));
                                     if (pickupToDestRoute != null) {
                                         pickupToDestRoute.remove();
                                     }
@@ -1916,6 +2003,7 @@ public class MainActivity extends AppCompatActivity
 
                                     if(pickupMarker != null)
                                         pickupMarker.remove();
+/*
 
                                     LatLngBounds.Builder builder = new LatLngBounds.Builder();
                                     if(currentLocationPoint == null)
@@ -1954,6 +2042,7 @@ public class MainActivity extends AppCompatActivity
                                         }
                                     }
 
+*/
 
 
                                     driverToPickupRoute = mMap.addPolyline(polylineOptions);
@@ -1994,7 +2083,7 @@ public class MainActivity extends AppCompatActivity
                                 String duration = durationInfo.getText();
 
                                 ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-                                PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
+                                PolylineOptions polylineOptions = DirectionConverter.createPolyline(MainActivity.this, directionPositionList, 5, getResources().getColor(R.color.red2));
                                 if (pickupToDestRoute != null) {
                                     pickupToDestRoute.remove();
                                 }
@@ -2042,43 +2131,43 @@ public class MainActivity extends AppCompatActivity
                                         driverToPickupRoute.remove();
                                     }
 
-                                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
-                                    if(currentLocationPoint == null)
-                                        currentLocationPoint = new LatLng(Double.parseDouble(prefManager.getCurrentLocation().split(",")[0]),
-                                                (Double.parseDouble(prefManager.getCurrentLocation().split(",")[1])));
-                                    for (LatLng point: directionPositionList){
-                                        builder.include(point);
-                                    }
-                                    bounds = builder.build();
-                                    int padding = 300; // offset from edges of the map in pixels
-                                    cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-                                    try {
-                                        MainActivity.this.mMap.moveCamera(cu);
-                                    } catch (IllegalStateException e) {
-                                        // layout not yet initialized
-                                        final View mapView = getFragmentManager()
-                                                .findFragmentById(R.id.map).getView();
-                                        if (mapView.getViewTreeObserver().isAlive()) {
-                                            mapView.getViewTreeObserver().addOnGlobalLayoutListener(
-                                                    new ViewTreeObserver.OnGlobalLayoutListener() {
-                                                        @SuppressWarnings("deprecation")
-                                                        @SuppressLint("NewApi")
-                                                        // We check which build version we are using.
-                                                        @Override
-                                                        public void onGlobalLayout() {
-                                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                                                                mapView.getViewTreeObserver()
-                                                                        .removeGlobalOnLayoutListener(this);
-                                                            } else {
-                                                                mapView.getViewTreeObserver()
-                                                                        .removeOnGlobalLayoutListener(this);
-                                                            }
-                                                            mMap.moveCamera(cu);
-                                                        }
-                                                    });
-                                        }
-                                    }
-
+//                                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+//                                    if(currentLocationPoint == null)
+//                                        currentLocationPoint = new LatLng(Double.parseDouble(prefManager.getCurrentLocation().split(",")[0]),
+//                                                (Double.parseDouble(prefManager.getCurrentLocation().split(",")[1])));
+//                                    for (LatLng point: directionPositionList){
+//                                        builder.include(point);
+//                                    }
+//                                    bounds = builder.build();
+//                                    int padding = 300; // offset from edges of the map in pixels
+//                                    cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+//                                    try {
+//                                        MainActivity.this.mMap.moveCamera(cu);
+//                                    } catch (IllegalStateException e) {
+//                                        // layout not yet initialized
+//                                        final View mapView = getFragmentManager()
+//                                                .findFragmentById(R.id.map).getView();
+//                                        if (mapView.getViewTreeObserver().isAlive()) {
+//                                            mapView.getViewTreeObserver().addOnGlobalLayoutListener(
+//                                                    new ViewTreeObserver.OnGlobalLayoutListener() {
+//                                                        @SuppressWarnings("deprecation")
+//                                                        @SuppressLint("NewApi")
+//                                                        // We check which build version we are using.
+//                                                        @Override
+//                                                        public void onGlobalLayout() {
+//                                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+//                                                                mapView.getViewTreeObserver()
+//                                                                        .removeGlobalOnLayoutListener(this);
+//                                                            } else {
+//                                                                mapView.getViewTreeObserver()
+//                                                                        .removeOnGlobalLayoutListener(this);
+//                                                            }
+//                                                            mMap.moveCamera(cu);
+//                                                        }
+//                                                    });
+//                                        }
+//                                    }
+//
 
 
                                     driverToPickupRoute = mMap.addPolyline(polylineOptions);
@@ -2098,13 +2187,16 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+/*
     private void activeNotification(Boolean enable) {
 
         if (enable) {
 
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 */
+/* Request code *//*
+, intent,
                     PendingIntent.FLAG_ONE_SHOT);
 
 //            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -2120,17 +2212,22 @@ public class MainActivity extends AppCompatActivity
             NotificationManager notificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-            notificationManager.notify(ACTIVE_NOTIFICATION_ID /* ID of notification */, notificationBuilder.build());
+            notificationManager.notify(ACTIVE_NOTIFICATION_ID */
+/* ID of notification *//*
+, notificationBuilder.build());
         }
         else
         {
             NotificationManager notificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-            notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
+            notificationManager.cancel(ACTIVE_NOTIFICATION_ID */
+/* ID of notification *//*
+);
 
         }
     }
+*/
 
     @Override
     protected void onDestroy() {

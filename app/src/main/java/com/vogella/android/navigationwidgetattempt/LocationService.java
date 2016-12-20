@@ -22,6 +22,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mRequestingLocationUpdates;
 import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
 
 
@@ -33,6 +34,8 @@ import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NO
 public class LocationService extends IntentService {
     private static final String TAG = "Location Service";
     private PrefManager prefManager;
+    protected static final int UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
+    protected static final int UPDATE_WHILE_IDLE = 2 * 60 * 1000;
 
     public LocationService() {
         super("LocationService");
@@ -46,64 +49,81 @@ public class LocationService extends IntentService {
             Log.d(TAG,"intent has alarmType");
 
             if(prefManager.isLoggedIn()) {
-                if (isLocationEnabled(this)) {
-                    Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-                    locationIntent.putExtra("alarmType", "location");
-                    PendingIntent locationPI = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                Log.d(TAG,"Driver is loggedin");
+                if(prefManager.isActive()) {
+                    Log.d(TAG,"Driver is Active");
+                    if (isLocationEnabled(this)) {
+                        Log.d(TAG,"Location Enabled");
+                        Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+                        locationIntent.putExtra("alarmType", "location");
+                        PendingIntent locationPI = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                    AlarmManager m = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                    int intervalTimeMillis;
-                    if (prefManager.isDoingRequest())
-                        intervalTimeMillis = 10 * 1000;  // 10 seconds
-                    else
-                        intervalTimeMillis = 30 * 60 * 1000;//5 * 60 * 1000; // 5 minutes
-                    m.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + intervalTimeMillis, locationPI);
-                    Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-                    activeIntent.putExtra("alarmType", "active");
+                        AlarmManager m = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                        int intervalTimeMillis;
+                        if (prefManager.isDoingRequest())
+                            intervalTimeMillis = UPDATE_DURING_REQUEST;  // 10 seconds
+                        else
+                            intervalTimeMillis = UPDATE_WHILE_IDLE;//5 * 60 * 1000; // 5 minutes
+                        m.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + intervalTimeMillis, locationPI);
+                        Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
+                        activeIntent.putExtra("alarmType", "active");
 
-                    PendingIntent activePI = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                    intervalTimeMillis = 30 * 1000;
-                    m.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + intervalTimeMillis, activePI);
-                } else {
-                    NotificationManager notificationManager =
-                            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                        PendingIntent activePI = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//                    intervalTimeMillis = 30 * 1000;
+                        m.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + intervalTimeMillis, activePI);
 
-                    notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
 
+                        if (intent.getStringExtra("alarmType").equals("location")) {
+                            Log.d(TAG, "alarmType is location");
+                            String location = prefManager.getCurrentLocation();
+                            String request_id;
+                            if (prefManager.isDoingRequest())
+                                request_id = prefManager.getRequestId();
+                            else
+                                request_id = "-1";
+                            sendLocation(request_id, location);
+                        } else if (intent.getStringExtra("alarmType").equals("active")) {
+                            Log.d(TAG, "alarmType is active");
+                            String location = prefManager.getCurrentLocation();
+                            int active;
+                            if (prefManager.isActive())
+                                active = 1;
+                            else
+                                active = 0;
+                            sendActive(active, location);
+                        } else {
+                            Log.d(TAG, "alarmType is : " + intent.getStringExtra("alarmType"));
+                        }
+                    } else {// Location not enabled
+                        Log.d(TAG,"Location Disabled");
+                        mRequestingLocationUpdates = false;
+
+//                        Intent intent1 = new Intent(this, PopupActivity.class);
+//                        intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                        startActivity(intent1);
+                        NotificationManager notificationManager =
+                                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                        notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
+                    }
+                }// Inactive
+                else{
+                    Log.d(TAG,"Driver is Inactive");
+                    String location = prefManager.getCurrentLocation();
+                    int active = 0;
+                    sendActive(active, location);
                 }
-            }else { //!loggedin
+            }
+            else { //!loggedin
+                Log.d(TAG,"Driver is not loggedin");
                 NotificationManager notificationManager =
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
                 notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
             }
 
-
-
-                if(intent.getStringExtra("alarmType").equals("location")){
-                Log.d(TAG,"alarmType is location");
-                String location = prefManager.getCurrentLocation();
-                String request_id;
-                if(prefManager.isDoingRequest())
-                    request_id = prefManager.getRequestId();
-                else
-                    request_id = "-1";
-                sendLocation(request_id, location);
-            }
-            else if(intent.getStringExtra("alarmType").equals("active")){
-                Log.d(TAG,"alarmType is active");
-                String location = prefManager.getCurrentLocation();
-                int active;
-                if(prefManager.isActive())
-                    active = 1;
-                else
-                    active = 0;
-                sendActive(active, location);
-            }
-            else {
-                Log.d(TAG,"alarmType is : " + intent.getStringExtra("alarmType"));
-            }
         }
+
         else {
             Log.d(TAG,"The intent doesn't have alarmType extra");
         }

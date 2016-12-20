@@ -51,17 +51,31 @@
         android:visibility="invisible"
         android:id="@+id/current_request_view">
     </include>
-
-    <ImageView
-            android:id="@+id/nav_button"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_gravity="bottom|start"
-            android:layout_marginTop="70dp"
+    <LinearLayout
+        android:gravity="center_horizontal"
+        android:padding="5dp"
+        android:id="@+id/nav_button"
+        android:background="@color/colorAccent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="bottom|start"
+        android:layout_marginTop="70dp"
+        >
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
             android:src="@drawable/navigation_001"
+            />
+    <TextView
+        android:paddingLeft="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Navigate"
+        android:textSize="18sp"
+        android:textColor="@color/white"
         />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/change_driver_status"

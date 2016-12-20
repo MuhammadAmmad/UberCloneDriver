@@ -112,7 +112,7 @@ public class SelectedRequest extends AppCompatActivity {
                 Intent intent2 = new Intent(SelectedRequest.this, MainActivity.class);
                 intent2.putExtras(intent);
                 startActivity(intent2);
-//                finish();
+                finish();
             }
         });
         ((TextView) findViewById(R.id.request_details_cancel)).setOnClickListener(new View.OnClickListener() {
@@ -192,6 +192,15 @@ public class SelectedRequest extends AppCompatActivity {
             }
         });
     }
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume called");
+        if (!prefManager.isLoggedIn()) {
+            Intent intent = new Intent(SelectedRequest.this, LoginActivity.class);
+            SelectedRequest.this.startActivity(intent);
+            SelectedRequest.super.finish();
+        }
+    }
 
 }

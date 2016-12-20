@@ -249,30 +249,44 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
+        int versionCode = 1;
+
+        try {
+
+            versionCode = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
 
         RestService service = retrofit.create(RestService.class);
         Call<LoginResponse> call = service.login("Basic "+ Base64.encodeToString((email + ":" + password).getBytes()
-                ,Base64.NO_WRAP), FirebaseInstanceId.getInstance().getToken());
+                ,Base64.NO_WRAP), FirebaseInstanceId.getInstance().getToken(), versionCode);
         call.enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
              //   if (response.isSuccessful()){
                 if (response.isSuccess()){
-                    driver driver = response.body().getdriver();
-                    //user.setPassword(password);
-                    driver.setEmail(email);
-                    driver.setPassword(password);
-                    prefManager.setIsLoggedIn(true);
-                    prefManager.setDriver(driver);
+                    if(response.body().getStatus() == 0) {
+                        driver driver = response.body().getdriver();
+                        //user.setPassword(password);
+                        driver.setEmail(email);
+                        driver.setPassword(password);
+                        prefManager.setIsLoggedIn(true);
+                        prefManager.setDriver(driver);
 
-                    prefManager.setLastEmail(email);
-                    prefManager.setLastPassword(password);
+                        prefManager.setLastEmail(email);
+                        prefManager.setLastPassword(password);
 
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(intent);
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
 //                showProgress(false);
-                    finish();
+                        finish();
+                    }
+                    else if(response.body().getStatus() == 3){
+                        Toast.makeText(LoginActivity.this,"Your app version is outdated, please get the latest version from play store to continue using this applicatoin", Toast.LENGTH_LONG).show();
+                        finish();
+                    }
                 } else if (response.code() == 401){
                     mPasswordView.setError(getString(R.string.error_incorrect_password));
                     mPasswordView.requestFocus();

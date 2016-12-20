@@ -90,7 +90,19 @@
         <service
             android:name=".BackgroundLocationService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
+
+        <activity
+            android:name=".PopupActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Dialog" />
+        <activity android:name=".LocationSettingCallback"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Transparent"/>
     </application>
 
 </manifest>

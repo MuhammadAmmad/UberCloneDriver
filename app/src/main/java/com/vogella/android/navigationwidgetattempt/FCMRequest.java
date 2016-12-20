@@ -124,6 +124,7 @@ public class FCMRequest extends AppCompatActivity {
         ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(request.getPickupText());
         ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.getPrice() + "  SDG");
         ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.getTime());
+        ((TextView) findViewById(R.id.fcmrequest_distance)).setText("calculating distance ...");
         final CountDownTimer countDownTimer = new CountDownTimer(30 * 1000, 500) {
             @Override
             public void onTick(long l) {
@@ -239,7 +240,7 @@ public class FCMRequest extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        if (prefManager.isLoggedIn() == false) {
+        if (!prefManager.isLoggedIn()) {
             Intent intent = new Intent(FCMRequest.this, LoginActivity.class);
             FCMRequest.this.startActivity(intent);
             FCMRequest.super.finish();
@@ -293,10 +294,10 @@ public class FCMRequest extends AppCompatActivity {
                             // Distance info
                             Info distanceInfo = leg.getDistance();
 //                            Info durationInfo = leg.getDuration();
-                            int distance = Integer.valueOf(distanceInfo.getValue()) / 1000;
+                            float distance = Float.valueOf(distanceInfo.getValue()) / 1000;
 //                            String duration = durationInfo.getValue();
 //                            calculatePrice(Integer.valueOf(duration), Integer.valueOf(distance));
-                            ((TextView) findViewById(R.id.fcmrequest_distance)).setText(String.valueOf(distance) + " Km");
+                            ((TextView) findViewById(R.id.fcmrequest_distance)).setText(String.format("%s Km", String.valueOf(distance)));
 
                         }
                     }

@@ -135,6 +135,26 @@ public class PrefManager {
         return pref.getString(CURRENT_LOCATION, "No data");
     }
 
+    public String getDriverName() {
+        return pref.getString(USER_FULLNAME, "No data");
+    }
+
+    public String getDriverPassword() {
+        return pref.getString(USER_PASSWORD, "No data");
+    }
+
+    public String getDriverPhone() {
+        return pref.getString(USER_PHONE, "No data");
+    }
+
+    public String getDriverEmail() {
+        return pref.getString(USER_EMAIL, "No data");
+    }
+
+    public String getDriverGender() {
+        return pref.getString(USER_GENDER, "No data");
+    }
+
 
     public String getRequestId() {
         return pref.getString(REQUEST_ID, "No data");
@@ -163,7 +183,7 @@ public class PrefManager {
         editor.apply();
     }
 
-    public boolean isExtermalLogout() {
+    public boolean isExternalLogout() {
         return pref.getBoolean(EXTERNAL_LOGOUT, false);
     }
 

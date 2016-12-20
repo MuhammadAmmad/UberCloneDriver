@@ -1,5 +1,6 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -9,17 +10,23 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
+import com.Wisam.Events.ChangeActiveUpdateInterval;
 import com.Wisam.Events.DriverActive;
 import com.Wisam.Events.LocationUpdated;
+import com.Wisam.Events.UnbindBackgroundLocationService;
 import com.Wisam.POJO.StatusResponse;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -34,6 +41,8 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -43,8 +52,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
 import static com.vogella.android.navigationwidgetattempt.MainActivity.REQUEST_CHECK_SETTINGS;
-import static com.vogella.android.navigationwidgetattempt.MainActivity.checkedLocation;
-import static com.vogella.android.navigationwidgetattempt.MainActivity.mRequestingLocationUpdates;
 
 /**
  *
@@ -56,7 +63,7 @@ public class BackgroundLocationService extends Service implements
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener, ResultCallback<LocationSettingsResult> {
 
-    private static final int ACCESS_FINE_LOCATION_CODE = 3124;
+    protected static final int ACCESS_FINE_LOCATION_CODE = 3124;
     IBinder mBinder = new LocalBinder();
 
     private GoogleApiClient mGoogleApiClient;
@@ -76,6 +83,66 @@ public class BackgroundLocationService extends Service implements
     private int inactiveAttempts = 0;
     private boolean sentInactiveSuccessfully;
 
+    protected static Boolean mRequestingLocationUpdates;
+
+
+    protected static boolean checkedLocation = false;
+
+
+//    private Looper mServiceLooper;
+//    private ServiceHandler mServiceHandler;
+
+    protected static final int UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
+    protected static final int UPDATE_WHILE_IDLE = 2 * 60 * 1000;
+    private Handler updateActiveHandler;
+    private Runnable updateActiveRunnable;
+    private Handler resendActivehandler;
+    private Handler resendLocationHandler;
+    private long resendFailedRequestDelay = 1000;
+    protected static boolean permissionIsRequested = false;
+
+    // Handler that receives messages from the thread
+/*
+    private final class ServiceHandler extends Handler {
+        public ServiceHandler(Looper looper) {
+            super(looper);
+        }
+        @Override
+        public void handleMessage(Message msg) {
+            Log.d(TAG,"handleMessage invoked");
+
+            mRequestingLocationUpdates = false;
+
+            mInProgress = false;
+            // Create the LocationRequest object
+            mLocationRequest = LocationRequest.create();
+            // Use high accuracy
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            // Set the update interval to 5 seconds
+            mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+            // Set the fastest update interval to 1 second
+            mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+
+//        servicesAvailable = servicesConnected();
+
+        */
+/*
+         * Create a new location client, using the enclosing class to
+         * handle callbacks.
+         *//*
+
+            setUpLocationClientIfNeeded();
+
+            buildLocationSettingsRequest();
+
+            prefManager = new PrefManager(BackgroundLocationService.this);
+
+            sentInactiveSuccessfully = false;
+        }
+    }
+*/
+
+
 
     public class LocalBinder extends Binder {
         public BackgroundLocationService getServerInstance() {
@@ -85,19 +152,34 @@ public class BackgroundLocationService extends Service implements
 
     @Override
     public void onCreate() {
-        super.onCreate();
-
+//        super.onCreate();
         Log.d(TAG,"onCreate()");
 
-        mInProgress = false;
-        // Create the LocationRequest object
-        mLocationRequest = LocationRequest.create();
-        // Use high accuracy
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        // Set the update interval to 5 seconds
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        // Set the fastest update interval to 1 second
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+//        // Start up the thread running the service.  Note that we create a
+//        // separate thread because the service normally runs in the process's
+//        // main thread, which we don't want to block.  We also make it
+//        // background priority so CPU-intensive work will not disrupt our UI.
+//        HandlerThread thread = new HandlerThread("ServiceStartArguments",
+//                Process.THREAD_PRIORITY_BACKGROUND);
+//        thread.start();
+//
+//        // Get the HandlerThread's Looper and use it for our Handler
+//        mServiceLooper = thread.getLooper();
+//        mServiceHandler = new ServiceHandler(mServiceLooper);
+
+//        Thread t = new Thread(){
+//            public void run(){
+                mRequestingLocationUpdates = false;
+
+                mInProgress = false;
+                // Create the LocationRequest object
+                mLocationRequest = LocationRequest.create();
+                // Use high accuracy
+                mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                // Set the update interval to 5 seconds
+                mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+                // Set the fastest update interval to 1 second
+                mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
 //        servicesAvailable = servicesConnected();
 
@@ -105,13 +187,36 @@ public class BackgroundLocationService extends Service implements
          * Create a new location client, using the enclosing class to
          * handle callbacks.
          */
-        setUpLocationClientIfNeeded();
+                setUpLocationClientIfNeeded();
 
-        buildLocationSettingsRequest();
+                buildLocationSettingsRequest();
 
-        prefManager = new PrefManager(this);
+                prefManager = new PrefManager(BackgroundLocationService.this);
 
-        sentInactiveSuccessfully = false;
+                sentInactiveSuccessfully = false;
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+//        builder.setContentTitle(getText(R.string.app_name));
+        builder.setContentTitle(prefManager.getDriverName());
+        builder.setContentText("Active");
+        builder.setSmallIcon(R.drawable.ic_notification_logo);
+        builder.setContentIntent(pendingIntent);
+        Notification notification = builder.build();
+
+
+        startForeground(ACTIVE_NOTIFICATION_ID, notification);
+
+        EventBus.getDefault().register(this);
+
+
+//            }
+//        };
+//        t.start();
+
 
     }
 
@@ -182,28 +287,38 @@ public class BackgroundLocationService extends Service implements
         final Status status = locationSettingsResult.getStatus();
         switch (status.getStatusCode()) {
             case LocationSettingsStatusCodes.SUCCESS:
+                checkedLocation = false;
                 Log.i(TAG, "All location settings are satisfied.");
                 startLocationUpdates();
                 break;
             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                 Log.i(TAG, "Location settings are not satisfied. Show the user a dialog to" +
                         "upgrade location settings");
-                checkedLocation = false;
+                Intent intent = new Intent(BackgroundLocationService.this, LocationSettingCallback.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        try {
+                            // Show the dialog by calling startResolutionForResult(), and check the result
+                            // in onActivityResult().
 
-                try {
-                    // Show the dialog by calling startResolutionForResult(), and check the result
-                    // in onActivityResult().
-                    status.startResolutionForResult(MainActivity.context, REQUEST_CHECK_SETTINGS);
-                } catch (IntentSender.SendIntentException e) {
-                    Log.i(TAG, "PendingIntent unable to execute request.");
-                }
+//                            status.startResolutionForResult(MainActivity.context, REQUEST_CHECK_SETTINGS);
+                            status.startResolutionForResult(LocationSettingCallback.activity, REQUEST_CHECK_SETTINGS);
+//                    status.startResolutionForResult(MainActivity.class.newInstance(), REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.i(TAG, "PendingIntent unable to execute request.");
+                        }
+                    }
+                }, 1000);
                 break;
             case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                 Log.i(TAG, "Location settings are inadequate, and cannot be fixed here. Dialog " +
                         "not created.");
-                checkedLocation = false;
                 prefManager.setActive(false);
                 EventBus.getDefault().post(new DriverActive(false));
+                stopSelf();
                 break;
         }
     }
@@ -347,7 +462,11 @@ public class BackgroundLocationService extends Service implements
     protected void startLocationUpdates() {
         Log.d(TAG, "startLocationUpdates");
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
+            if(!permissionIsRequested){
+                ActivityCompat.requestPermissions(MainActivity.context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
+//                ActivityCompat.requestPermissions(LocationSettingCallback.activity, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
+                permissionIsRequested = true;
+            }
             // TODO: Consider using a notification so that the request isn't bound to a certain activity
             //check
             return;
@@ -366,6 +485,10 @@ public class BackgroundLocationService extends Service implements
 
                 prefManager.setActive(true);
 
+                activeUpdate();
+
+                checkLocation();
+
                 EventBus.getDefault().post(new DriverActive(true));
 //                prefManager
 //                sendInactiveToLogout(1, prefManager.getCurrentLocation());
@@ -376,32 +499,206 @@ public class BackgroundLocationService extends Service implements
         });
 
     }
-/*
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if (requestCode == ACCESS_FINE_LOCATION_CODE) {
-            // If request is cancelled, the result arrays are empty.
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                checkLocationSettings();
-            } else {
-                Toast.makeText(this, "You can't receive requests unless you enable this permission\n" +
-                                "if you want to receive requests, press the 'Go active' button below",
-                        Toast.LENGTH_LONG).show();
-                // permission denied, boo! Disable the
-                // functionality that depends on this permission.
-            }
-        }
-    }
-*/
 
-    private void activeNotification(Boolean enable) {
+    @Subscribe(threadMode = ThreadMode.ASYNC)
+    public void ChangeActiveUpdateInterval(ChangeActiveUpdateInterval event) {
+        Log.d(TAG,"ChangeActiveUpdateInterval event received");
+        activeUpdate();
+    }
+
+    private void activeUpdate() {
+        Log.d(TAG,"activeUpdate invoked");
+        if(updateActiveHandler!= null)
+            updateActiveHandler.removeCallbacksAndMessages(null);
+        else
+            updateActiveHandler = new Handler();
+        updateActiveRunnable = new Runnable() {
+            @Override
+            public void run() {
+                    int intervalTimeMillis;
+                    if (prefManager.isDoingRequest())
+                        intervalTimeMillis = UPDATE_DURING_REQUEST;  // 10 seconds
+                    else
+                        intervalTimeMillis = UPDATE_WHILE_IDLE;//5 * 60 * 1000; // 5 minutes
+                    String location = prefManager.getCurrentLocation();
+                    String request_id;
+                    if (prefManager.isDoingRequest())
+                        request_id = prefManager.getRequestId();
+                    else
+                        request_id = "-1";
+                    sendLocation(request_id, location);
+                    int active;
+                    if (prefManager.isActive())
+                        active = 1;
+                    else
+                        active = 0;
+                    sendActive(active, location);
+
+                    updateActiveHandler.postDelayed(updateActiveRunnable, intervalTimeMillis);
+                }
+        };
+        updateActiveRunnable.run();
+    }
+
+    private void checkLocation() {
+        Handler checkLocationHandler = new Handler();
+        checkLocationHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(!isLocationEnabled(BackgroundLocationService.this)) {
+                    prefManager.setActive(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    final Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            stopSelf();
+                            handler.removeCallbacksAndMessages(null);
+                        }
+                    }, 2000);
+                }
+            }
+        },10 * 1000);
+    }
+
+
+    public static boolean isLocationEnabled(Context context) {
+        int locationMode = 0;
+        String locationProviders;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            try {
+                locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+
+        }else{
+            locationProviders = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            return !TextUtils.isEmpty(locationProviders);
+        }
+
+    }
+
+
+    private void sendLocation(final String request_id, final String location ) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = prefManager.pref.getString("UserEmail","");
+        String password = prefManager.pref.getString("UserPassword","");
+
+        Log.d(TAG,"sendLocation called");
+
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.location("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
+                request_id,location);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null){
+                    Log.d(TAG, "The location has been sent successfully");
+                    if(resendLocationHandler != null)
+                        resendLocationHandler.removeCallbacksAndMessages(null);
+                } else if (response.code() == 401){
+//                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "onCreate: User not logged in");
+                    prefManager.setIsLoggedIn(false);
+//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//                    MainActivity.this.startActivity(intent);
+//                    MainActivity.super.finish();
+                } else {
+//                    clearHistoryEntries();
+//                    Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "sendLocation Unknown error occurred");
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+                Log.i(TAG, "sendLocation Failed to get the server");
+                if(resendLocationHandler == null)
+                    resendLocationHandler = new Handler();
+                resendLocationHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendLocation(request_id, location);
+                    }
+                }, resendFailedRequestDelay);
+
+            }
+        });
+    }
+
+
+    private void sendActive(final int active, final String location) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = prefManager.pref.getString("UserEmail", "");
+        String password = prefManager.pref.getString("UserPassword", "");
+
+        Log.d(TAG, "sendActive called");
+
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.active("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
+                active, location);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null) {
+                    Log.d(TAG, "The driver status has been changed successfully");
+                    if(resendActivehandler != null)
+                        resendActivehandler.removeCallbacksAndMessages(null);
+                } else if (response.code() == 401) {
+//                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "sendActive User not logged in");
+                    prefManager.setIsLoggedIn(false);
+//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//                    MainActivity.this.startActivity(intent);
+//                    MainActivity.super.finish();
+                } else {
+//                    clearHistoryEntries();
+//                    Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "sendActive: Unknown error occurred");
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+                Log.i(TAG, "sendActive Failed to get the server");
+                if(resendActivehandler == null)
+                    resendActivehandler = new Handler();
+                resendActivehandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendActive(active, location);
+
+                    }
+                }, resendFailedRequestDelay);
+
+            }
+        });
+    }
+
+
+    /*private void activeNotification(Boolean enable) {
 
         if (enable) {
 
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 *//* Request code *//*, intent,
                     PendingIntent.FLAG_ONE_SHOT);
 
 //            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -417,28 +714,29 @@ public class BackgroundLocationService extends Service implements
             NotificationManager notificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-            notificationManager.notify(ACTIVE_NOTIFICATION_ID /* ID of notification */, notificationBuilder.build());
+            notificationManager.notify(ACTIVE_NOTIFICATION_ID *//* ID of notification *//*, notificationBuilder.build());
         }
         else
         {
             NotificationManager notificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-            notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
+            notificationManager.cancel(ACTIVE_NOTIFICATION_ID *//* ID of notification *//*);
 
         }
-    }
+    }*/
     @Override
     public void onDestroy() {
         // Turn off the request flag
         Log.d(TAG, "onDestroy");
 
-        activeNotification(false);
-        if(!prefManager.isExtermalLogout()) {
-            sendInactiveToLogout(prefManager.getCurrentLocation());
-        }
-        else
-            prefManager.setExternalLogout(false);
+//        activeNotification(false);
+        if(!prefManager.isLoggedIn())
+            if(!prefManager.isExternalLogout()) {
+                sendInactiveToLogout(prefManager.getCurrentLocation());
+            }
+
+//        prefManager.setExternalLogout(false);
 
         this.mInProgress = false;
 
@@ -487,7 +785,10 @@ public class BackgroundLocationService extends Service implements
                     inactiveAttempts = 0;
                     sentInactiveSuccessfully = true;
 //                    prefManager.setActive(false);
-                    activeNotification(false);
+
+                    //TODO: ensure the service is stopped so that the active notification is removed.
+//                    activeNotification(false);
+
                 } else if (response.code() == 401) {
                     Log.i(TAG, "onResponse: User not logged in");
                     prefManager.setIsLoggedIn(false);
@@ -500,7 +801,7 @@ public class BackgroundLocationService extends Service implements
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 Log.i(TAG, getString(R.string.server_timeout));
-                while(inactiveAttempts < 50 || !sentInactiveSuccessfully) {
+//                while(inactiveAttempts < 50 || !sentInactiveSuccessfully) {
 //                    try {
 //                        Thread.sleep(1000);
 //                    } catch (InterruptedException e) {
@@ -508,8 +809,8 @@ public class BackgroundLocationService extends Service implements
 //                        e.printStackTrace();
 //                    }
                     sendInactiveToLogout(location);
-                    inactiveAttempts++;
-                }
+//                    inactiveAttempts++;
+//                }
             }
         });
     }
@@ -527,14 +828,10 @@ public class BackgroundLocationService extends Service implements
         // Request location updates using static settings
 //        Intent intent = new Intent(this, LocationReceiver.class);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+//            if(!permissionIsRequested) {
+//                ActivityCompat.requestPermissions(MainActivity.context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
+//                permissionIsRequested = true;
+//            }
             return;
         }
         if(!checkedLocation) {
@@ -589,16 +886,9 @@ public class BackgroundLocationService extends Service implements
 
         }
     }
-}
-/*
-public class BackgroundLocationService extends Service {
-    public BackgroundLocationService() {
-    }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+    public void onTaskRemoved(Intent rootIntent){
+//        rootIntent.
     }
 }
-*/

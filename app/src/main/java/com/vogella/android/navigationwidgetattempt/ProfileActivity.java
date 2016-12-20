@@ -17,6 +17,7 @@ import org.greenrobot.eventbus.ThreadMode;
 public class ProfileActivity extends AppCompatActivity {
     private static final String TAG = "Profile Activity";
     public driver driver;
+    private PrefManager prefManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +29,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        PrefManager prefManager = new PrefManager(this);
+        prefManager = new PrefManager(this);
 
         if (prefManager.isLoggedIn()) {
             driver = prefManager.getDriver();
@@ -86,6 +87,15 @@ public class ProfileActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LoginActivity.class);
         this.startActivity(intent);
         finish();
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!prefManager.isLoggedIn()) {
+            Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+            ProfileActivity.this.startActivity(intent);
+            ProfileActivity.super.finish();
+        }
     }
 
 //    @Override
