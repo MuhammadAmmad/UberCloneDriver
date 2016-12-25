@@ -931,4 +931,7 @@ public class BackgroundLocationService extends Service implements
     public void onTaskRemoved(Intent rootIntent){
 //        rootIntent.
     }
+
+
+
 }

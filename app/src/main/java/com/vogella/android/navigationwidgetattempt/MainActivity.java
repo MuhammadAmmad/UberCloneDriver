@@ -118,6 +118,7 @@ public class MainActivity extends AppCompatActivity
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 2000;
     static final int ACTIVE_NOTIFICATION_ID = 1024;
+    private static final int RESENDING_ATTEMPTS_OVERALL_DELAY = 5 * 60 * 1000;
     private GoogleMap mMap;
 
     private ProgressDialog progress;
@@ -200,6 +201,10 @@ public class MainActivity extends AppCompatActivity
     private boolean createdFromNewRequest;
     private Handler routingHandler;
     private Runnable routingRunnable;
+    private Handler resendActivehandler;
+    private long resendFailedRequestDelay = 10 * 1000;
+    private int resendActiveAttempts = 0;
+    private boolean shownActiveProgress = false;
 
 
     @Override
@@ -221,10 +226,18 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
                 if (changeDriverStatus.getText().toString().equals(getString(R.string.go_inactive))) {
 //                if (prefManager.isActive()) {
+                    shownActiveProgress = false; // To display the progress bar again.
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from avaialble to away");
-//                    prefManager.setActive(false);
+                    prefManager.setActive(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    if (mIsBound) {
+                        getApplicationContext().unbindService(mConnection);
+                        mIsBound = false;
+                    }
+                    if (blsIntent != null)
+                        stopService(blsIntent);
                     sendActive(0, prefManager.getCurrentLocation());
-//                    setUI();
+                    setUI();
                 } else if (changeDriverStatus.getText().toString().equals(getString(R.string.go_active))) {
 //                } else{
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from away to available");
@@ -811,11 +824,13 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
-        progress = new ProgressDialog(this);
-        progress.setMessage(getString(R.string.updating_driver_status));
-        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progress.setIndeterminate(true);
-        progress.show();
+        if(!shownActiveProgress) {
+            progress = new ProgressDialog(this);
+            progress.setMessage(getString(R.string.updating_driver_status));
+            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setIndeterminate(true);
+            progress.show();
+        }
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.active("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
@@ -825,6 +840,7 @@ public class MainActivity extends AppCompatActivity
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
                     progress.dismiss();
+
 //                if (progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
@@ -835,14 +851,18 @@ public class MainActivity extends AppCompatActivity
 //                        activeNotification(true); //TODO ensure the service is always running before this point
                     } else {
                         prefManager.setActive(false);
+                        resendActiveAttempts = 0;
+                        if(resendActivehandler != null)
+                            resendActivehandler.removeCallbacksAndMessages(null);
 //                        activeNotification(false);
-                        if (mIsBound) {
-                            //TODO: Handle service leak
-                            getApplicationContext().unbindService(mConnection);
-                            mIsBound = false;
-                        }
-                        if (blsIntent != null)
-                            stopService(blsIntent);
+//                        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+//                        if (mIsBound) {
+//                            //TODO: Handle service leak
+//                            getApplicationContext().unbindService(mConnection);
+//                            mIsBound = false;
+//                        }
+//                        if (blsIntent != null)
+//                            stopService(blsIntent);
                     }
                     setUI();
                 } else if (response.code() == 401) {
@@ -855,17 +875,60 @@ public class MainActivity extends AppCompatActivity
                     logout();
                 } else {
 //                    clearHistoryEntries();
+
                     Log.i(TAG, "Unknown error occurred");
-                    Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
+                    if(shownActiveProgress) {
+                        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                            progress.dismiss();
+                    }else
+                    {
+                        shownActiveProgress = true;
+                        Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
+                    }
+                    if(active == 0) {
+                        if (resendActivehandler == null)
+                            resendActivehandler = new Handler();
+                        if (resendActiveAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
+                            resendActiveAttempts++;
+                            resendActivehandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    sendActive(active, location);
+                                }
+                            }, resendFailedRequestDelay);
+                        } else {
+                            Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
+                        }
+                    }
                 }
 
             }
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
-                    progress.dismiss();
-                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+                if(shownActiveProgress) {
+                    if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                        progress.dismiss();
+                }
+                else{
+                    shownActiveProgress = true;
+                    Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+                }
+                if(active == 0) {
+                    if (resendActivehandler == null)
+                        resendActivehandler = new Handler();
+                    if (resendActiveAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
+                        resendActiveAttempts++;
+                        resendActivehandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendActive(active, location);
+                            }
+                        }, resendFailedRequestDelay);
+                    } else {
+                        Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
+                    }
+                }
                 Log.i(TAG, getString(R.string.server_timeout));
             }
         });
@@ -1412,7 +1475,7 @@ public class MainActivity extends AppCompatActivity
 //        activeNotification(event.getActive());
 //        if(event.getActive())
         if (goActive) { //if the user changed his status to active
-            sendActive(1, prefManager.getCurrentLocation());
+//            sendActive(1, prefManager.getCurrentLocation());
             goActive = false;
         }
 //        else activeNotification(event.getActive());

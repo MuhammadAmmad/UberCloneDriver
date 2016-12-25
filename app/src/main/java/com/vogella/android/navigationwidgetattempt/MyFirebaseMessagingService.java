@@ -23,12 +23,14 @@ package com.vogella.android.navigationwidgetattempt;
         import android.media.RingtoneManager;
         import android.net.Uri;
         import android.support.v4.app.NotificationCompat;
+        import android.util.Base64;
         import android.util.Log;
 
         import com.Wisam.Events.DriverLoggedout;
         import com.Wisam.Events.PassengerArrived;
         import com.Wisam.Events.PassengerCanceled;
         import com.Wisam.Events.UnbindBackgroundLocationService;
+        import com.Wisam.POJO.StatusResponse;
         import com.google.firebase.messaging.FirebaseMessagingService;
         import com.google.firebase.messaging.RemoteMessage;
 
@@ -36,6 +38,12 @@ package com.vogella.android.navigationwidgetattempt;
 
         import java.util.Map;
         import java.util.Objects;
+
+        import retrofit2.Call;
+        import retrofit2.Callback;
+        import retrofit2.Response;
+        import retrofit2.Retrofit;
+        import retrofit2.converter.gson.GsonConverterFactory;
 
         import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
         import static com.vogella.android.navigationwidgetattempt.MainActivity.blsIntent;
@@ -117,21 +125,26 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 Log.d(TAG, "This request has no status.. it is impossible to determine which API is this");
             }
             else if(status.equals("0")){
-                Intent intent = new Intent(this, FCMRequest.class);
-                intent.putExtra("request_id", received.getRequest_id());
-                intent.putExtra("price", received.getPrice());
-                intent.putExtra("pickup", pickup);
-                intent.putExtra("pickup_text", received.getPickupText());
-                Log.d(TAG, "time read from the first request object =" + received.getTime());
-                intent.putExtra("time", received.getTime());
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.putExtra("dest", dest);
-                intent.putExtra("dest_text", received.getDestText());
+                if(prefManager.isActive()) {
+                    Intent intent = new Intent(this, FCMRequest.class);
+                    intent.putExtra("request_id", received.getRequest_id());
+                    intent.putExtra("price", received.getPrice());
+                    intent.putExtra("pickup", pickup);
+                    intent.putExtra("pickup_text", received.getPickupText());
+                    Log.d(TAG, "time read from the first request object =" + received.getTime());
+                    intent.putExtra("time", received.getTime());
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("dest", dest);
+                    intent.putExtra("dest_text", received.getDestText());
 //                intent.putExtra("time", received.getTime());
-                intent.putExtra("passenger_name", received.getPassenger_name());
-                intent.putExtra("passenger_phone", received.getPassenger_phone());
-                intent.putExtra("notes", received.getNotes());
-                startActivity(intent);
+                    intent.putExtra("passenger_name", received.getPassenger_name());
+                    intent.putExtra("passenger_phone", received.getPassenger_phone());
+                    intent.putExtra("notes", received.getNotes());
+                    startActivity(intent);
+                }
+                else{
+                    serverAccept(received.getRequest_id(), 0);
+                }
                 Log.d(TAG, "The recieved request has the content:" + received);
             }
             else if (status.equals("1")){ // Passenger Canceled
@@ -259,6 +272,45 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
 
         }
+    }
+
+    private void serverAccept(String request_id, final int accepted ) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(RestServiceConstants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = prefManager.pref.getString("UserEmail","");
+        String password = prefManager.pref.getString("UserPassword","");
+
+        Log.d(TAG, "serverAccept");
+
+
+
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.accept("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
+                request_id,accepted);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null){
+                    Log.d(TAG, "You have rejected the request");
+//                        FCMRequest.super.finish();
+
+                } else if (response.code() == 401){
+                    Log.i(TAG, "onCreate: User not logged in");
+                    prefManager.setIsLoggedIn(false);
+                } else {
+//                    clearHistoryEntries();
+                    Log.d(TAG,getResources().getString(R.string.server_unknown_error));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+                Log.d(TAG, "The response is onFailure");
+            }
+        });
     }
 
 }
