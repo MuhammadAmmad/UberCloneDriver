@@ -136,10 +136,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             else if (status.equals("1")){ // Passenger Canceled
                 for (Map.Entry<String, String> field : request.entrySet()) {
                     if (field.getKey().equals("request_id")) {
-                        prefManager.setRequestStatus("canceled");
+//                        prefManager.setRequestStatus("canceled");
+                        prefManager.setFcmrequestStatus("canceled");
+                        prefManager.setFcmrequestId(field.getValue());
                         prefManager.setDoingRequest(false);
                         EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
-                        OngoingRequestsActivity.removeRequest(field.getValue());
+//                        OngoingRequestsActivity.removeRequest(field.getValue());
                         sendNotification(getString(R.string.passenger_cancelled_notification) + field.getValue());
                         break;
                     }
@@ -149,9 +151,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 for (Map.Entry<String, String> field : request.entrySet()) {
                     if (field.getKey().equals("request_id")) {
                         sendNotification(getString(R.string.passenger_completed_notification));
-                        prefManager.setRequestStatus("completed");
+//                        prefManager.setRequestStatus("completed");
+                        prefManager.setFcmrequestStatus("completed");
+                        prefManager.setFcmrequestId(field.getValue());
                         EventBus.getDefault().post(new PassengerArrived(field.getValue()));
-                        OngoingRequestsActivity.removeRequest(field.getValue());
+//                        OngoingRequestsActivity.removeRequest(field.getValue());
                        // break;
                     }
                 }

@@ -64,6 +64,7 @@ public class BackgroundLocationService extends Service implements
         LocationListener, ResultCallback<LocationSettingsResult> {
 
     protected static final int ACCESS_FINE_LOCATION_CODE = 3124;
+    private static final int RESENDING_ATTEMPTS = 20;
     IBinder mBinder = new LocalBinder();
 
     private GoogleApiClient mGoogleApiClient;
@@ -100,6 +101,10 @@ public class BackgroundLocationService extends Service implements
     private Handler resendLocationHandler;
     private long resendFailedRequestDelay = 1000;
     protected static boolean permissionIsRequested = false;
+    private Handler checkLocationHandler;
+    private Runnable checkLocationRunnable;
+    private int resendActiveAttempts = 0;
+    private int resendLocationAttempts = 0;
 
     // Handler that receives messages from the thread
 /*
@@ -485,9 +490,9 @@ public class BackgroundLocationService extends Service implements
 
                 prefManager.setActive(true);
 
-                activeUpdate();
-
                 checkLocation();
+
+                activeUpdate();
 
                 EventBus.getDefault().post(new DriverActive(true));
 //                prefManager
@@ -515,6 +520,7 @@ public class BackgroundLocationService extends Service implements
         updateActiveRunnable = new Runnable() {
             @Override
             public void run() {
+                    Log.d(TAG,"updateActiveHandler running");
                     int intervalTimeMillis;
                     if (prefManager.isDoingRequest())
                         intervalTimeMillis = UPDATE_DURING_REQUEST;  // 10 seconds
@@ -526,39 +532,54 @@ public class BackgroundLocationService extends Service implements
                         request_id = prefManager.getRequestId();
                     else
                         request_id = "-1";
+                    resendLocationAttempts = 0;
                     sendLocation(request_id, location);
                     int active;
                     if (prefManager.isActive())
                         active = 1;
                     else
                         active = 0;
+                    resendActiveAttempts = 0;
                     sendActive(active, location);
-
                     updateActiveHandler.postDelayed(updateActiveRunnable, intervalTimeMillis);
                 }
         };
         updateActiveRunnable.run();
     }
 
-    private void checkLocation() {
-        Handler checkLocationHandler = new Handler();
-        checkLocationHandler.postDelayed(new Runnable() {
+    protected void checkLocation() {
+        Log.d(TAG,"checkLocation called");
+        if(checkLocationHandler == null)
+            checkLocationHandler = new Handler();
+        checkLocationRunnable = new Runnable() {
             @Override
             public void run() {
+                Log.d(TAG,"checkLocationHandler running");
                 if(!isLocationEnabled(BackgroundLocationService.this)) {
-                    prefManager.setActive(false);
-                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
-                    final Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            stopSelf();
-                            handler.removeCallbacksAndMessages(null);
-                        }
-                    }, 2000);
+                    checkLocationHandler.removeCallbacksAndMessages(null);
+                    Log.d(TAG,"checkLocationHandler removeCallbacksAndMessages");
+                    Intent intent1 = new Intent(BackgroundLocationService.this, PopupActivity.class);
+                    intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent1);
+//                    prefManager.setActive(false);
+//                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+//                    final Handler handler = new Handler();
+//                    handler.postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            stopSelf();
+//                            handler.removeCallbacksAndMessages(null);
+//                        }
+//                    }, 2000);
+
+                }
+                else{
+                    Log.d(TAG,"checkLocationHandler scheduled again");
+                    checkLocationHandler.postDelayed(checkLocationRunnable,10 * 1000);
                 }
             }
-        },10 * 1000);
+        };
+        checkLocationHandler.postDelayed(checkLocationRunnable,10 * 1000);
     }
 
 
@@ -607,15 +628,10 @@ public class BackgroundLocationService extends Service implements
                     if(resendLocationHandler != null)
                         resendLocationHandler.removeCallbacksAndMessages(null);
                 } else if (response.code() == 401){
-//                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
-//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-//                    MainActivity.this.startActivity(intent);
-//                    MainActivity.super.finish();
+                    stopSelf();
                 } else {
-//                    clearHistoryEntries();
-//                    Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "sendLocation Unknown error occurred");
                 }
 
@@ -623,15 +639,19 @@ public class BackgroundLocationService extends Service implements
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                Log.i(TAG, "sendLocation Failed to get the server");
+                Log.i(TAG, "sendLocation Failed to get the server", t);
+                Log.i(TAG, "sendActive call data was: " + call.toString());
                 if(resendLocationHandler == null)
                     resendLocationHandler = new Handler();
-                resendLocationHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendLocation(request_id, location);
-                    }
-                }, resendFailedRequestDelay);
+                if(resendLocationAttempts < RESENDING_ATTEMPTS) {
+                    resendLocationAttempts++;
+                    resendLocationHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            sendLocation(request_id, location);
+                        }
+                    }, resendFailedRequestDelay);
+                }
 
             }
         });
@@ -663,6 +683,7 @@ public class BackgroundLocationService extends Service implements
 //                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "sendActive User not logged in");
                     prefManager.setIsLoggedIn(false);
+                    stopSelf();
 //                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
 //                    MainActivity.this.startActivity(intent);
 //                    MainActivity.super.finish();
@@ -676,16 +697,23 @@ public class BackgroundLocationService extends Service implements
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                Log.i(TAG, "sendActive Failed to get the server");
+                Log.i(TAG, "sendActive Failed to get the server", t);
+                Log.i(TAG, "sendActive call data was: " + call.toString());
                 if(resendActivehandler == null)
                     resendActivehandler = new Handler();
-                resendActivehandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendActive(active, location);
+                if(resendActiveAttempts < RESENDING_ATTEMPTS) {
+                    resendActiveAttempts++;
+                    resendActivehandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            sendActive(active, location);
 
-                    }
-                }, resendFailedRequestDelay);
+                        }
+                    }, resendFailedRequestDelay);
+                }
+                else{
+                    Log.d(TAG,String.format("Couldn't connect to the server after %d attempts... Stopping now.", RESENDING_ATTEMPTS));
+                }
 
             }
         });
@@ -735,6 +763,15 @@ public class BackgroundLocationService extends Service implements
             if(!prefManager.isExternalLogout()) {
                 sendInactiveToLogout(prefManager.getCurrentLocation());
             }
+
+        //stop handlers' runnables
+        if(checkLocationHandler != null)
+            checkLocationHandler.removeCallbacksAndMessages(null);
+        if(resendLocationHandler != null)
+            resendLocationHandler.removeCallbacksAndMessages(null);
+        if(resendActivehandler != null)
+            resendActivehandler.removeCallbacksAndMessages(null);
+        Log.d(TAG,"Handlers runnables were removed");
 
 //        prefManager.setExternalLogout(false);
 

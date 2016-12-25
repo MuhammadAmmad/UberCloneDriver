@@ -199,6 +199,7 @@ public class FCMRequest extends AppCompatActivity {
                                 Intent intent = new Intent(FCMRequest.this, SelectedRequest.class);
                                 intent.putExtras(data);
                                 intent.putExtra("status", "on_the_way");
+                                intent.putExtra("source", "FCMRequest");
                                 startActivity(intent);
                             }
                             FCMRequest.super.finish();

@@ -68,6 +68,32 @@ public class PrefManager {
 
     private static final String CURRENT_LOCATION = "CurrentLocation";
 
+
+    private static final String FCMREQUEST_STATUS = "FCMRrequestStatus";
+
+    private static final String FCMREQUEST_ID = "FCMRrequestID";
+
+    public void setFcmrequestStatus(String status) {
+        editor.putString(FCMREQUEST_STATUS, status);
+        editor.apply();
+    }
+
+    public String getFcmrequestStatus() {
+        return pref.getString(FCMREQUEST_STATUS, "No data");
+    }
+
+
+    public void setFcmrequestId(String request_id) {
+        editor.putString(FCMREQUEST_ID, request_id);
+        editor.apply();
+    }
+
+    public String getFcmrequestId() {
+        return pref.getString(FCMREQUEST_ID, "No data");
+    }
+
+
+
     public void setLastEmail(String email) {
         editor.putString(LAST_EMAIL, email);
         editor.apply();
@@ -265,25 +291,6 @@ public class PrefManager {
                 pref.getString(REQUEST_DEST_TEXT,"No data")
         );
     }
-//    public String getPlacesList(){
-//        ArrayList<MapPlace> placesList = new ArrayList<>();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(placesList);
-//        return pref.getString(PLACES_LIST,json);
-//    }
-
-//    public void setTicketsList(String ticketsList){
-//        editor.putString(TICKETS_LIST, ticketsList);
-//        editor.apply();
-//    }
-
-//    public String getTicketsList(){
-//        ArrayList<EventTicket> eventsList = new ArrayList<>();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(eventsList);
-//        return pref.getString(TICKETS_LIST,json);
-//    }
-
 
 
 }

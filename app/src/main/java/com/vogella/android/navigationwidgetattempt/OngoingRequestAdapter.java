@@ -33,27 +33,28 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 
     private static final String TAG = "UbDriver";
     private static final int SELECTED_REQUEST_CODE = 43542;
-    private List<request> RequestList;
+    private List<request> requestList;
     private Context context;
     private PrefManager prefManager;
 
     public OngoingRequestAdapter(List<request> RequestList, Context context) {
 //    public OngoingRequestAdapter(Context context) {
-        this.RequestList = RequestList;
+        this.requestList = RequestList;
         this.context = context;
     }
 
 
     @Override
     public int getItemCount() {
-        return RequestList.size();
+        return requestList.size();
     }
 
-    public boolean addRequest(request request){RequestList.add(getItemCount(), request); return true;}
+    public boolean addRequest(request request){
+        requestList.add(getItemCount(), request); return true;}
 
     @Override
     public void onBindViewHolder(final com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder RequestViewHolder, int i) {
-        final request ci = RequestList.get(i);
+        final request ci = requestList.get(i);
 
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.price.setTextColor(context.getResources().getColor(R.color.colorPrimary));
@@ -171,7 +172,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
     }
 
     public void updateRequestsList(List<request> requestList) {
-        this.RequestList = requestList;
+        this.requestList = requestList;
     }
 
     public static class OngoingRequestViewHolder extends RecyclerView.ViewHolder{
@@ -243,8 +244,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                 if (response.isSuccess() && response.body() != null) {
 //                    endRequest(REQUEST_CANCELLED);
 //                    setUI(MainActivity.UI_STATE.SIMPLE);
-                    OngoingRequestsActivity.removeRequest(request_id);
-                    OngoingRequestAdapter.this.notifyDataSetChanged();
+                    removeRequest(request_id);
                     Toast.makeText(context, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
                 } else if (response.code() == 401) {
@@ -269,6 +269,19 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                 Log.i(TAG, "Couldn't connect to the server");
             }
         });
+    }
+
+    private void removeRequest(String request_id) {
+        int i;
+        for (i = 0; i < this.requestList.size(); i++) {
+            if (requestList.get(i).getRequest_id().equals(request_id)) {
+                requestList.remove(requestList.get(i));
+                Log.d(TAG, "The request " + request_id + " has been removed");
+                this.notifyDataSetChanged();
+                break;
+            }
+        }
+
     }
 
 

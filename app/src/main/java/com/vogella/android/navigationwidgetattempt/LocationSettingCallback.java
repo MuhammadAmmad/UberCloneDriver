@@ -31,6 +31,7 @@ public class LocationSettingCallback extends Activity {
     private PrefManager prefManager;
     private ServiceConnection mConnection;
     private Intent blsIntent;
+    private boolean handleWhenBound = false;
 
 
     @Override
@@ -39,8 +40,7 @@ public class LocationSettingCallback extends Activity {
         setContentView(R.layout.activity_location_setting_callback);
         activity = this;
         prefManager = new PrefManager(this);
-
-        EventBus.getDefault().register(this);
+        Log.d(TAG, "onCreate");
 
         // This is called when the connection with the service has been
 // established, giving us the service object we can use to
@@ -64,8 +64,13 @@ public class LocationSettingCallback extends Activity {
                 // interact with the service.  Because we have bound to a explicit
                 // service that we know is running in our own process, we can
                 // cast its IBinder to a concrete class and directly access it.
+                Log.d(TAG, "onServiceConnected");
                 backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
                 mIsBound = true;
+                if(handleWhenBound){
+                    backgroundLocationService.startLocationUpdates();
+                    finish();
+                }
 
                 // Tell the user about this for our demo.
                 //            Toast.makeText(Binding.this, R.string.local_service_connected,
@@ -77,6 +82,7 @@ public class LocationSettingCallback extends Activity {
                 // unexpectedly disconnected -- that is, its process crashed.
                 // Because it is running in our same process, we should never
                 // see this happen.
+                Log.d(TAG, "onServiceDisconnected");
                 backgroundLocationService = null;
                 mIsBound = false;
 
@@ -94,12 +100,18 @@ public class LocationSettingCallback extends Activity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult");
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             switch (resultCode) {
                 case RESULT_OK:
                     Log.i(TAG, "User agreed to make required location settings changes.");
-                    backgroundLocationService.startLocationUpdates();
-                    finish();
+                    if(backgroundLocationService != null) {
+                        backgroundLocationService.startLocationUpdates();
+                        finish();
+                    }
+                    else {
+                        handleWhenBound = true;
+                    }
                     break;
                 case RESULT_CANCELED:
                     Log.i(TAG, "User chose not to make required location settings changes.");
@@ -144,6 +156,19 @@ public class LocationSettingCallback extends Activity {
     }
 */
 
+    @Override
+    public void onStart() {
+        EventBus.getDefault().register(this);
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+
     @Subscribe(threadMode = ThreadMode.ASYNC)
     public void onUnbindBackgroundLocationService(UnbindBackgroundLocationService event) {
         Log.d(TAG, "onUnbindBackgroundLocationService has been invoked");
@@ -157,6 +182,7 @@ public class LocationSettingCallback extends Activity {
     @Override
     protected void onDestroy() {
 //        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+        Log.d(TAG, "onDestroy");
         if(mIsBound) {
             try {
                 getApplicationContext().unbindService(mConnection);

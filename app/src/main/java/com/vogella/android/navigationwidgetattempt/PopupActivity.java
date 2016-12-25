@@ -13,9 +13,11 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.Wisam.Events.ChangeActiveUpdateInterval;
@@ -28,7 +30,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mRequestingLocationUpdates;
 import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
 
-public class PopupActivity extends Activity {
+public class PopupActivity extends AppCompatActivity {
     private BackgroundLocationService backgroundLocationService;
     private Boolean mIsBound = false;
     private PrefManager prefManager;
@@ -36,6 +38,8 @@ public class PopupActivity extends Activity {
     protected static final int UPDATE_WHILE_IDLE = 5 * 1000;//2 * 60 * 1000;
     private ServiceConnection mConnection;
     private static final String TAG = PopupActivity.class.getSimpleName();
+    private boolean enablingLocation = false;
+    private Intent blsIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +47,13 @@ public class PopupActivity extends Activity {
         Log.d(TAG,"onCreate");
         setContentView(R.layout.activity_popup);
         prefManager = new PrefManager(this);
-
-        EventBus.getDefault().register(this);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.popup_toolbar);
+        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
+        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
+        toolbar.setTitle("Passenger");
+//        toolbar.setNavigationIcon(R.drawable.mini_logo);
+        setSupportActionBar(toolbar);
+//        getSupportActionBar().setIcon(R.drawable.mini_logo);
 
 
         // This is called when the connection with the service has been
@@ -61,6 +70,8 @@ public class PopupActivity extends Activity {
 // see this happen.
 //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
 //                    Toast.LENGTH_SHORT).show();
+        prefManager.setActive(false);
+
         mConnection = new ServiceConnection() {
 
             public void onServiceConnected(ComponentName className, IBinder service) {
@@ -91,15 +102,17 @@ public class PopupActivity extends Activity {
                 //                    Toast.LENGTH_SHORT).show();
             }
         };
-        final Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
 
         getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
 
         mIsBound = true;
 
-        ((Button) findViewById(R.id.enable_location)).setOnClickListener(new View.OnClickListener() {
+        ((TextView) findViewById(R.id.enable_location)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG,"enable location clicked");
+                enablingLocation = true;
                 backgroundLocationService.checkLocationSettings();
                 final ProgressDialog progress = new ProgressDialog(PopupActivity.this);
                 progress.setMessage(getString(R.string.updating_request_status));
@@ -113,6 +126,8 @@ public class PopupActivity extends Activity {
                             if (!PopupActivity.this.isFinishing() && progress.isShowing()) progress.dismiss();
 //                            setAlarms();
                             EventBus.getDefault().post(new ChangeActiveUpdateInterval());
+                            backgroundLocationService.checkLocation();
+                            finish();
                         }
                         else{
                             Toast.makeText(getApplicationContext(),"Couldn't get your location. Go to the app and try again",Toast.LENGTH_LONG).show();
@@ -122,11 +137,26 @@ public class PopupActivity extends Activity {
 
             }
         });
-        ((Button) findViewById(R.id.become_inactive)).setOnClickListener(new View.OnClickListener() {
+        ((TextView) findViewById(R.id.become_inactive)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                unbindService(mConnection);
-                stopService(blsIntent);
+                Log.d(TAG,"become inactive clicked");
+                if(mIsBound) {
+                    getApplicationContext().unbindService(mConnection);
+                    mIsBound = false;
+                }
+                prefManager.setActive(false);
+//                Log.d(TAG,"Posting new UnbindBackgroundLocationService");
+//                EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        stopService(blsIntent);
+                        handler.removeCallbacksAndMessages(null);
+                        finish();
+                    }
+                }, 200);
             }
         });
 
@@ -137,17 +167,52 @@ public class PopupActivity extends Activity {
     @Override
     protected void onDestroy() {
 //        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
-        if(mIsBound) {
-            try {
+        Log.d(TAG,"onDestroy");
+        if(enablingLocation) {
+            Log.d(TAG,"Decided to enable location");
+            if (mIsBound) {
+                try {
+                    getApplicationContext().unbindService(mConnection);
+                } catch (java.lang.IllegalArgumentException ignored) {
+                    Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
+                }
+                mIsBound = false;
+            }
+        }
+        else{
+            Log.d(TAG,"Decided not to enable location");
+            if(mIsBound) {
                 getApplicationContext().unbindService(mConnection);
+                mIsBound = false;
             }
-            catch (java.lang.IllegalArgumentException ignored){
-                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-            }
-            mIsBound = false;
+            prefManager.setActive(false);
+//            Log.d(TAG,"Posting new UnbindBackgroundLocationService");
+//            EventBus.getDefault().post(new UnbindBackgroundLocationService());
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG,"onDestroy: stopping BackgroundLocationService");
+                    stopService(blsIntent);
+                    handler.removeCallbacksAndMessages(null);
+                }
+            }, 200);
         }
         super.onDestroy();
     }
+
+    @Override
+    public void onStart() {
+        EventBus.getDefault().register(this);
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
 
     @Subscribe(threadMode = ThreadMode.ASYNC)
     public void onUnbindBackgroundLocationService(UnbindBackgroundLocationService event) {
@@ -159,55 +224,6 @@ public class PopupActivity extends Activity {
     }
 
 
-/*
-    private void setAlarms() {
-        //setup location alarm
-
-        AlarmManager alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-        Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-        locationIntent.putExtra("alarmType", "location");
-        boolean locationFlag = (PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_NO_CREATE) == null);
-*/
-/*Register alarm if not registered already*//*
-
-//            if(locationFlag){
-        PendingIntent alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-*/
-/* Setting alarm for every one hour from the current time.*//*
-
-        int intervalTimeMillis;
-        if (prefManager.isDoingRequest())
-            intervalTimeMillis = UPDATE_DURING_REQUEST;  // 10 seconds
-        else
-            intervalTimeMillis = UPDATE_WHILE_IDLE;// 2 minutes
-        alarmMgr.set(AlarmManager.RTC_WAKEUP, intervalTimeMillis, alarmIntent);
-//             alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//                        SystemClock.elapsedRealtime(), intervalTimeMillis,
-//                        alarmIntent);
-//            }
-        Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-        activeIntent.putExtra("alarmType", "active");
-        boolean activeFlag = (PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_NO_CREATE) == null);
-*/
-/*Register alarm if not registered already*//*
-
-//            if(activeFlag){
-        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-*/
-/* Setting alarm for every one hour from the current time.*//*
-
-//                int intervalTimeMillis;
-//        intervalTimeMillis = 30 * 1000;//30 * 1000; // 30 seconds
-        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, intervalTimeMillis, alarmIntent);
-//                alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//                        SystemClock.elapsedRealtime(), intervalTimeMillis,
-//                        alarmIntent);
-////            }
-    }
-*/
 
 }
 

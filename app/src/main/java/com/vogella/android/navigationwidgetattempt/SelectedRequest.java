@@ -18,6 +18,8 @@ import com.Wisam.Events.PassengerCanceled;
 import com.Wisam.POJO.StatusResponse;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,6 +32,7 @@ public class SelectedRequest extends AppCompatActivity {
     private static final String TAG = "Selected Request";
     private Intent intent;
     private PrefManager prefManager;
+    private ProgressDialog progress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +87,7 @@ public class SelectedRequest extends AppCompatActivity {
                     ((TextView) findViewById(R.id.request_details_toolbar_title)).setText("Missed");
                 }
             }
-            else if (intent.getStringExtra("source").equals("incoming")){
+            else if (intent.getStringExtra("source").equals("incoming") || intent.getStringExtra("source").equals("FCMRequest")){
                 ImageView icon = (ImageView) findViewById(R.id.derails_icon);
                 icon.setVisibility(View.GONE);
                 ((TextView) findViewById(R.id.request_details_toolbar_title)).setPadding(0, 15, 0, 15);
@@ -92,11 +95,11 @@ public class SelectedRequest extends AppCompatActivity {
             }
         }
         else {
+            Log.d(TAG,"This shouldn't be happening.. All intents to this activity are presumed to have a \'source\' extra");
             ImageView icon = (ImageView) findViewById(R.id.derails_icon);
             icon.setVisibility(View.GONE);
             ((TextView) findViewById(R.id.request_details_toolbar_title)).setPadding(0, 15, 0, 15);
             ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
-
         }
 
         ((TextView) findViewById(R.id.request_details_pickup)).setText(intent.getStringExtra("pickup_text"));
@@ -146,7 +149,7 @@ public class SelectedRequest extends AppCompatActivity {
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
-        final ProgressDialog progress = new ProgressDialog(this);
+        progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.cancelling_request));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
@@ -159,7 +162,7 @@ public class SelectedRequest extends AppCompatActivity {
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if(progress.isShowing()) progress.dismiss();
+                if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
 //                    endRequest(REQUEST_CANCELLED);
@@ -186,7 +189,7 @@ public class SelectedRequest extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if(progress.isShowing()) progress.dismiss();
+                if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Toast.makeText(SelectedRequest.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, "Couldn't connect to the server");
             }
@@ -201,6 +204,48 @@ public class SelectedRequest extends AppCompatActivity {
             SelectedRequest.this.startActivity(intent);
             SelectedRequest.super.finish();
         }
+
+        if(prefManager.getFcmrequestId().equals(intent.getStringExtra("request_id")))
+            if(intent.hasExtra("source"))
+                if(!intent.getStringExtra("source").equals("history")) {
+                    if(prefManager.getFcmrequestStatus().equals("canceled"))
+                        Log.d(TAG, "The current request seems to have been cancelled");
+                    if(prefManager.getFcmrequestStatus().equals("completed"))
+                        Log.d(TAG, "The current request seems to have been completed");
+                    this.finish();
+        }
+
     }
+
+    @Override
+    public void onPause(){
+        if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+        super.onPause();
+    }
+
+    @Override
+    public void onStart() {
+        EventBus.getDefault().register(this);
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onPassengerCancelled(PassengerCanceled event) {
+        Log.d(TAG, "onPassengerCanceled has been invoked");
+        if(event.getRequest_id().equals(intent.getStringExtra("request_id"))){
+            if(intent.hasExtra("source"))
+                if(!intent.getStringExtra("source").equals("history")) {
+                    Log.d(TAG, "The current request seems to have been cancelled");
+                    this.finish();
+                }
+        }
+    }
+
 
 }

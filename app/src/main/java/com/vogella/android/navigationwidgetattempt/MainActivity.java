@@ -1302,23 +1302,34 @@ public class MainActivity extends AppCompatActivity
         //Setup the UI based on whether there is a current request
         if (prefManager.isDoingRequest()) {
             current_request = prefManager.getRequest();
-            if (current_request.getStatus().equals("completed")) {
-                Log.d(TAG, "The passenger marked the request as complete");
-                endRequest(REQUEST_SUCCESS);
-                setUI(UI_STATE.SIMPLE);
-                current_request = new request();
-            } else if (current_request.getStatus().equals("canceled")) {
-                Log.d(TAG, "The passenger canceled the request");
-                endRequest(REQUEST_CANCELLED);
-                setUI(UI_STATE.SIMPLE);
-                current_request = new request();
-            } else {
+            if (prefManager.getFcmrequestId().equals(current_request.getRequest_id())){
+                if (prefManager.getFcmrequestStatus().equals("completed")) {
+                    Log.d(TAG, "The passenger marked the request as complete");
+                    endRequest(REQUEST_SUCCESS);
+                    setUI(UI_STATE.SIMPLE);
+                    current_request = new request();
+                    prefManager.setRequest(current_request);
+                } else if (prefManager.getFcmrequestStatus().equals("canceled")) {
+                    Log.d(TAG, "The passenger canceled the request");
+                    endRequest(REQUEST_CANCELLED);
+                    setUI(UI_STATE.SIMPLE);
+                    current_request = new request();
+                    prefManager.setRequest(current_request);
+                }
+        }else {
                 Log.d(TAG, "The driver is doing a request");
 //                    current_request = prefManager.getRequest();
                 setUI(UI_STATE.DOINGREQUEST);
             }
         } else {
             setUI(UI_STATE.SIMPLE);
+        }
+
+        //remove the fcm request update
+
+        if(!prefManager.getFcmrequestId().equals("No data")){
+            prefManager.setFcmrequestId("No data");
+            prefManager.setFcmrequestStatus("No data");
         }
 
     }
@@ -1394,6 +1405,7 @@ public class MainActivity extends AppCompatActivity
     public void onPassengerCancelled(PassengerCanceled event) {
         Log.d(TAG, "onPassengerCanceled has been invoked");
         endRequest(REQUEST_CANCELLED);
+        setUI();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1408,6 +1420,7 @@ public class MainActivity extends AppCompatActivity
     public void onPassngerArrived(PassengerArrived event) {
         Log.d(TAG, "onPassengerArrived has been invoked");
         endRequest(REQUEST_SUCCESS);
+        setUI();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

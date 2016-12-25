@@ -16,6 +16,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.Wisam.Events.DriverLoggedout;
+import com.Wisam.Events.PassengerArrived;
+import com.Wisam.Events.PassengerCanceled;
 import com.Wisam.POJO.RequestsResponse;
 
 import org.greenrobot.eventbus.EventBus;
@@ -244,12 +246,13 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 //        ca.addRequest(request);
         return true;
     }
-    public static boolean removeRequest(String request_id){
+    public boolean removeRequest(String request_id){
         int i;
         for (i = 0; i < requestList.size(); i++) {
             if (requestList.get(i).getRequest_id().equals(request_id)) {
                 requestList.remove(requestList.get(i));
                 Log.d(TAG, "The request " + request_id + " has been removed");
+                ca.notifyDataSetChanged();
                 break;
             }
         }
@@ -280,6 +283,20 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         OngoingRequestsActivity.super.finish();
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onPassengerCancelled(PassengerCanceled event) {
+        Log.d(TAG, "onPassengerCanceled has been invoked");
+        removeRequest(event.getRequest_id());
+    }
+
+    //Most likely not needed.
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onPassengerArrived(PassengerArrived event) {
+        Log.d(TAG, "onPassengerArrived has been invoked");
+        removeRequest(event.getRequest_id());
+    }
+
+
     @Override
     public void onStop() {
         EventBus.getDefault().unregister(this);
@@ -294,6 +311,13 @@ public class OngoingRequestsActivity extends AppCompatActivity{
             OngoingRequestsActivity.this.startActivity(intent);
             OngoingRequestsActivity.super.finish();
         }
-    }
+
+        if(!prefManager.getFcmrequestId().equals("No data"))
+            if(prefManager.getFcmrequestStatus().equals("canceled"))
+                Log.d(TAG, "The current request seems to have been cancelled");
+            if(prefManager.getFcmrequestStatus().equals("completed"))
+                Log.d(TAG, "The current request seems to have been completed");
+        removeRequest(prefManager.getFcmrequestId());
+        }
 
 }
