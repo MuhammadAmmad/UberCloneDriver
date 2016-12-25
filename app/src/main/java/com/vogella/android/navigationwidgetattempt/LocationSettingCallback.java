@@ -92,9 +92,6 @@ public class LocationSettingCallback extends Activity {
         };
         blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
 
-        getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
-
-        mIsBound = true;
 
     }
 
@@ -120,6 +117,7 @@ public class LocationSettingCallback extends Activity {
                         getApplicationContext().unbindService(mConnection);
                         mIsBound = false;
                     }
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     stopService(blsIntent);
                     finish();
                     break;
@@ -158,12 +156,22 @@ public class LocationSettingCallback extends Activity {
 
     @Override
     public void onStart() {
+        getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
         EventBus.getDefault().register(this);
         super.onStart();
     }
 
     @Override
     public void onStop() {
+        if(mIsBound) {
+            try {
+                getApplicationContext().unbindService(mConnection);
+            }
+            catch (java.lang.IllegalArgumentException ignored){
+                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
+            }
+            mIsBound = false;
+        }
         EventBus.getDefault().unregister(this);
         super.onStop();
     }

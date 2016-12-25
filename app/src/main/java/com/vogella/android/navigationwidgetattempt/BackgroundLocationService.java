@@ -323,6 +323,7 @@ public class BackgroundLocationService extends Service implements
                         "not created.");
                 prefManager.setActive(false);
                 EventBus.getDefault().post(new DriverActive(false));
+                EventBus.getDefault().post(new UnbindBackgroundLocationService());
                 stopSelf();
                 break;
         }
@@ -630,6 +631,7 @@ public class BackgroundLocationService extends Service implements
                 } else if (response.code() == 401){
                     Log.i(TAG, "onCreate: User not logged in");
                     prefManager.setIsLoggedIn(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     stopSelf();
                 } else {
                     Log.i(TAG, "sendLocation Unknown error occurred");
@@ -683,6 +685,7 @@ public class BackgroundLocationService extends Service implements
 //                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "sendActive User not logged in");
                     prefManager.setIsLoggedIn(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     stopSelf();
 //                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
 //                    MainActivity.this.startActivity(intent);

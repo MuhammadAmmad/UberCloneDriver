@@ -63,7 +63,7 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="450dp">
+        android:layout_height="500dp">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -108,6 +108,27 @@
                 android:paddingBottom="13dp"
                 android:textSize="16sp"
                 android:text="Unnamed Road near a very very very very very very very very very very very very random location" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#33000000" />
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="13dp"
+                android:textColor="@color/colorPrimary"
+                android:text="Distance"/>
+
+            <TextView
+                android:id="@+id/request_details_distance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="13dp"
+                android:textSize="16sp"
+                android:text="Being calculated..." />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"

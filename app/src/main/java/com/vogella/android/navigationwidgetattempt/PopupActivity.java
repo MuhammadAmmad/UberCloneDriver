@@ -104,9 +104,6 @@ public class PopupActivity extends AppCompatActivity {
         };
         blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
 
-        getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
-
-        mIsBound = true;
 
         ((TextView) findViewById(R.id.enable_location)).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -146,8 +143,8 @@ public class PopupActivity extends AppCompatActivity {
                     mIsBound = false;
                 }
                 prefManager.setActive(false);
-//                Log.d(TAG,"Posting new UnbindBackgroundLocationService");
-//                EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                Log.d(TAG,"Posting new UnbindBackgroundLocationService");
+                EventBus.getDefault().post(new UnbindBackgroundLocationService());
                 final Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     @Override
@@ -193,6 +190,7 @@ public class PopupActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     Log.d(TAG,"onDestroy: stopping BackgroundLocationService");
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     stopService(blsIntent);
                     handler.removeCallbacksAndMessages(null);
                 }
@@ -203,12 +201,22 @@ public class PopupActivity extends AppCompatActivity {
 
     @Override
     public void onStart() {
+        getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
         EventBus.getDefault().register(this);
         super.onStart();
     }
 
     @Override
     public void onStop() {
+        if(mIsBound) {
+            try {
+                getApplicationContext().unbindService(mConnection);
+            }
+            catch (java.lang.IllegalArgumentException ignored){
+                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
+            }
+            mIsBound = false;
+        }
         EventBus.getDefault().unregister(this);
         super.onStop();
     }

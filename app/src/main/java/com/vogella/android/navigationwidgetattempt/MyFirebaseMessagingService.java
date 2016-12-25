@@ -28,6 +28,7 @@ package com.vogella.android.navigationwidgetattempt;
         import com.Wisam.Events.DriverLoggedout;
         import com.Wisam.Events.PassengerArrived;
         import com.Wisam.Events.PassengerCanceled;
+        import com.Wisam.Events.UnbindBackgroundLocationService;
         import com.google.firebase.messaging.FirebaseMessagingService;
         import com.google.firebase.messaging.RemoteMessage;
 
@@ -177,6 +178,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     }
                     mIsBound = false;
                 }
+
+                EventBus.getDefault().post(new UnbindBackgroundLocationService());
+
                 if(blsIntent != null)
                     stopService(blsIntent);
 

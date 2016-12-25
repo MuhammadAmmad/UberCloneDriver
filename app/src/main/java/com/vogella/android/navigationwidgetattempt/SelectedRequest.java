@@ -16,6 +16,13 @@ import android.widget.Toast;
 
 import com.Wisam.Events.PassengerCanceled;
 import com.Wisam.POJO.StatusResponse;
+import com.akexorcist.googledirection.DirectionCallback;
+import com.akexorcist.googledirection.GoogleDirection;
+import com.akexorcist.googledirection.model.Direction;
+import com.akexorcist.googledirection.model.Info;
+import com.akexorcist.googledirection.model.Leg;
+import com.akexorcist.googledirection.model.Route;
+import com.google.android.gms.maps.model.LatLng;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -33,6 +40,10 @@ public class SelectedRequest extends AppCompatActivity {
     private Intent intent;
     private PrefManager prefManager;
     private ProgressDialog progress;
+    private static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
+    private LatLng pickupPoint;
+    private LatLng destPoint;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +99,11 @@ public class SelectedRequest extends AppCompatActivity {
                 }
             }
             else if (intent.getStringExtra("source").equals("incoming") || intent.getStringExtra("source").equals("FCMRequest")){
+                pickupPoint = new LatLng(Double.valueOf(intent.getStringExtra("pickup").split(",")[0]),
+                        Double.valueOf(intent.getStringExtra("pickup").split(",")[1]));
+                destPoint = new LatLng(Double.valueOf(intent.getStringExtra("dest").split(",")[0]),
+                        Double.valueOf(intent.getStringExtra("dest").split(",")[1]));
+                calculate_distance();
                 ImageView icon = (ImageView) findViewById(R.id.derails_icon);
                 icon.setVisibility(View.GONE);
                 ((TextView) findViewById(R.id.request_details_toolbar_title)).setPadding(0, 15, 0, 15);
@@ -235,6 +251,13 @@ public class SelectedRequest extends AppCompatActivity {
         super.onStop();
     }
 
+    @Override
+    protected void onDestroy() {
+        if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+        super.onDestroy();
+    }
+
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onPassengerCancelled(PassengerCanceled event) {
         Log.d(TAG, "onPassengerCanceled has been invoked");
@@ -247,5 +270,72 @@ public class SelectedRequest extends AppCompatActivity {
         }
     }
 
+    private void calculate_distance()
+    {
+        progress = new ProgressDialog(this);
+//        progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
+        progress.setMessage("Calculating distance..");
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
+        GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
+                .from(pickupPoint)
+                .to(destPoint)
+                .execute(new DirectionCallback() {
+                    @Override
+                    public void onDirectionSuccess(Direction direction, String rawBody) {
+                        // Do something here
+//                        Toast.makeText(MapsActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
+//                        toast.setText("Route successfully computed ");
+//                        toast.show();
+//                        Log.d(TAG, "showRoute: Route successfully computed ");
+//
+                        if(!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
+
+                        if(direction.isOK()) {
+//                            // Check if user hasn't cancelled:
+//                            if (UIState != UI_STATE.DETAILED){
+//                                return;
+//                            }
+
+                            // Do
+                            Route route = direction.getRouteList().get(0);
+                            Leg leg = route.getLegList().get(0);
+
+
+//                            Double priceValue = (double) (Integer.valueOf(distance) *  Integer.valueOf(duration) / 3/60/1000);
+//                            ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+//                            PolylineOptions polylineOptions = DirectionConverter.createPolyline(MapsActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
+//                            if (routePolyline != null) {
+//                                routePolyline.remove();
+//                            }
+//                            routePolyline = mMap.addPolyline(polylineOptions);
+//
+//
+                            // Distance info
+                            Info distanceInfo = leg.getDistance();
+//                            Info durationInfo = leg.getDuration();
+                            float distance = Float.valueOf(distanceInfo.getValue()) / 1000;
+//                            String duration = durationInfo.getValue();
+//                            calculatePrice(Integer.valueOf(duration), Integer.valueOf(distance));
+                            ((TextView) findViewById(R.id.request_details_distance)).setText(String.format("%s Km", String.valueOf(distance)));
+
+                        }
+                    }
+
+                    @Override
+                    public void onDirectionFailure(Throwable t) {
+                        // Do something here
+//                        toast.setText( "Route Failed ");
+//                        toast.show();
+//                        showRoute();
+//                        Log.d(TAG, "showRoute: Route Failed ");
+
+                        if(!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
+
+                    }
+                });
+    }
 
 }

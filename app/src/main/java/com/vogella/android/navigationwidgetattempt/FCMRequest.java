@@ -40,7 +40,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.vogella.android.navigationwidgetattempt.MainActivity.GOOGLE_DIRECTIONS_API;
 
 public class FCMRequest extends AppCompatActivity {
 
@@ -55,8 +54,8 @@ public class FCMRequest extends AppCompatActivity {
     private LatLng pickupPoint;
     private LatLng driverLocation;
     private Ringtone r;
-
     private ProgressDialog progress;
+    private static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

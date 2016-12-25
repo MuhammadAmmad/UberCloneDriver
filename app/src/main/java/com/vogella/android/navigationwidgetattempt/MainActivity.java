@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity
 //        GoogleApiClient.OnConnectionFailedListener
 //        , LocationListener,
 //        ResultCallback<LocationSettingsResult>
-    {
+{
 
     protected static final int UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
     protected static final int UPDATE_WHILE_IDLE = 2 * 60 * 1000;
@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity
 //    private Dialog myDialog;
 
     private static final String TAG = "MainActivity";
-    static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
+    private static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
 
     private PrefManager prefManager;
     private AlarmManager alarmMgr;
@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity
     private Runnable routingRunnable;
 
 
-        @Override
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -283,7 +283,7 @@ public class MainActivity extends AppCompatActivity
         Resources res = getResources();
         Configuration conf = res.getConfiguration();
         Locale savedLocale = conf.locale;
-        if(savedLocale.equals(arabicLocale))
+        if (savedLocale.equals(arabicLocale))
             desiredLocale = englishLocale;
         else
             desiredLocale = arabicLocale;
@@ -301,7 +301,7 @@ public class MainActivity extends AppCompatActivity
 //            ((MenuItem) navigationView.getMenu().getItem(5)).setTitle("عربي");
 //        if (prefManager.getCurrentLanguage().equals("Arabic"))
 //            ((MenuItem) navigationView.getMenu().getItem(5)).setTitle("English");
-        if(prefManager.usingOtherLanguage())
+        if (prefManager.usingOtherLanguage())
             ((MenuItem) navigationView.getMenu().getItem(5)).setTitle(otherLanguage);
 
 
@@ -318,7 +318,6 @@ public class MainActivity extends AppCompatActivity
         createdFromNewRequest = false;
 
 
-
         getCurrentRequest(getIntent());
 
 //        buildGoogleApiClient();
@@ -329,64 +328,58 @@ public class MainActivity extends AppCompatActivity
 
         blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
 
-        if(prefManager.isActive()) {
+        if (prefManager.isActive()) {
 
             startAndBindLocationService();
 
         }
 
 
-//        setAlarms();
+    }
+
+    private void startAndBindLocationService() {
+        startService(blsIntent);
 
 
+        mConnection = new ServiceConnection() {
 
-
-        }
-
-        private void startAndBindLocationService() {
-            startService(blsIntent);
-
-
-            mConnection = new ServiceConnection() {
-
-                public void onServiceConnected(ComponentName className, IBinder service) {
-                    // This is called when the connection with the service has been
-                    // established, giving us the service object we can use to
-                    // interact with the service.  Because we have bound to a explicit
-                    // service that we know is running in our own process, we can
-                    // cast its IBinder to a concrete class and directly access it.
-                    MainActivity.this.backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
-                    if (!checkedLocation) {
-                        MainActivity.this.backgroundLocationService.checkLocationSettings();
-                        checkedLocation = true;
-                    }
-                    mIsBound = true;
-
-                    // Tell the user about this for our demo.
-                    //            Toast.makeText(Binding.this, R.string.local_service_connected,
-                    //                    Toast.LENGTH_SHORT).show();
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                // This is called when the connection with the service has been
+                // established, giving us the service object we can use to
+                // interact with the service.  Because we have bound to a explicit
+                // service that we know is running in our own process, we can
+                // cast its IBinder to a concrete class and directly access it.
+                MainActivity.this.backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
+                if (!checkedLocation) {
+                    MainActivity.this.backgroundLocationService.checkLocationSettings();
+                    checkedLocation = true;
                 }
+                mIsBound = true;
 
-                public void onServiceDisconnected(ComponentName className) {
-                    // This is called when the connection with the service has been
-                    // unexpectedly disconnected -- that is, its process crashed.
-                    // Because it is running in our same process, we should never
-                    // see this happen.
-                    MainActivity.this.backgroundLocationService = null;
-                    mIsBound = false;
+                // Tell the user about this for our demo.
+                //            Toast.makeText(Binding.this, R.string.local_service_connected,
+                //                    Toast.LENGTH_SHORT).show();
+            }
 
-                    //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
-                    //                    Toast.LENGTH_SHORT).show();
-                }
-            };
+            public void onServiceDisconnected(ComponentName className) {
+                // This is called when the connection with the service has been
+                // unexpectedly disconnected -- that is, its process crashed.
+                // Because it is running in our same process, we should never
+                // see this happen.
+                MainActivity.this.backgroundLocationService = null;
+                mIsBound = false;
 
-            getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
+                //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
+                //                    Toast.LENGTH_SHORT).show();
+            }
+        };
 
-            mIsBound = true;
-        }
+        getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
+
+    }
 
 
-        /**
+    /**
      * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
      * LocationServices API.
      */
@@ -532,8 +525,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 */
-
-
     private void setOnClickListeners() {
         TextView cancelRequest = (TextView) findViewById(R.id.cancel_request);
         cancelRequest.setOnClickListener(new View.OnClickListener() {
@@ -681,10 +672,9 @@ public class MainActivity extends AppCompatActivity
                         current_request.getStatus().equals("completed")) {
 
                     gmmIntentUri = Uri.parse("google.navigation:q=" + String.valueOf(destPoint.latitude)
-                            + "," + String.valueOf(destPoint.longitude) );
+                            + "," + String.valueOf(destPoint.longitude));
 
-                }
-                else{
+                } else {
                     gmmIntentUri = Uri.parse("google.navigation:q=" + String.valueOf(pickupPoint.latitude)
                             + "," + String.valueOf(pickupPoint.longitude));
                 }
@@ -692,7 +682,7 @@ public class MainActivity extends AppCompatActivity
                 mapIntent.setPackage("com.google.android.apps.maps");
                 startActivity(mapIntent);
 
-                }
+            }
         });
 
     }
@@ -759,7 +749,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 if (!status.equals("on_the_way"))
-                     if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+                    if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                        progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
 //                    Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
@@ -767,8 +758,7 @@ public class MainActivity extends AppCompatActivity
                     if (status.equals("on_the_way")) {
 //                        prefManager.setDoingRequest(true);
 //                        setUI(UI_STATE.DOINGREQUEST);
-                    }
-                    else {
+                    } else {
                         Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                         current_request.nextStatus();
                         if (status.equals("completed")) {
@@ -789,7 +779,7 @@ public class MainActivity extends AppCompatActivity
 //                    clearHistoryEntries();
                     Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "Unknown error occurred");
-                    if(status.equals("on_the_way")) {
+                    if (status.equals("on_the_way")) {
                         prefManager.setDoingRequest(false);
                         setUI();
                     }
@@ -800,10 +790,11 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 if (!status.equals("on_the_way"))
-                    if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+                    if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                        progress.dismiss();
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, getString(R.string.server_timeout));
-                if(status.equals("on_the_way")) {
+                if (status.equals("on_the_way")) {
                     prefManager.setDoingRequest(false);
                     setUI();
                 }
@@ -832,25 +823,25 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
 //                if (progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
                     Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The driver status has been set successfully");
-                    if(active == 1) {
+                    if (active == 1) {
                         prefManager.setActive(true);
 //                        activeNotification(true); //TODO ensure the service is always running before this point
-                    }
-                    else {
+                    } else {
                         prefManager.setActive(false);
 //                        activeNotification(false);
-                        if(mIsBound) {
+                        if (mIsBound) {
                             //TODO: Handle service leak
                             getApplicationContext().unbindService(mConnection);
                             mIsBound = false;
                         }
-                        if(blsIntent != null)
+                        if (blsIntent != null)
                             stopService(blsIntent);
                     }
                     setUI();
@@ -872,7 +863,8 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, getString(R.string.server_timeout));
             }
@@ -900,7 +892,8 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
                     endRequest(REQUEST_CANCELLED);
@@ -925,7 +918,8 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, getString(R.string.server_timeout));
             }
@@ -1095,7 +1089,7 @@ public class MainActivity extends AppCompatActivity
     public void setUI(UI_STATE state) {
         switch (state) {
             case SIMPLE:
-                if(routingHandler != null)
+                if (routingHandler != null)
                     routingHandler.removeCallbacksAndMessages(null);
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
                 linearLayout.setVisibility(View.INVISIBLE);
@@ -1147,7 +1141,6 @@ public class MainActivity extends AppCompatActivity
             case DOINGREQUEST:
                 pickupPoint = new LatLng(current_request.getPickup()[0], current_request.getPickup()[1]);
                 destPoint = new LatLng(current_request.getDest()[0], current_request.getDest()[1]);
-
 
 
                 //set values for the different views
@@ -1263,7 +1256,7 @@ public class MainActivity extends AppCompatActivity
             prefManager.setRequest(current_request);
         }
         checkedLocation = false;
-        if(routingHandler != null)
+        if (routingHandler != null)
             routingHandler.removeCallbacksAndMessages(null);
         wasActive = prefManager.isActive();
     }
@@ -1285,16 +1278,14 @@ public class MainActivity extends AppCompatActivity
         //ensure location is enabled
 //        if(prefManager.isDoingRequest() || wasActive)
 //        if(prefManager.isDoingRequest() || prefManager.isActive())
-        if(prefManager.isActive())
-            if(backgroundLocationService != null)
-                if (!checkedLocation){
+        if (prefManager.isActive())
+            if (backgroundLocationService != null)
+                if (!checkedLocation) {
                     backgroundLocationService.checkLocationSettings();
                     checkedLocation = true;
+                } else if (prefManager.isDoingRequest()) {
+                    startAndBindLocationService();
                 }
-        else
-            if(prefManager.isDoingRequest()){
-                startAndBindLocationService();
-            }
 
 
 //        } //end of if(isActive)
@@ -1302,7 +1293,7 @@ public class MainActivity extends AppCompatActivity
         //Setup the UI based on whether there is a current request
         if (prefManager.isDoingRequest()) {
             current_request = prefManager.getRequest();
-            if (prefManager.getFcmrequestId().equals(current_request.getRequest_id())){
+            if (prefManager.getFcmrequestId().equals(current_request.getRequest_id())) {
                 if (prefManager.getFcmrequestStatus().equals("completed")) {
                     Log.d(TAG, "The passenger marked the request as complete");
                     endRequest(REQUEST_SUCCESS);
@@ -1316,7 +1307,7 @@ public class MainActivity extends AppCompatActivity
                     current_request = new request();
                     prefManager.setRequest(current_request);
                 }
-        }else {
+            } else {
                 Log.d(TAG, "The driver is doing a request");
 //                    current_request = prefManager.getRequest();
                 setUI(UI_STATE.DOINGREQUEST);
@@ -1327,7 +1318,7 @@ public class MainActivity extends AppCompatActivity
 
         //remove the fcm request update
 
-        if(!prefManager.getFcmrequestId().equals("No data")){
+        if (!prefManager.getFcmrequestId().equals("No data")) {
             prefManager.setFcmrequestId("No data");
             prefManager.setFcmrequestStatus("No data");
         }
@@ -1387,16 +1378,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onStart() {
-//        if(prefManager.isActive()) {
-//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-//                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-//                        PERMISSION_REQUEST_CLIENT_CONNECT);
-//            } else {
-//                mGoogleApiClient.connect();
-//            }
-//        }
-//        mGoogleApiClient.connect();
+        startAndBindLocationService();
         EventBus.getDefault().register(this);
         super.onStart();
     }
@@ -1429,7 +1411,7 @@ public class MainActivity extends AppCompatActivity
 //        endRequest(REQUEST_SUCCESS);
 //        activeNotification(event.getActive());
 //        if(event.getActive())
-        if(goActive) { //if the user changed his status to active
+        if (goActive) { //if the user changed his status to active
             sendActive(1, prefManager.getCurrentLocation());
             goActive = false;
         }
@@ -1441,7 +1423,7 @@ public class MainActivity extends AppCompatActivity
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onUnbindBackgroundLocationService(UnbindBackgroundLocationService event) {
         Log.d(TAG, "onUnbindBackgroundLocationService has been invoked");
-        if(mIsBound) {
+        if (mIsBound) {
             getApplicationContext().unbindService(mConnection);
             mIsBound = false;
             setUI();
@@ -1480,7 +1462,7 @@ public class MainActivity extends AppCompatActivity
                 // for ActivityCompat#requestPermissions for more details.
                 return;
             }
-            Log.d(TAG,"onLocationUpdated (Eventbus) mMap.setMyLocationEnabled(true)");
+            Log.d(TAG, "onLocationUpdated (Eventbus) mMap.setMyLocationEnabled(true)");
             mMap.setMyLocationEnabled(true);
             // Get the button view
             View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
@@ -1549,7 +1531,16 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onStop() {
-//        mGoogleApiClient.disconnect();
+        Log.d(TAG,"onStop");
+        if(mIsBound) {
+            try {
+                getApplicationContext().unbindService(mConnection);
+            }
+            catch (java.lang.IllegalArgumentException ignored){
+                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
+            }
+            mIsBound = false;
+        }
         EventBus.getDefault().unregister(this);
         super.onStop();
     }
@@ -1623,10 +1614,10 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.sign_out) {
             logout();
-        }else if (id == R.id.language) {
+        } else if (id == R.id.language) {
 //            if(prefManager.getCurrentLanguage().equals("Arabic")){
             Configuration config = new Configuration();
-            if(item.getTitle().equals("English")){
+            if (item.getTitle().equals("English")) {
                 String languageToLoad = "en";
                 Locale locale = new Locale(languageToLoad);
                 Locale.setDefault(locale);
@@ -1635,12 +1626,11 @@ public class MainActivity extends AppCompatActivity
                     config.setLayoutDirection(locale);
                 }
 //                item.setTitle("عربي");
-                if(item.getTitle().equals(R.string.Language))
+                if (item.getTitle().equals(R.string.Language))
                     prefManager.setOtherLanguage(true);
                 else
                     prefManager.setOtherLanguage(false);
-            }
-            else {
+            } else {
                 String languageToLoad = "ar";
                 Locale locale = new Locale(languageToLoad);
                 Locale.setDefault(locale);
@@ -1649,7 +1639,7 @@ public class MainActivity extends AppCompatActivity
                     config.setLayoutDirection(locale);
                 }
 //                item.setTitle("English");
-                if(item.getTitle().equals(R.string.Language))
+                if (item.getTitle().equals(R.string.Language))
                     prefManager.setOtherLanguage(true);
                 else
                     prefManager.setOtherLanguage(false);
@@ -1678,7 +1668,7 @@ public class MainActivity extends AppCompatActivity
 //            }
 
             Context context = getApplicationContext();
-            context.getResources().updateConfiguration(config,context.getResources().getDisplayMetrics());
+            context.getResources().updateConfiguration(config, context.getResources().getDisplayMetrics());
             Intent intent = new Intent(MainActivity.this, MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
@@ -1690,25 +1680,26 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-        private void logout() {
-            prefManager.setIsLoggedIn(false);
-            prefManager.setExternalLogout(false);
-            driver = new driver();
+    private void logout() {
+        prefManager.setIsLoggedIn(false);
+        prefManager.setExternalLogout(false);
+        driver = new driver();
 //            prefManager.setDriver(driver);
-            if(mIsBound) {
-                //TODO: Handle service leak
-                getApplicationContext().unbindService(mConnection);
-                mIsBound = false;
-            }
-            if(blsIntent != null)
-                stopService(blsIntent);
-            Intent intent = new Intent(this, LoginActivity.class);
-//            activeNotification(false);
-            startActivity(intent);
-            finish();
+        if (mIsBound) {
+            //TODO: Handle service leak
+            getApplicationContext().unbindService(mConnection);
+            mIsBound = false;
         }
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+        if (blsIntent != null)
+            stopService(blsIntent);
+        Intent intent = new Intent(this, LoginActivity.class);
+//            activeNotification(false);
+        startActivity(intent);
+        finish();
+    }
 
-        @Override
+    @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         // Add a marker in Sydney and move the camera
@@ -1720,7 +1711,7 @@ public class MainActivity extends AppCompatActivity
 
         if (setWhenReady) {
             setWhenReady = false;
-            if(!createdFromNewRequest) {
+            if (!createdFromNewRequest) {
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     public void run() {
@@ -1739,8 +1730,8 @@ public class MainActivity extends AppCompatActivity
 //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
             return;
         }
-            Log.d(TAG,"onMapReady: mMap.setMyLocationEnabled(true)");
-            mMap.setMyLocationEnabled(true);
+        Log.d(TAG, "onMapReady: mMap.setMyLocationEnabled(true)");
+        mMap.setMyLocationEnabled(true);
 //        mMap.setPadding(0, 150, 0, 0);
         // Get the button view
         View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
@@ -1765,7 +1756,7 @@ public class MainActivity extends AppCompatActivity
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult: Granted");
-                if(!checkedLocation) {
+                if (!checkedLocation) {
                     backgroundLocationService.checkLocationSettings();
                     checkedLocation = true;
                 }
@@ -1971,7 +1962,7 @@ public class MainActivity extends AppCompatActivity
         }
 */
 
-        if(currentLocationPoint == null)
+        if (currentLocationPoint == null)
             currentLocationPoint = new LatLng(Double.parseDouble(prefManager.getCurrentLocation().split(",")[0]),
                     (Double.parseDouble(prefManager.getCurrentLocation().split(",")[1])));
 //        mMap.moveCamera();
@@ -2014,7 +2005,7 @@ public class MainActivity extends AppCompatActivity
                                         driverToPickupRoute.remove();
                                     }
 
-                                    if(pickupMarker != null)
+                                    if (pickupMarker != null)
                                         pickupMarker.remove();
 /*
 
@@ -2073,7 +2064,7 @@ public class MainActivity extends AppCompatActivity
                         });
             }
 
-        }else {
+        } else {
             GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
                     .from(pickupPoint)
                     .to(destPoint)
@@ -2239,17 +2230,18 @@ public class MainActivity extends AppCompatActivity
 );
 
         }
+
     }
 */
 
     @Override
     protected void onDestroy() {
-        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
-        if(mIsBound) {
+        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+            progress.dismiss();
+        if (mIsBound) {
             try {
                 getApplicationContext().unbindService(mConnection);
-            }
-            catch (java.lang.IllegalArgumentException ignored){
+            } catch (java.lang.IllegalArgumentException ignored) {
                 Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
             }
             mIsBound = false;
