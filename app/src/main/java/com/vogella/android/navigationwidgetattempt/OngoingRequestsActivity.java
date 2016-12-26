@@ -68,6 +68,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     private PrefManager prefManager;
 
     private static final int SELECTED_REQUEST_CODE = 43542;
+    private ProgressDialog progress;
 
 //    @Override
 //    public void recyclerViewListClicked(View v, int position){
@@ -140,7 +141,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         String password = prefManager.pref.getString("UserPassword","");
 //        String password = prefManager.pref.getString("USER_PASSWORD","");
 
-        final ProgressDialog progress = new ProgressDialog(this);
+        progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
@@ -154,7 +155,8 @@ public class OngoingRequestsActivity extends AppCompatActivity{
             public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 Log.d(TAG, "onResponse: code: " + response.code());
-                if(progress.isShowing())progress.dismiss();
+                if(!OngoingRequestsActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
                 if (response.isSuccess() && response.body() != null){
                     List <request> rides = response.body().getRides();
                     List <request> upcoming = new ArrayList<request>(){{}};
@@ -212,7 +214,8 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
             @Override
             public void onFailure(Call<RequestsResponse> call, Throwable t) {
-                if(progress.isShowing())progress.dismiss();
+                if(!OngoingRequestsActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
                 Toast.makeText(OngoingRequestsActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -229,27 +232,27 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
 
 
-    private List<request> createList(int size) {
-
-        List<request> result = new ArrayList<request>();
-        for (int i=1; i <= size; i++) {
-            request ci = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,DUMMY_PASSENGER_NAME,
-                    DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES, DUMMY_STATUS,
-                    DUMMY_PICKUP_TEXT, DUMMY_DEST_TEXT);
-//            ci.passenger_name = DUMMY_PASSENGER_NAME + i;
-//            ci.passenger_phone = DUMMY_PASSENGER_PHONE + i;
-//            ci.status = DUMMY_STATUS;
-//            ci.time = DUMMY_TIME + i;
-//            ci.dest[0] = Double.parseDouble(DUMMY_DEST.split(",")[0]);
-//            ci.dest[1] = Double.parseDouble(DUMMY_DEST.split(",")[1]);
-//            ci.pickup[0] = Double.parseDouble(DUMMY_PICKUP.split(",")[0]);
-//            ci.pickup[1] = Double.parseDouble(DUMMY_PICKUP.split(",")[1]);
-            result.add(ci);
-
-        }
-
-        return result;
-    }
+//    private List<request> createList(int size) {
+//
+//        List<request> result = new ArrayList<request>();
+//        for (int i=1; i <= size; i++) {
+//            request ci = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,DUMMY_PASSENGER_NAME,
+//                    DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES, DUMMY_STATUS,
+//                    DUMMY_PICKUP_TEXT, DUMMY_DEST_TEXT);
+////            ci.passenger_name = DUMMY_PASSENGER_NAME + i;
+////            ci.passenger_phone = DUMMY_PASSENGER_PHONE + i;
+////            ci.status = DUMMY_STATUS;
+////            ci.time = DUMMY_TIME + i;
+////            ci.dest[0] = Double.parseDouble(DUMMY_DEST.split(",")[0]);
+////            ci.dest[1] = Double.parseDouble(DUMMY_DEST.split(",")[1]);
+////            ci.pickup[0] = Double.parseDouble(DUMMY_PICKUP.split(",")[0]);
+////            ci.pickup[1] = Double.parseDouble(DUMMY_PICKUP.split(",")[1]);
+//            result.add(ci);
+//
+//        }
+//
+//        return result;
+//    }
 
     public static boolean addRequest(request request){
         requestList.add(requestList.size(),request);
@@ -295,6 +298,11 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 //        Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
 //        OngoingRequestsActivity.this.startActivity(intent);
 //        OngoingRequestsActivity.super.finish();
+        logout();
+
+    }
+
+    private void logout() {
         String lastEmail = prefManager.getLastEmail();
         String lastPassword = prefManager.getLastPassword();
         prefManager.editor.clear().apply();
@@ -309,7 +317,6 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
-
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -336,9 +343,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     public void onResume() {
         super.onResume();
         if (!prefManager.isLoggedIn()) {
-            Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
-            OngoingRequestsActivity.this.startActivity(intent);
-            OngoingRequestsActivity.super.finish();
+            logout();
         }
 
         if(!prefManager.getFcmrequestId().equals("No data"))
@@ -348,5 +353,11 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                 Log.d(TAG, "The current request seems to have been completed");
         removeRequest(prefManager.getFcmrequestId());
         }
+
+    @Override
+    protected void onDestroy() {
+        if (!OngoingRequestsActivity.this.isFinishing() & progress != null && progress.isShowing()) progress.dismiss();
+        super.onDestroy();
+    }
 
 }

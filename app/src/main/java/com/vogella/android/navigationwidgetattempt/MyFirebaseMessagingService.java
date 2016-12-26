@@ -45,12 +45,6 @@ package com.vogella.android.navigationwidgetattempt;
         import retrofit2.Retrofit;
         import retrofit2.converter.gson.GsonConverterFactory;
 
-        import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
-        import static com.vogella.android.navigationwidgetattempt.MainActivity.blsIntent;
-        import static com.vogella.android.navigationwidgetattempt.MainActivity.mConnection;
-        import static com.vogella.android.navigationwidgetattempt.MainActivity.mIsBound;
-
-//current token : dKkBmm8H48A:APA91bFQQR2f-ibM1EfuLXbIRTItS2M3l5oV4AosbyEDZLdWm9un_-CJArBXNHo-lAonoXAqrlEy-tgbik4K3Hd5NJeKjgVjSG0tavW1_swW38oUIHbRN9uwVCPE06ujZh6szCH5glgi
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
@@ -151,7 +145,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     //                        prefManager.setRequestStatus("canceled");
                             prefManager.setFcmrequestStatus("canceled");
                             prefManager.setFcmrequestId(field.getValue());
-                            prefManager.setDoingRequest(false);
                             EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
     //                        OngoingRequestsActivity.removeRequest(field.getValue());
                             sendNotification(getString(R.string.passenger_cancelled_notification) + field.getValue());
@@ -173,32 +166,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 } else if (status.equals("3")) { // Driver logged out
                     sendNotification(getString(R.string.logged_elsewhere));
 
-                    String lastEmail = prefManager.getLastEmail();
-                    String lastPassword = prefManager.getLastPassword();
-                    prefManager.editor.clear().apply();
-                    prefManager.setLastPassword(lastPassword);
-                    prefManager.setLastEmail(lastEmail);
-
-                    prefManager.setIsLoggedIn(false);
-
-//                    prefManager.setExternalLogout(true); //to distinguis between this case and when logging out from within the app
-
-                    if (mIsBound) {
-                        try {
-                            getApplicationContext().unbindService(mConnection);
-                        } catch (java.lang.IllegalArgumentException ignored) {
-
-                        }
-                        mIsBound = false;
-                    }
-
-                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
-
-                    if (blsIntent != null)
-                        stopService(blsIntent);
-
-
-                    EventBus.getDefault().post(new DriverLoggedout());
+                    logout();
                 }
             }
         }
@@ -265,18 +233,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 } else if (response.code() == 401){
                     Log.i(TAG, "onCreate: User not logged in");
 //                    prefManager.setIsLoggedIn(false);
-                    String lastEmail = prefManager.getLastEmail();
-                    String lastPassword = prefManager.getLastPassword();
-                    prefManager.editor.clear().apply();
-                    prefManager.setLastPassword(lastPassword);
-                    prefManager.setLastEmail(lastEmail);
-                    prefManager.setIsLoggedIn(false);
-//                    prefManager.setExternalLogout(false);
-                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
-                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
-                    stopService(blsIntent);
-
-                    EventBus.getDefault().post(new DriverLoggedout());
+                    logout();
 
                 } else {
 //                    clearHistoryEntries();
@@ -289,6 +246,21 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 Log.d(TAG, "The response is onFailure");
             }
         });
+    }
+
+    private void logout() {
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
+        prefManager.setIsLoggedIn(false);
+//                    prefManager.setExternalLogout(false);
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+        Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        stopService(blsIntent);
+
+        EventBus.getDefault().post(new DriverLoggedout());
     }
 
 }

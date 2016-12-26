@@ -1,9 +1,7 @@
 package com.vogella.android.navigationwidgetattempt;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.AlarmManager;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
@@ -21,7 +19,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
@@ -36,7 +33,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -68,7 +64,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -94,7 +89,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.ACCESS_FINE_LOCATION_CODE;
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.checkedLocation;
-import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mRequestingLocationUpdates;
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.permissionIsRequested;
 
 //import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mGoogleApiClient;
@@ -201,10 +195,12 @@ public class MainActivity extends AppCompatActivity
     private boolean createdFromNewRequest;
     private Handler routingHandler;
     private Runnable routingRunnable;
-    private Handler resendActivehandler;
+    private Handler resendActiveHandler;
     private long resendFailedRequestDelay = 10 * 1000;
     private int resendActiveAttempts = 0;
     private boolean shownActiveProgress = false;
+    private Handler resendStatusHandler;
+    private int resendStatusAttempts = 0;
 
 
     @Override
@@ -702,36 +698,14 @@ public class MainActivity extends AppCompatActivity
 
 
     void endRequest(int res) {
-//        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
-//        linearLayout.setVisibility(View.INVISIBLE);
         if (res == REQUEST_SUCCESS)
             Toast.makeText(MainActivity.this, R.string.current_request_completed,
                     Toast.LENGTH_LONG).show();
         else if (res == REQUEST_CANCELLED)
             Toast.makeText(MainActivity.this, R.string.current_request_cancelled,
                     Toast.LENGTH_LONG).show();
-//        OngoingRequestsActivity.removeRequest(current_request.getRequest_id());
-//        current_request = new request();
-//        if (pickupMarker != null) {
-//            pickupMarker.remove();
-//        }
-//        if (destMarker != null) {
-//            destMarker.remove();
-//        }
-//        if (currentLocationMarker != null) {
-//            currentLocationMarker.remove();
-//        }
-//        if (pickupToDestRoute != null) {
-//            pickupToDestRoute.remove();
-//        }
-//        if (driverToPickupRoute != null) {
-//            driverToPickupRoute.remove();
-//        }
-//        prefManager.setRequestId("");
         prefManager.setDoingRequest(false);
 
-
-//        setAlarms();
 
         EventBus.getDefault().post(new ChangeActiveUpdateInterval());
 
@@ -771,6 +745,9 @@ public class MainActivity extends AppCompatActivity
                     if (status.equals("on_the_way")) {
 //                        prefManager.setDoingRequest(true);
 //                        setUI(UI_STATE.DOINGREQUEST);
+                        if(resendStatusHandler != null)
+                            resendStatusHandler.removeCallbacksAndMessages(null);
+                        resendStatusAttempts = 0;
                     } else {
                         Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                         current_request.nextStatus();
@@ -783,18 +760,26 @@ public class MainActivity extends AppCompatActivity
                 } else if (response.code() == 401) {
                     Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "sendStatus: User not logged in");
-//                    prefManager.setIsLoggedIn(false);
-//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-//                    MainActivity.this.startActivity(intent);
-//                    MainActivity.super.finish();
                     logout();
                 } else {
-//                    clearHistoryEntries();
                     Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "Unknown error occurred");
                     if (status.equals("on_the_way")) {
-                        prefManager.setDoingRequest(false);
-                        setUI();
+//                        prefManager.setDoingRequest(false);
+//                        setUI();
+                        if (resendStatusHandler == null)
+                            resendStatusHandler = new Handler();
+                        if (resendStatusAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
+                            resendStatusAttempts++;
+                            resendStatusHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    sendStatus(request_id, status);
+                                }
+                            }, resendFailedRequestDelay);
+                        } else {
+                            Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
+                        }
                     }
                 }
 
@@ -808,8 +793,22 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, getString(R.string.server_timeout));
                 if (status.equals("on_the_way")) {
-                    prefManager.setDoingRequest(false);
-                    setUI();
+//                    prefManager.setDoingRequest(false);
+//                    setUI();
+                    if (resendStatusHandler == null)
+                        resendStatusHandler = new Handler();
+                    if (resendStatusAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
+                        resendStatusAttempts++;
+                        resendStatusHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendStatus(request_id, status);
+                            }
+                        }, resendFailedRequestDelay);
+                    } else {
+                        Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
+                    }
+
                 }
             }
         });
@@ -852,17 +851,8 @@ public class MainActivity extends AppCompatActivity
                     } else {
                         prefManager.setActive(false);
                         resendActiveAttempts = 0;
-                        if(resendActivehandler != null)
-                            resendActivehandler.removeCallbacksAndMessages(null);
-//                        activeNotification(false);
-//                        EventBus.getDefault().post(new UnbindBackgroundLocationService());
-//                        if (mIsBound) {
-//                            //TODO: Handle service leak
-//                            getApplicationContext().unbindService(mConnection);
-//                            mIsBound = false;
-//                        }
-//                        if (blsIntent != null)
-//                            stopService(blsIntent);
+                        if(resendActiveHandler != null)
+                            resendActiveHandler.removeCallbacksAndMessages(null);
                     }
                     setUI();
                 } else if (response.code() == 401) {
@@ -886,11 +876,11 @@ public class MainActivity extends AppCompatActivity
                         Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     }
                     if(active == 0) {
-                        if (resendActivehandler == null)
-                            resendActivehandler = new Handler();
+                        if (resendActiveHandler == null)
+                            resendActiveHandler = new Handler();
                         if (resendActiveAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
                             resendActiveAttempts++;
-                            resendActivehandler.postDelayed(new Runnable() {
+                            resendActiveHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
                                     sendActive(active, location);
@@ -915,11 +905,11 @@ public class MainActivity extends AppCompatActivity
                     Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 }
                 if(active == 0) {
-                    if (resendActivehandler == null)
-                        resendActivehandler = new Handler();
+                    if (resendActiveHandler == null)
+                        resendActiveHandler = new Handler();
                     if (resendActiveAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
                         resendActiveAttempts++;
-                        resendActivehandler.postDelayed(new Runnable() {
+                        resendActiveHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 sendActive(active, location);
@@ -993,7 +983,7 @@ public class MainActivity extends AppCompatActivity
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == ONGOING_REQUESTS_CODE && resultCode == RESULT_OK) {
 //            Toast.makeText(this,data.getExtras().getString("passenger_name"), Toast.LENGTH_LONG).show();
-            getCurrentRequest(data);
+//            getCurrentRequest(data);
         }
 
         if (requestCode == REQUEST_CHECK_SETTINGS) {
@@ -1152,8 +1142,10 @@ public class MainActivity extends AppCompatActivity
     public void setUI(UI_STATE state) {
         switch (state) {
             case SIMPLE:
-                if (routingHandler != null)
+                if (routingHandler != null) {
+                    Log.d(TAG,"setUI Simple: removing routing runnable");
                     routingHandler.removeCallbacksAndMessages(null);
+                }
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
                 linearLayout.setVisibility(View.INVISIBLE);
                 ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.VISIBLE);
@@ -1269,7 +1261,8 @@ public class MainActivity extends AppCompatActivity
                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.stop_loc_smaller))
         );
 
-        routingHandler = new Handler();
+        if(routingHandler == null)
+            routingHandler = new Handler();
         routingRunnable = new Runnable() {
             public void run() {
                 //
@@ -1319,8 +1312,10 @@ public class MainActivity extends AppCompatActivity
             prefManager.setRequest(current_request);
         }
         checkedLocation = false;
-        if (routingHandler != null)
+        if (routingHandler != null) {
+            Log.d(TAG,"onPause: removing routing runnable");
             routingHandler.removeCallbacksAndMessages(null);
+        }
         wasActive = prefManager.isActive();
     }
 
@@ -1451,8 +1446,14 @@ public class MainActivity extends AppCompatActivity
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onPassengerCancelled(PassengerCanceled event) {
         Log.d(TAG, "onPassengerCanceled has been invoked");
-        endRequest(REQUEST_CANCELLED);
-        setUI();
+        if(prefManager.isDoingRequest()) {
+            if(event.getRequest_id().equals(current_request.getRequest_id())) {
+                endRequest(REQUEST_CANCELLED);
+                setUI();
+                current_request = new request();
+                prefManager.setRequest(current_request);
+            }
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1467,8 +1468,14 @@ public class MainActivity extends AppCompatActivity
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onPassngerArrived(PassengerArrived event) {
         Log.d(TAG, "onPassengerArrived has been invoked");
-        endRequest(REQUEST_SUCCESS);
-        setUI();
+        if(prefManager.isDoingRequest()) {
+            if(event.getRequest_id().equals(current_request.getRequest_id())) {
+                endRequest(REQUEST_SUCCESS);
+                setUI();
+                current_request = new request();
+                prefManager.setRequest(current_request);
+            }
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1599,12 +1606,7 @@ public class MainActivity extends AppCompatActivity
     public void onStop() {
         Log.d(TAG,"onStop");
         if(mIsBound) {
-            try {
-                getApplicationContext().unbindService(mConnection);
-            }
-            catch (java.lang.IllegalArgumentException ignored){
-                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-            }
+            getApplicationContext().unbindService(mConnection);
             mIsBound = false;
         }
         EventBus.getDefault().unregister(this);
@@ -1756,7 +1758,6 @@ public class MainActivity extends AppCompatActivity
 //        prefManager.setExternalLogout(false);
         driver = new driver();
         if (mIsBound) {
-            //TODO: Handle service leak
             getApplicationContext().unbindService(mConnection);
             mIsBound = false;
         }
@@ -2308,11 +2309,7 @@ public class MainActivity extends AppCompatActivity
         if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
             progress.dismiss();
         if (mIsBound) {
-            try {
-                getApplicationContext().unbindService(mConnection);
-            } catch (java.lang.IllegalArgumentException ignored) {
-                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-            }
+            getApplicationContext().unbindService(mConnection);
             mIsBound = false;
         }
         super.onDestroy();

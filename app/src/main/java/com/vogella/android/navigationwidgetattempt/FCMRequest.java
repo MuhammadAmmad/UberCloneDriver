@@ -223,21 +223,8 @@ public class FCMRequest extends AppCompatActivity {
                     }
                 } else if (response.code() == 401){
                     Toast.makeText(FCMRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onCreate: User not logged in");
-                    String lastEmail = prefManager.getLastEmail();
-                    String lastPassword = prefManager.getLastPassword();
-                    prefManager.editor.clear().apply();
-                    prefManager.setLastPassword(lastPassword);
-                    prefManager.setLastEmail(lastEmail);
-                    prefManager.setIsLoggedIn(false);
-//                    prefManager.setExternalLogout(false);
-                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
-                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
-                    stopService(blsIntent);
-
-                    Intent intent = new Intent(FCMRequest.this, LoginActivity.class);
-                    startActivity(intent);
-                    finish();
+                    Log.i(TAG, "Accept request onResponse: User not logged in");
+                    logout();
 
 //                    prefManager.setIsLoggedIn(false);
 //                    Intent intent = new Intent(FCMRequest.this, LoginActivity.class);
@@ -258,25 +245,14 @@ public class FCMRequest extends AppCompatActivity {
             }
         });
     }
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (!prefManager.isLoggedIn()) {
-            Intent intent = new Intent(FCMRequest.this, LoginActivity.class);
-            FCMRequest.this.startActivity(intent);
-            FCMRequest.super.finish();
-        }
-    }
-
 
     private void calculate_distance()
     {
-        progress = new ProgressDialog(this);
-//        progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
-        progress.setMessage("Calculating distance..");
-        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progress.setIndeterminate(true);
-        progress.show();
+//        progress = new ProgressDialog(this);
+//        progress.setMessage("Calculating distance..");
+//        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+//        progress.setIndeterminate(true);
+//        progress.show();
 
         GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
                 .from(pickupPoint)
@@ -290,7 +266,7 @@ public class FCMRequest extends AppCompatActivity {
 //                        toast.show();
 //                        Log.d(TAG, "showRoute: Route successfully computed ");
 //
-                        if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
+//                        if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
 
                         if(direction.isOK()) {
 //                            // Check if user hasn't cancelled:
@@ -331,11 +307,20 @@ public class FCMRequest extends AppCompatActivity {
 //                        showRoute();
 //                        Log.d(TAG, "showRoute: Route Failed ");
 
-                        if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
+//                        if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
 
                     }
                 });
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!prefManager.isLoggedIn()) {
+            logout();
+        }
+    }
+
     @Override
     protected void onDestroy() {
         if (!FCMRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
@@ -359,6 +344,10 @@ public class FCMRequest extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
         Log.d(TAG, "onDriverLoggedout has been invoked");
+        logout();
+    }
+
+    private void logout() {
         String lastEmail = prefManager.getLastEmail();
         String lastPassword = prefManager.getLastPassword();
         prefManager.editor.clear().apply();

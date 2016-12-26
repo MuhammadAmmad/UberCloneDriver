@@ -85,6 +85,11 @@ public class ProfileActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onLogoutRequest(DriverLoggedout logoutRequest){
         Log.d(TAG,"onDriverLoggedout has been invoked");
+        logout();
+
+    }
+
+    private void logout() {
         String lastEmail = prefManager.getLastEmail();
         String lastPassword = prefManager.getLastPassword();
         prefManager.editor.clear().apply();
@@ -99,21 +104,15 @@ public class ProfileActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
-
     }
+
     @Override
     public void onResume() {
+        Log.d(TAG,"onResume:");
         super.onResume();
         if (!prefManager.isLoggedIn()) {
-            Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
-            ProfileActivity.this.startActivity(intent);
-            ProfileActivity.super.finish();
+            logout();
         }
     }
-
-//    @Override
-//    protected void attachBaseContext(Context newBase) {
-//        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
-//    }
 
 }

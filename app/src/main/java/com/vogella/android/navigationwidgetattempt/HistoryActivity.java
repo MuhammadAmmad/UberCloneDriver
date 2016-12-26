@@ -61,6 +61,7 @@ public class HistoryActivity extends AppCompatActivity {
     private RecyclerView previous_requests;
     private RecyclerView.Adapter RVadapter;
     private RecyclerView.LayoutManager layoutManager;
+    private ProgressDialog progress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,7 +137,7 @@ public class HistoryActivity extends AppCompatActivity {
               String email = prefManager.pref.getString("UserEmail","");
         String password = prefManager.pref.getString("UserPassword","");
 
-        final ProgressDialog progress = new ProgressDialog(this);
+        progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
@@ -148,7 +149,8 @@ public class HistoryActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<RequestsResponse> call, Response<RequestsResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
-                if(progress.isShowing())progress.dismiss();
+                if(!HistoryActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
                 if (response.isSuccess() && response.body() != null){
                     List <request> rides = response.body().getRides();
                     List <request> history = new ArrayList<request>(){{}};
@@ -177,20 +179,7 @@ public class HistoryActivity extends AppCompatActivity {
                 } else if (response.code() == 401){
                     Toast.makeText(HistoryActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
-                    String lastEmail = prefManager.getLastEmail();
-                    String lastPassword = prefManager.getLastPassword();
-                    prefManager.editor.clear().apply();
-                    prefManager.setLastPassword(lastPassword);
-                    prefManager.setLastEmail(lastEmail);
-                    prefManager.setIsLoggedIn(false);
-                    prefManager.setExternalLogout(false);
-                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
-                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
-                    stopService(blsIntent);
-
-                    Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
-                    startActivity(intent);
-                    finish();
+                   logout();
 
 //                    prefManager.setIsLoggedIn(false);
 //                    Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
@@ -205,7 +194,8 @@ public class HistoryActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<RequestsResponse> call, Throwable t) {
-                if(progress.isShowing())progress.dismiss();
+                if(!HistoryActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
                 Toast.makeText(HistoryActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
 
             }
@@ -228,10 +218,11 @@ public class HistoryActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
-//        prefManager.setIsLoggedIn(false);
-//        Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
-//        HistoryActivity.this.startActivity(intent);
-//        HistoryActivity.super.finish();
+        Log.d(TAG,"onDriverLoggedout invoked");
+        logout();
+    }
+
+    private void logout() {
         String lastEmail = prefManager.getLastEmail();
         String lastPassword = prefManager.getLastPassword();
         prefManager.editor.clear().apply();
@@ -256,11 +247,16 @@ public class HistoryActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        if (prefManager.isLoggedIn() == false) {
-            Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
-            HistoryActivity.this.startActivity(intent);
-            HistoryActivity.super.finish();
+        if (!prefManager.isLoggedIn()) {
+            logout();
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        if (!HistoryActivity.this.isFinishing() & progress != null && progress.isShowing()) progress.dismiss();
+        super.onDestroy();
+    }
+
 
 }

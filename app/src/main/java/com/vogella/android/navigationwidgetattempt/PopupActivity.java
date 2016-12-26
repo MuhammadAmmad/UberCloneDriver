@@ -169,11 +169,7 @@ public class PopupActivity extends AppCompatActivity {
         if(enablingLocation) {
             Log.d(TAG,"Decided to enable location");
             if (mIsBound) {
-                try {
-                    getApplicationContext().unbindService(mConnection);
-                } catch (java.lang.IllegalArgumentException ignored) {
-                    Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-                }
+                getApplicationContext().unbindService(mConnection);
                 mIsBound = false;
             }
         }
@@ -210,12 +206,7 @@ public class PopupActivity extends AppCompatActivity {
     @Override
     public void onStop() {
         if(mIsBound) {
-            try {
-                getApplicationContext().unbindService(mConnection);
-            }
-            catch (java.lang.IllegalArgumentException ignored){
-                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-            }
+            getApplicationContext().unbindService(mConnection);
             mIsBound = false;
         }
         EventBus.getDefault().unregister(this);
@@ -235,6 +226,10 @@ public class PopupActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
         Log.d(TAG, "onDriverLoggedout has been invoked");
+        logout();
+    }
+
+    private void logout() {
         String lastEmail = prefManager.getLastEmail();
         String lastPassword = prefManager.getLastPassword();
         prefManager.editor.clear().apply();
@@ -243,12 +238,7 @@ public class PopupActivity extends AppCompatActivity {
         prefManager.setIsLoggedIn(false);
 //        prefManager.setExternalLogout(false);
         if(mIsBound) {
-            try {
-                getApplicationContext().unbindService(mConnection);
-            }
-            catch (java.lang.IllegalArgumentException ignored){
-                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-            }
+            getApplicationContext().unbindService(mConnection);
             mIsBound = false;
         }
         EventBus.getDefault().post(new UnbindBackgroundLocationService());
@@ -257,6 +247,15 @@ public class PopupActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    public void onResume() {
+        Log.d(TAG,"onResume:");
+        super.onResume();
+        if (!prefManager.isLoggedIn()) {
+            logout();
+        }
     }
 
 

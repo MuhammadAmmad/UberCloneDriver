@@ -90,18 +90,7 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
                     Toast.makeText(getBaseContext(), R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
 //                    prefManager.setIsLoggedIn(false);
-                    String lastEmail = prefManager.getLastEmail();
-                    String lastPassword = prefManager.getLastPassword();
-                    prefManager.editor.clear().apply();
-                    prefManager.setLastPassword(lastPassword);
-                    prefManager.setLastEmail(lastEmail);
-                    prefManager.setIsLoggedIn(false);
-//                    prefManager.setExternalLogout(false);
-                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
-                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
-                    stopService(blsIntent);
-
-                    EventBus.getDefault().post(new DriverLoggedout());
+                    logout();
 
 //                    Intent intent = new Intent(SelectedRequest.this, LoginActivity.class);
 //                    startActivity(intent);
@@ -123,6 +112,21 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
 
             }
         });
+    }
+
+    private void logout() {
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
+        prefManager.setIsLoggedIn(false);
+//                    prefManager.setExternalLogout(false);
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+        Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        stopService(blsIntent);
+
+        EventBus.getDefault().post(new DriverLoggedout());
     }
 
 }

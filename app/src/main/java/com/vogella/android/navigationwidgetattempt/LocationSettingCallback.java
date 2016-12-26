@@ -27,7 +27,7 @@ public class LocationSettingCallback extends Activity {
     private static final String TAG = LocationSettingCallback.class.getSimpleName();
     protected static Activity activity;
     protected static final int REQUEST_CHECK_SETTINGS = 21314;
-    private Boolean mIsBound;
+    private Boolean mIsBound = false;
     private BackgroundLocationService backgroundLocationService;
     private PrefManager prefManager;
     private ServiceConnection mConnection;
@@ -165,12 +165,7 @@ public class LocationSettingCallback extends Activity {
     @Override
     public void onStop() {
         if(mIsBound) {
-            try {
-                getApplicationContext().unbindService(mConnection);
-            }
-            catch (java.lang.IllegalArgumentException ignored){
-                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-            }
+            getApplicationContext().unbindService(mConnection);
             mIsBound = false;
         }
         EventBus.getDefault().unregister(this);
@@ -190,15 +185,9 @@ public class LocationSettingCallback extends Activity {
 
     @Override
     protected void onDestroy() {
-//        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
         Log.d(TAG, "onDestroy");
         if(mIsBound) {
-            try {
-                getApplicationContext().unbindService(mConnection);
-            }
-            catch (java.lang.IllegalArgumentException ignored){
-                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-            }
+            getApplicationContext().unbindService(mConnection);
             mIsBound = false;
         }
         super.onDestroy();
@@ -207,6 +196,10 @@ public class LocationSettingCallback extends Activity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
         Log.d(TAG, "onDriverLoggedout has been invoked");
+        logout();
+    }
+
+    private void logout() {
         String lastEmail = prefManager.getLastEmail();
         String lastPassword = prefManager.getLastPassword();
         prefManager.editor.clear().apply();
@@ -215,12 +208,7 @@ public class LocationSettingCallback extends Activity {
         prefManager.setIsLoggedIn(false);
 //        prefManager.setExternalLogout(false);
         if(mIsBound) {
-            try {
-                getApplicationContext().unbindService(mConnection);
-            }
-            catch (java.lang.IllegalArgumentException ignored){
-                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
-            }
+            getApplicationContext().unbindService(mConnection);
             mIsBound = false;
         }
         EventBus.getDefault().post(new UnbindBackgroundLocationService());
@@ -230,7 +218,14 @@ public class LocationSettingCallback extends Activity {
         startActivity(intent);
         finish();
     }
-
+    @Override
+    public void onResume() {
+        Log.d(TAG,"onResume:");
+        super.onResume();
+        if (!prefManager.isLoggedIn()) {
+            logout();
+        }
+    }
 
 
 }

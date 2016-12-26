@@ -38,10 +38,10 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
     private static final String TAG = "UbDriver";
     private static final int SELECTED_REQUEST_CODE = 43542;
     private List<request> requestList;
-    private Context context;
+    private Activity context;
     private PrefManager prefManager;
 
-    public OngoingRequestAdapter(List<request> RequestList, Context context) {
+    public OngoingRequestAdapter(List<request> RequestList, Activity context) {
 //    public OngoingRequestAdapter(Context context) {
         this.requestList = RequestList;
         this.context = context;
@@ -243,7 +243,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if(progress.isShowing()) progress.dismiss();
+                if(!context.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
 //                    endRequest(REQUEST_CANCELLED);
@@ -281,7 +281,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if(progress.isShowing()) progress.dismiss();
+                if(!context.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
                 Toast.makeText(context, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, "Couldn't connect to the server");
             }

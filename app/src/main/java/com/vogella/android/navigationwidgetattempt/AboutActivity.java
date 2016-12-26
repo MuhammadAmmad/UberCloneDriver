@@ -46,9 +46,7 @@ public class AboutActivity extends AppCompatActivity {
         super.onResume();
         Log.d(TAG, "onResume called");
         if (!prefManager.isLoggedIn()) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-            this.finish();
+            logout();
         }
     }
 
@@ -68,6 +66,10 @@ public class AboutActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
         Log.d(TAG, "onDriverLoggedout has been invoked");
+        logout();
+    }
+
+    private void logout() {
         String lastEmail = prefManager.getLastEmail();
         String lastPassword = prefManager.getLastPassword();
         prefManager.editor.clear().apply();
