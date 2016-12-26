@@ -121,87 +121,85 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     status = field.getValue();
                 }
             }
-            if (status.equals("-1")) {
-                Log.d(TAG, "This request has no status.. it is impossible to determine which API is this");
-            }
-            else if(status.equals("0")){
-                if(prefManager.isActive()) {
-                    Intent intent = new Intent(this, FCMRequest.class);
-                    intent.putExtra("request_id", received.getRequest_id());
-                    intent.putExtra("price", received.getPrice());
-                    intent.putExtra("pickup", pickup);
-                    intent.putExtra("pickup_text", received.getPickupText());
-                    Log.d(TAG, "time read from the first request object =" + received.getTime());
-                    intent.putExtra("time", received.getTime());
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    intent.putExtra("dest", dest);
-                    intent.putExtra("dest_text", received.getDestText());
-//                intent.putExtra("time", received.getTime());
-                    intent.putExtra("passenger_name", received.getPassenger_name());
-                    intent.putExtra("passenger_phone", received.getPassenger_phone());
-                    intent.putExtra("notes", received.getNotes());
-                    startActivity(intent);
-                }
-                else{
-                    serverAccept(received.getRequest_id(), 0);
-                }
-                Log.d(TAG, "The recieved request has the content:" + received);
-            }
-            else if (status.equals("1")){ // Passenger Canceled
-                for (Map.Entry<String, String> field : request.entrySet()) {
-                    if (field.getKey().equals("request_id")) {
-//                        prefManager.setRequestStatus("canceled");
-                        prefManager.setFcmrequestStatus("canceled");
-                        prefManager.setFcmrequestId(field.getValue());
-                        prefManager.setDoingRequest(false);
-                        EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
-//                        OngoingRequestsActivity.removeRequest(field.getValue());
-                        sendNotification(getString(R.string.passenger_cancelled_notification) + field.getValue());
-                        break;
+            if(prefManager.isLoggedIn()){
+                if (status.equals("-1")) {
+                    Log.d(TAG, "This request has no status.. it is impossible to determine which API is this");
+                } else if (status.equals("0")) {
+                    if (prefManager.isActive()) {
+                        Intent intent = new Intent(this, FCMRequest.class);
+                        intent.putExtra("request_id", received.getRequest_id());
+                        intent.putExtra("price", received.getPrice());
+                        intent.putExtra("pickup", pickup);
+                        intent.putExtra("pickup_text", received.getPickupText());
+                        Log.d(TAG, "time read from the first request object =" + received.getTime());
+                        intent.putExtra("time", received.getTime());
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.putExtra("dest", dest);
+                        intent.putExtra("dest_text", received.getDestText());
+    //                intent.putExtra("time", received.getTime());
+                        intent.putExtra("passenger_name", received.getPassenger_name());
+                        intent.putExtra("passenger_phone", received.getPassenger_phone());
+                        intent.putExtra("notes", received.getNotes());
+                        startActivity(intent);
+                    } else {
+                        serverAccept(received.getRequest_id(), 0);
                     }
-                }
-            }
-            else if (status.equals("2")){ // Passenger Arrived
-                for (Map.Entry<String, String> field : request.entrySet()) {
-                    if (field.getKey().equals("request_id")) {
-                        sendNotification(getString(R.string.passenger_completed_notification));
-//                        prefManager.setRequestStatus("completed");
-                        prefManager.setFcmrequestStatus("completed");
-                        prefManager.setFcmrequestId(field.getValue());
-                        EventBus.getDefault().post(new PassengerArrived(field.getValue()));
-//                        OngoingRequestsActivity.removeRequest(field.getValue());
-                       // break;
+                    Log.d(TAG, "The recieved request has the content:" + received);
+                } else if (status.equals("1")) { // Passenger Canceled
+                    for (Map.Entry<String, String> field : request.entrySet()) {
+                        if (field.getKey().equals("request_id")) {
+    //                        prefManager.setRequestStatus("canceled");
+                            prefManager.setFcmrequestStatus("canceled");
+                            prefManager.setFcmrequestId(field.getValue());
+                            prefManager.setDoingRequest(false);
+                            EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
+    //                        OngoingRequestsActivity.removeRequest(field.getValue());
+                            sendNotification(getString(R.string.passenger_cancelled_notification) + field.getValue());
+                            break;
+                        }
                     }
-                }
-            }
-            else if (status.equals("3")){ // Driver logged out
-                sendNotification(getString(R.string.logged_elsewhere));
-//                prefManager.setIsLoggedIn(false);
-                prefManager.setIsLoggedIn(false);
-
-                prefManager.setExternalLogout(true); //to distinguis between this case and when logging out from within the app
-
-//            prefManager.setDriver(driver);
-                if(mIsBound) {
-                    try {
-                        getApplicationContext().unbindService(mConnection);
+                } else if (status.equals("2")) { // Passenger Arrived
+                    for (Map.Entry<String, String> field : request.entrySet()) {
+                        if (field.getKey().equals("request_id")) {
+                            sendNotification(getString(R.string.passenger_completed_notification));
+    //                        prefManager.setRequestStatus("completed");
+                            prefManager.setFcmrequestStatus("completed");
+                            prefManager.setFcmrequestId(field.getValue());
+                            EventBus.getDefault().post(new PassengerArrived(field.getValue()));
+    //                        OngoingRequestsActivity.removeRequest(field.getValue());
+                            // break;
+                        }
                     }
-                    catch (java.lang.IllegalArgumentException ignored){
+                } else if (status.equals("3")) { // Driver logged out
+                    sendNotification(getString(R.string.logged_elsewhere));
 
+                    String lastEmail = prefManager.getLastEmail();
+                    String lastPassword = prefManager.getLastPassword();
+                    prefManager.editor.clear().apply();
+                    prefManager.setLastPassword(lastPassword);
+                    prefManager.setLastEmail(lastEmail);
+
+                    prefManager.setIsLoggedIn(false);
+
+//                    prefManager.setExternalLogout(true); //to distinguis between this case and when logging out from within the app
+
+                    if (mIsBound) {
+                        try {
+                            getApplicationContext().unbindService(mConnection);
+                        } catch (java.lang.IllegalArgumentException ignored) {
+
+                        }
+                        mIsBound = false;
                     }
-                    mIsBound = false;
+
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+
+                    if (blsIntent != null)
+                        stopService(blsIntent);
+
+
+                    EventBus.getDefault().post(new DriverLoggedout());
                 }
-
-                EventBus.getDefault().post(new UnbindBackgroundLocationService());
-
-                if(blsIntent != null)
-                    stopService(blsIntent);
-
-
-                activeNotification(false);
-
-
-                EventBus.getDefault().post(new DriverLoggedout());
             }
         }
         // Check if message contains a notification payload.
@@ -240,39 +238,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
 
-    private void activeNotification(Boolean enable) {
-
-        if (enable) {
-
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-                    PendingIntent.FLAG_ONE_SHOT);
-
-//            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_notification_logo)
-                    .setContentTitle(getString(R.string.app_name))
-                    .setContentText("Active")
-//                .setAutoCancel(true)
-//                    .setSound(defaultSoundUri)
-                    .setContentIntent(pendingIntent)
-                    .setOngoing(true);
-
-            NotificationManager notificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-            notificationManager.notify(ACTIVE_NOTIFICATION_ID /* ID of notification */, notificationBuilder.build());
-        }
-        else
-        {
-            NotificationManager notificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-            notificationManager.cancel(ACTIVE_NOTIFICATION_ID /* ID of notification */);
-
-        }
-    }
 
     private void serverAccept(String request_id, final int accepted ) {
         Retrofit retrofit = new Retrofit.Builder()
@@ -299,7 +264,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
                 } else if (response.code() == 401){
                     Log.i(TAG, "onCreate: User not logged in");
+//                    prefManager.setIsLoggedIn(false);
+                    String lastEmail = prefManager.getLastEmail();
+                    String lastPassword = prefManager.getLastPassword();
+                    prefManager.editor.clear().apply();
+                    prefManager.setLastPassword(lastPassword);
+                    prefManager.setLastEmail(lastEmail);
                     prefManager.setIsLoggedIn(false);
+//                    prefManager.setExternalLogout(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+                    stopService(blsIntent);
+
+                    EventBus.getDefault().post(new DriverLoggedout());
+
                 } else {
 //                    clearHistoryEntries();
                     Log.d(TAG,getResources().getString(R.string.server_unknown_error));

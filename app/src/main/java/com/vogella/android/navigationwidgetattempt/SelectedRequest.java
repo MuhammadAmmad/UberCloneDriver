@@ -14,7 +14,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.Wisam.Events.DriverLoggedout;
 import com.Wisam.Events.PassengerCanceled;
+import com.Wisam.Events.UnbindBackgroundLocationService;
 import com.Wisam.POJO.StatusResponse;
 import com.akexorcist.googledirection.DirectionCallback;
 import com.akexorcist.googledirection.GoogleDirection;
@@ -190,10 +192,25 @@ public class SelectedRequest extends AppCompatActivity {
                     finish();
                 } else if (response.code() == 401) {
                     Toast.makeText(SelectedRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onResume: User not logged in");
+                    Log.i(TAG, "onResponse: User not logged in");
+                    String lastEmail = prefManager.getLastEmail();
+                    String lastPassword = prefManager.getLastPassword();
+                    prefManager.editor.clear().apply();
+                    prefManager.setLastPassword(lastPassword);
+                    prefManager.setLastEmail(lastEmail);
                     prefManager.setIsLoggedIn(false);
+//                    prefManager.setExternalLogout(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+                    stopService(blsIntent);
+
                     Intent intent = new Intent(SelectedRequest.this, LoginActivity.class);
                     startActivity(intent);
+                    finish();
+
+//                    prefManager.setIsLoggedIn(false);
+//                    Intent intent = new Intent(SelectedRequest.this, LoginActivity.class);
+//                    startActivity(intent);
 //                    finish();
                 } else {
 //                    clearHistoryEntries();
@@ -337,5 +354,25 @@ public class SelectedRequest extends AppCompatActivity {
                     }
                 });
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDriverLoggedout(DriverLoggedout event) {
+        Log.d(TAG, "onDriverLoggedout has been invoked");
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
+        prefManager.setIsLoggedIn(false);
+//        prefManager.setExternalLogout(false);
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+
+        Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        stopService(blsIntent);
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
 
 }

@@ -22,9 +22,13 @@ package com.vogella.android.navigationwidgetattempt;
         import android.util.Log;
         import android.widget.Toast;
 
+        import com.Wisam.Events.DriverLoggedout;
+        import com.Wisam.Events.UnbindBackgroundLocationService;
         import com.Wisam.POJO.StatusResponse;
         import com.google.firebase.iid.FirebaseInstanceId;
         import com.google.firebase.iid.FirebaseInstanceIdService;
+
+        import org.greenrobot.eventbus.EventBus;
 
         import retrofit2.Call;
         import retrofit2.Callback;
@@ -85,9 +89,27 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
                 } else if (response.code() == 401){
                     Toast.makeText(getBaseContext(), R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
+//                    prefManager.setIsLoggedIn(false);
+                    String lastEmail = prefManager.getLastEmail();
+                    String lastPassword = prefManager.getLastPassword();
+                    prefManager.editor.clear().apply();
+                    prefManager.setLastPassword(lastPassword);
+                    prefManager.setLastEmail(lastEmail);
                     prefManager.setIsLoggedIn(false);
-                    Intent intent = new Intent(getBaseContext(), LoginActivity.class);
-                    getBaseContext().startActivity(intent);
+//                    prefManager.setExternalLogout(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+                    stopService(blsIntent);
+
+                    EventBus.getDefault().post(new DriverLoggedout());
+
+//                    Intent intent = new Intent(SelectedRequest.this, LoginActivity.class);
+//                    startActivity(intent);
+//                    finish();
+
+
+//                    Intent intent = new Intent(getBaseContext(), LoginActivity.class);
+//                    getBaseContext().startActivity(intent);
                     //getBaseContext().finish();
                 } else {
 //                    clearHistoryEntries();

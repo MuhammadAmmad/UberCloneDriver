@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.Wisam.Events.DriverLoggedout;
 import com.Wisam.Events.PassengerArrived;
 import com.Wisam.Events.PassengerCanceled;
+import com.Wisam.Events.UnbindBackgroundLocationService;
 import com.Wisam.POJO.RequestsResponse;
 
 import org.greenrobot.eventbus.EventBus;
@@ -185,7 +186,20 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                 } else if (response.code() == 401){
                     Toast.makeText(OngoingRequestsActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
+//                    prefManager.setIsLoggedIn(false);
+                    String lastEmail = prefManager.getLastEmail();
+                    String lastPassword = prefManager.getLastPassword();
+                    prefManager.editor.clear().apply();
+                    prefManager.setLastPassword(lastPassword);
+                    prefManager.setLastEmail(lastEmail);
                     prefManager.setIsLoggedIn(false);
+//                    prefManager.setExternalLogout(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+                    stopService(blsIntent);
+
+                    EventBus.getDefault().post(new DriverLoggedout());
+
                     Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
                     startActivity(intent);
                     finish();
@@ -277,10 +291,25 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
+//        prefManager.setIsLoggedIn(false);
+//        Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
+//        OngoingRequestsActivity.this.startActivity(intent);
+//        OngoingRequestsActivity.super.finish();
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-        Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
-        OngoingRequestsActivity.this.startActivity(intent);
-        OngoingRequestsActivity.super.finish();
+//        prefManager.setExternalLogout(false);
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+
+        Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        stopService(blsIntent);
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

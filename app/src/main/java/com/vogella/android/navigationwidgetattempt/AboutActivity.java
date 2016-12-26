@@ -7,6 +7,13 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.Wisam.Events.DriverLoggedout;
+import com.Wisam.Events.UnbindBackgroundLocationService;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 public class AboutActivity extends AppCompatActivity {
 
     private static final String TAG = AboutActivity.class.getSimpleName();
@@ -44,5 +51,38 @@ public class AboutActivity extends AppCompatActivity {
             this.finish();
         }
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDriverLoggedout(DriverLoggedout event) {
+        Log.d(TAG, "onDriverLoggedout has been invoked");
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
+        prefManager.setIsLoggedIn(false);
+//        prefManager.setExternalLogout(false);
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+
+        Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        stopService(blsIntent);
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
 
 }

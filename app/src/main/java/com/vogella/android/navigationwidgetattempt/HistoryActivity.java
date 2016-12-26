@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.Wisam.Events.DriverLoggedout;
+import com.Wisam.Events.UnbindBackgroundLocationService;
 import com.Wisam.POJO.RequestsResponse;
 
 import org.greenrobot.eventbus.EventBus;
@@ -175,11 +176,26 @@ public class HistoryActivity extends AppCompatActivity {
                     HistoryActivity.this.setRequestsList(history);
                 } else if (response.code() == 401){
                     Toast.makeText(HistoryActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onCreate: User not logged in");
+                    Log.i(TAG, "onResponse: User not logged in");
+                    String lastEmail = prefManager.getLastEmail();
+                    String lastPassword = prefManager.getLastPassword();
+                    prefManager.editor.clear().apply();
+                    prefManager.setLastPassword(lastPassword);
+                    prefManager.setLastEmail(lastEmail);
                     prefManager.setIsLoggedIn(false);
+                    prefManager.setExternalLogout(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+                    stopService(blsIntent);
+
                     Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
                     startActivity(intent);
                     finish();
+
+//                    prefManager.setIsLoggedIn(false);
+//                    Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
+//                    startActivity(intent);
+//                    finish();
                 } else {
 //                    clearHistoryEntries();
                     Toast.makeText(HistoryActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
@@ -212,10 +228,24 @@ public class HistoryActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
+//        prefManager.setIsLoggedIn(false);
+//        Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
+//        HistoryActivity.this.startActivity(intent);
+//        HistoryActivity.super.finish();
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-        Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
-        HistoryActivity.this.startActivity(intent);
-        HistoryActivity.super.finish();
+//        prefManager.setExternalLogout(false);
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+
+        Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        stopService(blsIntent);
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     @Override

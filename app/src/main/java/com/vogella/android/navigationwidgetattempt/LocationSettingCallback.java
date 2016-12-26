@@ -12,6 +12,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.Wisam.Events.DriverActive;
+import com.Wisam.Events.DriverLoggedout;
 import com.Wisam.Events.UnbindBackgroundLocationService;
 
 import org.greenrobot.eventbus.EventBus;
@@ -202,6 +203,34 @@ public class LocationSettingCallback extends Activity {
         }
         super.onDestroy();
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDriverLoggedout(DriverLoggedout event) {
+        Log.d(TAG, "onDriverLoggedout has been invoked");
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
+        prefManager.setIsLoggedIn(false);
+//        prefManager.setExternalLogout(false);
+        if(mIsBound) {
+            try {
+                getApplicationContext().unbindService(mConnection);
+            }
+            catch (java.lang.IllegalArgumentException ignored){
+                Log.d(TAG, "onDestroy: unbindService returned exception" + ignored.toString());
+            }
+            mIsBound = false;
+        }
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+        Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        stopService(blsIntent);
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
 
 
 }

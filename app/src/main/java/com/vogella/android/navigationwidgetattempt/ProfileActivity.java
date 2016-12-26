@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.Wisam.Events.DriverLoggedout;
+import com.Wisam.Events.UnbindBackgroundLocationService;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -84,9 +85,21 @@ public class ProfileActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onLogoutRequest(DriverLoggedout logoutRequest){
         Log.d(TAG,"onDriverLoggedout has been invoked");
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
+        prefManager.setIsLoggedIn(false);
+//        prefManager.setExternalLogout(false);
+        EventBus.getDefault().post(new UnbindBackgroundLocationService());
+
+        Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
+        stopService(blsIntent);
         Intent intent = new Intent(this, LoginActivity.class);
-        this.startActivity(intent);
+        startActivity(intent);
         finish();
+
     }
     @Override
     public void onResume() {

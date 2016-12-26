@@ -15,7 +15,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.Wisam.Events.DriverLoggedout;
+import com.Wisam.Events.UnbindBackgroundLocationService;
 import com.Wisam.POJO.StatusResponse;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
@@ -251,8 +255,21 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
                     Toast.makeText(context, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResume: User not logged in");
                     prefManager.setIsLoggedIn(false);
-                    Intent intent = new Intent(context, LoginActivity.class);
-                    context.startActivity(intent);
+                    String lastEmail = prefManager.getLastEmail();
+                    String lastPassword = prefManager.getLastPassword();
+                    prefManager.editor.clear().apply();
+                    prefManager.setLastPassword(lastPassword);
+                    prefManager.setLastEmail(lastEmail);
+                    prefManager.setIsLoggedIn(false);
+//                    prefManager.setExternalLogout(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    Intent blsIntent = new Intent(context.getApplicationContext(), BackgroundLocationService.class);
+                    context.stopService(blsIntent);
+
+                    EventBus.getDefault().post(new DriverLoggedout());
+
+//                    Intent intent = new Intent(context, LoginActivity.class);
+//                    context.startActivity(intent);
 //                    finish();
                 } else {
 //                    clearHistoryEntries();

@@ -1329,9 +1329,10 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
         Log.d(TAG, "onResume called");
         if (!prefManager.isLoggedIn()) {
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            MainActivity.this.startActivity(intent);
-            MainActivity.super.finish();
+//            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//            MainActivity.this.startActivity(intent);
+//            MainActivity.super.finish();
+            logout();
         }
         //get the driver information
         driver = prefManager.getDriver();
@@ -1341,12 +1342,13 @@ public class MainActivity extends AppCompatActivity
         //ensure location is enabled
 //        if(prefManager.isDoingRequest() || wasActive)
 //        if(prefManager.isDoingRequest() || prefManager.isActive())
-        if (prefManager.isActive())
+        if (prefManager.isActive()){
             if (backgroundLocationService != null)
                 if (!checkedLocation) {
                     backgroundLocationService.checkLocationSettings();
                     checkedLocation = true;
-                } else if (prefManager.isDoingRequest()) {
+                }
+            } else if (prefManager.isDoingRequest()) {
                     startAndBindLocationService();
                 }
 
@@ -1441,7 +1443,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onStart() {
-        startAndBindLocationService();
+//        startAndBindLocationService();
         EventBus.getDefault().register(this);
         super.onStart();
     }
@@ -1456,9 +1458,10 @@ public class MainActivity extends AppCompatActivity
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
         Log.d(TAG, "onDriverLoggedout has been invoked");
-        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-        MainActivity.this.startActivity(intent);
-        MainActivity.super.finish();
+//        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//        MainActivity.this.startActivity(intent);
+//        MainActivity.super.finish();
+        logout();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1744,10 +1747,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void logout() {
+        String lastEmail = prefManager.getLastEmail();
+        String lastPassword = prefManager.getLastPassword();
+        prefManager.editor.clear().apply();
+        prefManager.setLastPassword(lastPassword);
+        prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-        prefManager.setExternalLogout(false);
+//        prefManager.setExternalLogout(false);
         driver = new driver();
-//            prefManager.setDriver(driver);
         if (mIsBound) {
             //TODO: Handle service leak
             getApplicationContext().unbindService(mConnection);
@@ -1757,7 +1764,6 @@ public class MainActivity extends AppCompatActivity
         if (blsIntent != null)
             stopService(blsIntent);
         Intent intent = new Intent(this, LoginActivity.class);
-//            activeNotification(false);
         startActivity(intent);
         finish();
     }

@@ -69,12 +69,6 @@
             android:label="@string/fcm_request"
             android:theme="@style/AppTheme.details.completed" />
 
-        <service
-            android:name=".LocationService"
-            android:exported="false" />
-
-        <receiver android:name=".UpdateLocation_Active" />
-
         <activity
             android:name=".ProfileActivity"
             android:label="@string/profile"

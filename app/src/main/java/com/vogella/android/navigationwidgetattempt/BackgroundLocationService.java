@@ -761,11 +761,10 @@ public class BackgroundLocationService extends Service implements
         // Turn off the request flag
         Log.d(TAG, "onDestroy");
 
-//        activeNotification(false);
-        if(!prefManager.isLoggedIn())
-            if(!prefManager.isExternalLogout()) {
-                sendInactiveToLogout(prefManager.getCurrentLocation());
-            }
+//        if(!prefManager.isLoggedIn())
+//            if(!prefManager.isExternalLogout()) {
+//                sendInactiveToLogout(prefManager.getCurrentLocation());
+//            }
 
         //stop handlers' runnables
         if(checkLocationHandler != null)
@@ -848,7 +847,7 @@ public class BackgroundLocationService extends Service implements
 //                        // TODO Auto-generated catch block
 //                        e.printStackTrace();
 //                    }
-                    sendInactiveToLogout(location);
+//                    sendInactiveToLogout(location);
 //                    inactiveAttempts++;
 //                }
             }
