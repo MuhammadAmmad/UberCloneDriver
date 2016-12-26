@@ -773,6 +773,8 @@ public class BackgroundLocationService extends Service implements
             resendLocationHandler.removeCallbacksAndMessages(null);
         if(resendActivehandler != null)
             resendActivehandler.removeCallbacksAndMessages(null);
+        if(updateActiveHandler != null)
+            updateActiveHandler.removeCallbacksAndMessages(null);
         Log.d(TAG,"Handlers runnables were removed");
 
 //        prefManager.setExternalLogout(false);
