@@ -222,15 +222,16 @@ public class SelectedRequest extends AppCompatActivity {
         if (!prefManager.isLoggedIn()) {
             logout();
         }
-
-        if(prefManager.getFcmrequestId().equals(intent.getStringExtra("request_id")))
-            if(intent.hasExtra("source"))
-                if(!intent.getStringExtra("source").equals("history")) {
-                    if(prefManager.getFcmrequestStatus().equals("canceled"))
-                        Log.d(TAG, "The current request seems to have been cancelled");
-                    if(prefManager.getFcmrequestStatus().equals("completed"))
-                        Log.d(TAG, "The current request seems to have been completed");
-                    this.finish();
+        else {
+            if (prefManager.getFcmrequestId().equals(intent.getStringExtra("request_id")))
+                if (intent.hasExtra("source"))
+                    if (!intent.getStringExtra("source").equals("history")) {
+                        if (prefManager.getFcmrequestStatus().equals("canceled"))
+                            Log.d(TAG, "The current request seems to have been cancelled");
+                        if (prefManager.getFcmrequestStatus().equals("completed"))
+                            Log.d(TAG, "The current request seems to have been completed");
+                        this.finish();
+                    }
         }
 
     }

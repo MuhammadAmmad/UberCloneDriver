@@ -1324,116 +1324,58 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
         Log.d(TAG, "onResume called");
         if (!prefManager.isLoggedIn()) {
-//            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-//            MainActivity.this.startActivity(intent);
-//            MainActivity.super.finish();
             logout();
         }
-        //get the driver information
-        driver = prefManager.getDriver();
-//        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        //if the driver is active, enable the location and schedule location and active requests.
-//        if(prefManager.isActive()){
-        //ensure location is enabled
-//        if(prefManager.isDoingRequest() || wasActive)
-//        if(prefManager.isDoingRequest() || prefManager.isActive())
-        if (prefManager.isActive()){
-            if (backgroundLocationService != null)
-                if (!checkedLocation) {
-                    backgroundLocationService.checkLocationSettings();
-                    checkedLocation = true;
-                }
+        else {
+            //get the driver information
+            driver = prefManager.getDriver();
+            if (prefManager.isActive()) {
+                if (backgroundLocationService != null)
+                    if (!checkedLocation) {
+                        backgroundLocationService.checkLocationSettings();
+                        checkedLocation = true;
+                    }
             } else if (prefManager.isDoingRequest()) {
-                    startAndBindLocationService();
-                }
+                startAndBindLocationService();
+            }
 
 
-//        } //end of if(isActive)
-
-        //Setup the UI based on whether there is a current request
-        if (prefManager.isDoingRequest()) {
-            current_request = prefManager.getRequest();
-            if (prefManager.getFcmrequestId().equals(current_request.getRequest_id())) {
-                if (prefManager.getFcmrequestStatus().equals("completed")) {
-                    Log.d(TAG, "The passenger marked the request as complete");
-                    endRequest(REQUEST_SUCCESS);
-                    setUI(UI_STATE.SIMPLE);
-                    current_request = new request();
-                    prefManager.setRequest(current_request);
-                } else if (prefManager.getFcmrequestStatus().equals("canceled")) {
-                    Log.d(TAG, "The passenger canceled the request");
-                    endRequest(REQUEST_CANCELLED);
-                    setUI(UI_STATE.SIMPLE);
-                    current_request = new request();
-                    prefManager.setRequest(current_request);
+            //Setup the UI based on whether there is a current request
+            if (prefManager.isDoingRequest()) {
+                current_request = prefManager.getRequest();
+                if (prefManager.getFcmrequestId().equals(current_request.getRequest_id())) {
+                    if (prefManager.getFcmrequestStatus().equals("completed")) {
+                        Log.d(TAG, "The passenger marked the request as complete");
+                        endRequest(REQUEST_SUCCESS);
+                        setUI(UI_STATE.SIMPLE);
+                        current_request = new request();
+                        prefManager.setRequest(current_request);
+                    } else if (prefManager.getFcmrequestStatus().equals("canceled")) {
+                        Log.d(TAG, "The passenger canceled the request");
+                        endRequest(REQUEST_CANCELLED);
+                        setUI(UI_STATE.SIMPLE);
+                        current_request = new request();
+                        prefManager.setRequest(current_request);
+                    }
+                } else {
+                    Log.d(TAG, "The driver is doing a request");
+//                    current_request = prefManager.getRequest();
+                    setUI(UI_STATE.DOINGREQUEST);
                 }
             } else {
-                Log.d(TAG, "The driver is doing a request");
-//                    current_request = prefManager.getRequest();
-                setUI(UI_STATE.DOINGREQUEST);
+                setUI(UI_STATE.SIMPLE);
             }
-        } else {
-            setUI(UI_STATE.SIMPLE);
-        }
 
-        //remove the fcm request update
+            //remove the fcm request update
 
-        if (!prefManager.getFcmrequestId().equals("No data")) {
-            prefManager.setFcmrequestId("No data");
-            prefManager.setFcmrequestStatus("No data");
+            if (!prefManager.getFcmrequestId().equals("No data")) {
+                prefManager.setFcmrequestId("No data");
+                prefManager.setFcmrequestStatus("No data");
+            }
         }
 
     }
 
-/*
-    private void setAlarms() {
-        //setup location alarm
-
-        alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-        Intent locationIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-        locationIntent.putExtra("alarmType", "location");
-        boolean locationFlag = (PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_NO_CREATE) == null);
-*/
-/*Register alarm if not registered already*//*
-
-//            if(locationFlag){
-        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, locationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-*/
-/* Setting alarm for every one hour from the current time.*//*
-
-        int intervalTimeMillis;
-        if (prefManager.isDoingRequest())
-            intervalTimeMillis = UPDATE_DURING_REQUEST;  // 10 seconds
-        else
-            intervalTimeMillis = UPDATE_WHILE_IDLE;// 2 minutes
-        alarmMgr.set(AlarmManager.RTC_WAKEUP, intervalTimeMillis, alarmIntent);
-//             alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//                        SystemClock.elapsedRealtime(), intervalTimeMillis,
-//                        alarmIntent);
-//            }
-        Intent activeIntent = new Intent(getApplicationContext(), UpdateLocation_Active.class);
-        activeIntent.putExtra("alarmType", "active");
-        boolean activeFlag = (PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_NO_CREATE) == null);
-*/
-/*Register alarm if not registered already*//*
-
-//            if(activeFlag){
-        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 67769, activeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-*/
-/* Setting alarm for every one hour from the current time.*//*
-
-//                int intervalTimeMillis;
-//        intervalTimeMillis = 30 * 1000;//30 * 1000; // 30 seconds
-        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, intervalTimeMillis, alarmIntent);
-//                alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//                        SystemClock.elapsedRealtime(), intervalTimeMillis,
-//                        alarmIntent);
-////            }
-    }
-*/
 
 
     @Override

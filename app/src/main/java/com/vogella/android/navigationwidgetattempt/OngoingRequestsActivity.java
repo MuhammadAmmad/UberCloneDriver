@@ -345,14 +345,16 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         if (!prefManager.isLoggedIn()) {
             logout();
         }
-
-        if(!prefManager.getFcmrequestId().equals("No data"))
-            if(prefManager.getFcmrequestStatus().equals("canceled"))
-                Log.d(TAG, "The current request seems to have been cancelled");
-            if(prefManager.getFcmrequestStatus().equals("completed"))
-                Log.d(TAG, "The current request seems to have been completed");
-        removeRequest(prefManager.getFcmrequestId());
+        else {
+            if (!prefManager.getFcmrequestId().equals("No data")) {
+                if (prefManager.getFcmrequestStatus().equals("canceled"))
+                    Log.d(TAG, "The current request seems to have been cancelled");
+                if (prefManager.getFcmrequestStatus().equals("completed"))
+                    Log.d(TAG, "The current request seems to have been completed");
+                removeRequest(prefManager.getFcmrequestId());
+            }
         }
+    }
 
     @Override
     protected void onDestroy() {

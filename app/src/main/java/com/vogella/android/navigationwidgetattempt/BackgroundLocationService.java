@@ -798,6 +798,8 @@ public class BackgroundLocationService extends Service implements
 
         mRequestingLocationUpdates = false;
 
+        Log.d(TAG,"Calling super.onDestroy");
+
         super.onDestroy();
     }
     private void sendInactiveToLogout(final String location) {
