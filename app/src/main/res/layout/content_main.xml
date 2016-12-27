@@ -7,50 +7,18 @@
     android:layout_height="match_parent"
     tools:context="com.vogella.android.navigationwidgetattempt.MainActivity"
     tools:showIn="@layout/app_bar_main">
-<!--<LinearLayout-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--android:paddingTop="40dp">-->
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context="com.vogella.android.googlemapstry.MapsActivity" />
-<!--</LinearLayout>-->
-<!--
-    <Spinner
-        android:id="@+id/driverStatus"
-        android:layout_marginTop="56dp"
-        android:background="@color/wallet_holo_blue_light"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"></Spinner>
--->
-<!--
-    <Button
-        android:id="@+id/driver_status"
-        android:layout_marginTop="60dp"
-        android:textAlignment="center"
-        android:layout_centerHorizontal="true"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:text="@string/driver_active"/>
--->
-<!--
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="invisible">
-        <ScrollView
-            android:id="@+id/requests_list"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"></ScrollView>
-    </RelativeLayout>
--->
+
     <include layout="@layout/ongoing_request"
         android:visibility="invisible"
         android:id="@+id/current_request_view">
     </include>
+
     <LinearLayout
         android:gravity="center_horizontal"
         android:padding="5dp"
@@ -60,21 +28,18 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_gravity="bottom|start"
-        android:layout_marginTop="70dp"
-        >
+        android:layout_marginTop="70dp">
         <ImageView
             android:layout_width="22dp"
             android:layout_height="22dp"
-            android:src="@drawable/navigation_001"
-            />
-    <TextView
-        android:paddingLeft="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Navigate"
-        android:textSize="18sp"
-        android:textColor="@color/white"
-        />
+            android:src="@drawable/navigation_001" />
+        <TextView
+            android:paddingLeft="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Navigate"
+            android:textSize="18sp"
+            android:textColor="@color/white" />
     </LinearLayout>
 
     <TextView
@@ -87,31 +52,34 @@
         android:textSize="24sp"
         android:paddingTop="8dp"
         android:textAlignment="center"
+        android:gravity="center"
         android:layout_alignParentBottom="true"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
     <LinearLayout
         android:id="@+id/ongoing_request"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_alignParentBottom="true"
         android:visibility="visible"
+        android:layout_alignParentBottom="true"
         android:background="@color/white"
         android:gravity="center">
         <LinearLayout
             android:id="@+id/request_view_top"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        <TextView
-            android:id="@+id/cr_passenger_name"
-            android:layout_width="220dp"
-            android:textAlignment="center"
-            android:textColor="@color/colorPrimary"
             android:layout_height="wrap_content"
-            android:text="Ayman Hassan"
-            android:padding="15dp" />
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/cr_passenger_name"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:textColor="@color/colorPrimary"
+                android:layout_height="wrap_content"
+                android:text="Ayman Hassan"
+                android:padding="15dp" />
             <View
                 android:layout_width="1dp"
                 android:layout_height="30dp"
@@ -145,17 +113,17 @@
             android:layout_gravity="center_vertical"
             android:background="#dedede"/>
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="40dp"
             android:gravity="center">
             <TextView
                 android:id="@+id/cancel_request"
-                android:layout_width="170dp"
-                android:layout_marginRight="5dp"
-                android:layout_marginLeft="5dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:text="@string/cancel"
                 android:textAlignment="center"
+                android:gravity="center"
                 android:background="@color/white"
                 android:textColor="@color/red2"
                 android:textSize="14sp" />
@@ -166,17 +134,15 @@
                 android:background="#dedede"/>
             <TextView
                 android:id="@+id/next_state"
-                android:layout_width="170dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:layout_marginLeft="5dp"
                 android:background="@color/white"
                 android:textAlignment="center"
+                android:gravity="center"
                 android:text="passenger picked up"
                 android:textSize="14sp"
-                android:textColor="@color/colorPrimary"
-                android:paddingLeft="20dp"
-                android:paddingRight="20dp"/>
+                android:textColor="@color/colorPrimary" />
         </LinearLayout>
 
     </LinearLayout>

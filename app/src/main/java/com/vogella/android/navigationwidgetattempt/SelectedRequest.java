@@ -2,6 +2,7 @@ package com.vogella.android.navigationwidgetattempt;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -63,6 +64,9 @@ public class SelectedRequest extends AppCompatActivity {
         }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selected_request);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            findViewById(R.id.selectedRequestGradientShadow).setVisibility(View.GONE);
+        }
         Toolbar toolbar = (Toolbar) findViewById(R.id.request_details_toolbar);
         toolbar.setBackgroundColor(getResources().getColor(R.color.white));
         ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.white));

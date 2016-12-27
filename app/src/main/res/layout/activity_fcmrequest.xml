@@ -6,58 +6,33 @@
     android:layout_height="match_parent"
     tools:context="com.vogella.android.navigationwidgetattempt.FCMRequest"
     android:orientation="vertical">
-<!--    <TextView
-        android:id="@+id/fcmrequest_pickup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:text="El Baraha street, Khartoum, Sudan"
-        android:textSize="25sp"
-        android:textAlignment="center"
-        android:textColor="@color/darkText" />
-    <TextView
-        android:id="@+id/fcmrequest_time"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:textAlignment="center"
-        android:text="25/10/16 4:33"
-        android:textSize="25sp"
-        android:textColor="@color/darkText" />-->
-<!--
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center">
-    <TextView
-        android:id="@+id/fcmrequest_price"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="65"
-        android:textSize="25sp"
-        android:textColor="@color/darkText" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="@string/sdg"
-        android:textSize="25sp"
-        android:textColor="@color/darkText" />
-    </LinearLayout>
--->
-
     <LinearLayout
         android:background="@color/colorPrimary"
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="60"
         android:gravity="center_horizontal"
         android:padding="10dp">
         <TextView
             android:id="@+id/fcmrequest_reject"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="5"
+            android:drawableLeft="@drawable/ic_close"
+            android:drawableStart="@drawable/ic_close"
+            android:drawablePadding="15dp"
+            android:text="@string/decline"
+            android:textSize="24sp"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:textColor="@color/white"/>
+<!--
+        <TextView
+            android:id="@+id/fcmrequest_reject"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="5"
             android:drawableLeft="@drawable/ic_close"
             android:drawableStart="@drawable/ic_close"
             android:drawablePadding="15dp"
@@ -65,65 +40,120 @@
             android:textSize="24sp"
             android:paddingBottom="25dp"
             android:textColor="@color/white"/>
+-->
+<!--
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="25"
+            android:orientation="horizontal">
+-->
+<!--
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent" />
+-->
         <ProgressBar
             android:id="@+id/progressbar_timerview"
             style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="310dp"
-            android:layout_height="310dp"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
             android:background="@drawable/progress_background"
             android:indeterminate="false"
             android:max="30"
             android:progress="15"
             android:progressDrawable="@drawable/progress_drawable" />
+<!--
+        <ProgressBar
+            android:id="@+id/progressbar_timerview"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="10"
+            android:layout_height="match_parent"
+            android:background="@drawable/progress_background"
+            android:indeterminate="false"
+            android:max="30"
+            android:progress="15"
+            android:progressDrawable="@drawable/progress_drawable" />
+-->
+<!--
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent" />
+-->
+        <!--</LinearLayout>-->
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:textAlignment="center"
+            android:text="@string/click_anywhere_to_accept"
+            android:textColor="@color/white"/>
+<!--
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="2"
             android:paddingTop="5dp"
             android:text="@string/click_anywhere_to_accept"
             android:textColor="@color/white"/>
+-->
      </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-        <TextView
-            android:id="@+id/fcmrequest_pickup"
+    <!--<ScrollView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content">-->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="6dp"
-            android:text="El Baraha street, Khartoum, Sudan"
-            android:textSize="25sp"
-            android:lines="1"
-            android:textAlignment="center"
-            android:textColor="@color/colorAccent" />
-        <TextView
-            android:id="@+id/fcmrequest_distance"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="6dp"
-            android:text="0.1 KM"
-            android:textSize="25sp"
-            android:lines="1"
-            android:textAlignment="center"
-            android:textColor="@color/colorAccent" />
-        <TextView
-            android:id="@+id/fcmrequest_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="6dp"
-            android:textAlignment="center"
-            android:text="in 10 minutes"
-            android:textSize="25sp"
-            android:textColor="@color/colorAccent" />
-        <TextView
-            android:id="@+id/fcmrequest_price"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="6dp"
-            android:text="65 SDG"
-            android:textAlignment="center"
-            android:textSize="25sp"
-            android:textColor="@color/colorAccent" />
+            android:layout_height="0dp"
+            android:layout_weight="25"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/fcmrequest_pickup"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:text="El Baraha street, Khartoum, Sudan"
+                android:textSize="25sp"
+                android:lines="1"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:textColor="@color/colorAccent" />
+            <TextView
+                android:id="@+id/fcmrequest_distance"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:text="0.1 KM"
+                android:textSize="25sp"
+                android:lines="1"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:textColor="@color/colorAccent" />
+            <TextView
+                android:id="@+id/fcmrequest_time"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:text="in 10 minutes"
+                android:textSize="25sp"
+                android:textColor="@color/colorAccent" />
+            <TextView
+                android:id="@+id/fcmrequest_price"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:text="65 SDG"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:textSize="25sp"
+                android:textColor="@color/colorAccent" />
 
-    </LinearLayout>
+        </LinearLayout>
+    <!--</ScrollView>-->
 </LinearLayout>

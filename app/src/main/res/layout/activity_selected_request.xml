@@ -15,21 +15,6 @@
         android:layout_height="wrap_content"
         app:popupTheme="@style/AppTheme.PopupOverlay"
         android:elevation="4dp">
-        <!--<android.support.v7.widget.Toolbar-->
-        <!--android:id="@+id/request_details_toolbar"-->
-        <!--android:textAlignment="center"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="?attr/actionBarSize"-->
-        <!--app:popupTheme="@style/AppTheme.PopupOverlay"-->
-        <!--android:elevation="4dp">-->
-    <!--<android.support.v7.widget.Toolbar-->
-        <!--android:id="@+id/request_details_toolbar"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="?attr/actionBarSize"-->
-        <!--android:background="?attr/colorPrimary"-->
-        <!--android:elevation="4dp"-->
-        <!--android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
-        <!--app:popupTheme="@style/ThemeOverlay.AppCompat.Light">-->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,6 +45,14 @@
 
 
     </android.support.v7.widget.Toolbar>
+    <View
+        android:id="@+id/selectedRequestGradientShadow"
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:background="@drawable/toolbar_shadow"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_collapseMode="pin"/>
+
 
     <ScrollView
         android:layout_width="match_parent"
@@ -199,29 +192,36 @@
         android:id="@+id/request_details_buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingTop="5dp"
         android:paddingBottom="10dp"
         android:layout_gravity="bottom"
         android:gravity="center_horizontal|bottom">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
         <Button
             android:id="@+id/request_details_cancel"
-            android:layout_width="170dp"
+            android:layout_width="0dp"
+            android:layout_weight="18"
             android:layout_height="wrap_content"
             android:textAllCaps="false"
             android:background="@color/red2"
             android:textColor="@color/white"
             style="?android:attr/buttonBarButtonStyle"
             android:text="@string/remove"
-            android:layout_marginRight="10dp"
-            android:layout_marginEnd="10dp"
             android:textSize="18sp"
             android:textAlignment="center"/>
-        <!--<view-->
-        <!--android:layout_width="1dp"-->
-        <!--android:background="#33000000"-->
-        <!--android:layout_height="20dp" />-->
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2" />
         <Button
             android:id="@+id/request_details_start"
-            android:layout_width="170dp"
+            android:layout_width="0dp"
+            android:layout_weight="18"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:textSize="18sp"
@@ -230,5 +230,10 @@
             android:background="@color/colorPrimary"
             android:text="@string/on_the_way"
             android:textAlignment="center"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
     </LinearLayout>
 </LinearLayout>

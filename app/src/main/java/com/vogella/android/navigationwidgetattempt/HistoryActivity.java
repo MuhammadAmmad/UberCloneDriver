@@ -2,6 +2,7 @@ package com.vogella.android.navigationwidgetattempt;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -68,6 +69,9 @@ public class HistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         prefManager = new PrefManager(this);
         setContentView(R.layout.activity_history);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            findViewById(R.id.HistoryActivityGradientShadow).setVisibility(View.GONE);
+        }
         Toolbar toolbar = (Toolbar) findViewById(R.id.history_toolbar);
 //        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
 //        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));

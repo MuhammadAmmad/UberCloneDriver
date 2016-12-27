@@ -8,7 +8,7 @@
     <!--<color name="colorAccent">#ffb82d</color>-->
 
 
-    <color name="sepGray">#dddddd</color>
+    <color name="sepGray">#33000000</color>
     <color name="red">#ffe2766d</color>
     <color name="white">#FFFFFFFF</color>
     <color name="bgGray">#f2f2f2</color>
