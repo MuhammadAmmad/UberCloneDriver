@@ -133,5 +133,10 @@
     </style>
 
 
+    <style name="drawerMenuItemStyle">
+        <item name="android:textSize">14sp</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:gravity">center_horizontal</item>
+    </style>
 
 </resources>
