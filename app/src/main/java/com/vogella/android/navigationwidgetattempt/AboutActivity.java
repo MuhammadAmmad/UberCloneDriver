@@ -1,5 +1,6 @@
 package com.vogella.android.navigationwidgetattempt;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -16,10 +17,17 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
 public class AboutActivity extends AppCompatActivity {
 
     private static final String TAG = AboutActivity.class.getSimpleName();
     private PrefManager prefManager;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

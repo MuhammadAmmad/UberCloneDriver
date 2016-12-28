@@ -1,6 +1,7 @@
 package com.vogella.android.navigationwidgetattempt;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -36,6 +37,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class HistoryActivity extends AppCompatActivity {
 
@@ -63,6 +65,11 @@ public class HistoryActivity extends AppCompatActivity {
     private RecyclerView.Adapter RVadapter;
     private RecyclerView.LayoutManager layoutManager;
     private ProgressDialog progress;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

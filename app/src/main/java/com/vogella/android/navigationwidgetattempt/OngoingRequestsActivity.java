@@ -2,6 +2,7 @@ package com.vogella.android.navigationwidgetattempt;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -36,6 +37,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class OngoingRequestsActivity extends AppCompatActivity{
 
@@ -67,10 +69,10 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     private static final int SELECTED_REQUEST_CODE = 43542;
     private ProgressDialog progress;
 
-//    @Override
-//    public void recyclerViewListClicked(View v, int position){
-//        Toast.makeText(this,"Everything is awesome", Toast.LENGTH_SHORT).show();
-//    }
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
