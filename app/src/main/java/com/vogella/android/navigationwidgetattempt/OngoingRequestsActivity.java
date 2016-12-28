@@ -109,17 +109,10 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SELECTED_REQUEST_CODE && resultCode == RESULT_OK) {
-//            Toast.makeText(this,data.getExtras().getString("passenger_name"), Toast.LENGTH_LONG).show();
-            if (data.hasExtra("request_id")) {
-                setResult(Activity.RESULT_OK, data);
-                finish();
-            }
-            else {
-                requestList = new ArrayList<request>(){{}};
-                ca.updateRequestsList(requestList);
-                ca.notifyDataSetChanged();
-                serverRequest();
-            }
+                if(data.hasExtra("request_id")) {
+                    removeRequest(data.getStringExtra("request_id"));
+                    ca.notifyDataSetChanged();
+                }
         }
     }
 

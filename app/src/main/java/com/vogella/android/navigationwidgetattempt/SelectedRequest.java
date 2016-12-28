@@ -124,6 +124,12 @@ public class SelectedRequest extends AppCompatActivity {
             ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
         }
 
+        pickupPoint = new LatLng(Double.valueOf(intent.getStringExtra("pickup").split(",")[0]),
+                Double.valueOf(intent.getStringExtra("pickup").split(",")[1]));
+        destPoint = new LatLng(Double.valueOf(intent.getStringExtra("dest").split(",")[0]),
+                Double.valueOf(intent.getStringExtra("dest").split(",")[1]));
+        calculate_distance();
+
         ((TextView) findViewById(R.id.request_details_pickup)).setText(intent.getStringExtra("pickup_text"));
         ((TextView) findViewById(R.id.request_details_dest)).setText(intent.getStringExtra("dest_text"));
         ((TextView) findViewById(R.id.request_details_price)).setText(intent.getStringExtra("price"));
@@ -133,7 +139,6 @@ public class SelectedRequest extends AppCompatActivity {
         ((TextView) findViewById(R.id.request_details_start)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                setResult(RESULT_OK, intent);
                 Intent intent2 = new Intent(SelectedRequest.this, MainActivity.class);
                 intent2.putExtras(intent);
                 startActivity(intent2);
@@ -192,8 +197,9 @@ public class SelectedRequest extends AppCompatActivity {
                     Toast.makeText(SelectedRequest.this, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
                     Intent temp = new Intent();
-                    setResult(RESULT_OK, temp);
-                    finish();
+                    temp.putExtra("request_id", request_id);
+                    SelectedRequest.this.setResult(RESULT_OK, temp);
+                    SelectedRequest.this.finish();
                 } else if (response.code() == 401) {
                     Toast.makeText(SelectedRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
@@ -260,7 +266,7 @@ public class SelectedRequest extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        if (!SelectedRequest.this.isFinishing() & progress != null && progress.isShowing()) progress.dismiss();
+        if (progress != null && progress.isShowing()) progress.dismiss();
         super.onDestroy();
     }
 
