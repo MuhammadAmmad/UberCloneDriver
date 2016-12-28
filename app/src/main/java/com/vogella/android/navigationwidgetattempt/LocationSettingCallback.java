@@ -2,7 +2,6 @@ package com.vogella.android.navigationwidgetattempt;
 
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -20,8 +19,6 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
-
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.ACCESS_FINE_LOCATION_CODE;
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.checkedLocation;
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.permissionIsRequested;
@@ -37,10 +34,6 @@ public class LocationSettingCallback extends Activity {
     private Intent blsIntent;
     private boolean handleWhenBound = false;
 
-//    @Override
-//    protected void attachBaseContext(Context newBase) {
-//        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
-//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

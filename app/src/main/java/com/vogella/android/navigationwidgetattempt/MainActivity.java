@@ -86,7 +86,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.ACCESS_FINE_LOCATION_CODE;
 import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.checkedLocation;
@@ -346,12 +345,6 @@ public class MainActivity extends AppCompatActivity
 
 
     }
-
-    @Override
-    protected void attachBaseContext(Context newBase) {
-        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
-    }
-
 
     private void startAndBindLocationService() {
         startService(blsIntent);
