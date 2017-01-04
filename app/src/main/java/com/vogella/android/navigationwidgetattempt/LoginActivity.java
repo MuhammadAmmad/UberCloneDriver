@@ -260,6 +260,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         RestService service = retrofit.create(RestService.class);
         Call<LoginResponse> call = service.login("Basic "+ Base64.encodeToString((email + ":" + password).getBytes()
+//                ,Base64.NO_WRAP), FirebaseInstanceId.getInstance().getToken(), versionCode);
                 ,Base64.NO_WRAP), FirebaseInstanceId.getInstance().getToken(), versionCode);
         call.enqueue(new Callback<LoginResponse>() {
             @Override
@@ -284,7 +285,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         finish();
                     }
                     else if(response.body().getStatus() == 3){
-                        Toast.makeText(LoginActivity.this,"Your app version is outdated, please get the latest version from play store to continue using this applicatoin", Toast.LENGTH_LONG).show();
+                        Toast.makeText(LoginActivity.this, R.string.outdated_app, Toast.LENGTH_LONG).show();
                         finish();
                     }
                 } else if (response.code() == 401){

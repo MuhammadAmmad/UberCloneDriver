@@ -173,7 +173,7 @@ public class HistoryActivity extends AppCompatActivity {
 //                            sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
 //                            i.setTime(sdf.format(df));
 
-                            i.setPrice(i.getPrice() + " SDG");
+                            i.setPrice(String.format(getString(R.string.history_price), i.getPrice()));
                             history.add(0, i);
                         }
                     }

@@ -1220,7 +1220,7 @@ public class MainActivity extends AppCompatActivity
                     ((LinearLayout) findViewById(R.id.request_view_top)).setVisibility(View.GONE);
 //                    ((Button) findViewById(R.id.cancel_request)).setVisibility(View.GONE);
 //                    ((View) findViewById(R.id.current_request_separator)).setVisibility(View.GONE);
-                    ((TextView) findViewById(R.id.cancel_request)).setText("Ride info");
+                    ((TextView) findViewById(R.id.cancel_request)).setText(R.string.ride_info);
                     ((TextView) findViewById(R.id.cancel_request)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 } else {
                     ((LinearLayout) findViewById(R.id.request_view_top)).setVisibility(View.VISIBLE);
@@ -1773,8 +1773,7 @@ public class MainActivity extends AppCompatActivity
                     checkedLocation = true;
                 }
             } else {
-                Toast.makeText(this, "You can't receive requests unless you enable this permission\n" +
-                                "if you want to receive requests, press the 'Go active' button below",
+                Toast.makeText(this, R.string.location_permission_denied,
                         Toast.LENGTH_LONG).show();
                 prefManager.setActive(false);
                 setUI();

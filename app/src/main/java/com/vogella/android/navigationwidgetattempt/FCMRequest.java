@@ -127,9 +127,9 @@ public class FCMRequest extends AppCompatActivity {
         calculate_distance();
         final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressbar_timerview);
         ((TextView) findViewById(R.id.fcmrequest_pickup)).setText(request.getPickupText());
-        ((TextView) findViewById(R.id.fcmrequest_price)).setText(request.getPrice() + "  SDG");
+        ((TextView) findViewById(R.id.fcmrequest_price)).setText(String.format(getString(R.string.new_request_price), request.getPrice()));
         ((TextView) findViewById(R.id.fcmrequest_time)).setText(request.getTime());
-        ((TextView) findViewById(R.id.fcmrequest_distance)).setText("calculating distance ...");
+        ((TextView) findViewById(R.id.fcmrequest_distance)).setText(R.string.new_request_distance);
         final CountDownTimer countDownTimer = new CountDownTimer(30 * 1000, 500) {
             @Override
             public void onTick(long l) {

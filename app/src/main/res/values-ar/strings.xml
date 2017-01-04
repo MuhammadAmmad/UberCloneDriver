@@ -6,7 +6,7 @@
     <string name="FCM_accepted_new_request">لقد قبلت هذه الرحلة. يمكنك الآن رؤيتها ضمن قائمة الرحلات القادمة</string>
     <string name="FCM_another_driver_accepted">قام سائق آخر بقبول هذه الرحلة قبلك</string>
     <string name="FCM_rejected_request">لقد رفضت الرحلة</string>
-    <string name="about_driver_content">تطبيق درايفر هو منصة تربط السائقين بالركاب. كلام كثير كلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثيركلام كثير</string>
+    <string name="about_driver_content">Create your account with us , you will find at the driver app if this is the first time try it, this sentence ( Don\'t have an account yet? Register ) , and fill the gaps with your correct info.\nThe payment will be cash at the end of the trip.\nPayment cash Sudanese currency (SD) or the equivalent in foreign currencies will be reimbursed. After your trip, we will email you a receipt.</string>
     <string name="accept">أوافق</string>
     <string name="accepted">موافق</string>
     <string name="account_info">بيانات الحساب</string>
@@ -18,7 +18,6 @@
     <string name="arrived_pickup">وصلت نقطة ركوب الزبون</string>
     <string name="authorization_error">الرجاء تسجيل الدخول للمواصلة</string>
     <string name="call_passenger">نعم</string>
-    <string name="call_passenger_message">"هل تريد الاتصال بالرقم "</string>
     <string name="cancel">إلغاء</string>
     <string name="cancel_current_request">نعم، أريد إلغاء الرحلة</string>
     <string name="cancel_current_request_message">هل ترغب في إلغاء هذه الرحلة؟</string>
@@ -28,7 +27,7 @@
     <string name="close">إغلاق</string>
     <string name="completed">مكتملة</string>
     <string name="contact_us">اتصل بنا</string>
-    <string name="contact_us_content">هاتف: 0232</string>
+    <string name="contact_us_content">Phone: +249917255444\nEmail: drivertaxisudan2017@gmail.com</string>
     <string name="current_request_cancelled">تم إلغاء الرحلة</string>
     <string name="current_request_completed">شكرا على مجهودك! لقد اكتملت الرحلة</string>
     <string name="developed_by">هذا التطبيق منتج من Favicon</string>
@@ -94,4 +93,12 @@
     <string name="request_details">تفاصيل الطلب</string>
     <string name="no_incoming_requests">لا توجد لديك رحلات قادمة</string>
     <string name="no_previous_requests">لا توجد لديك رحلات سابقة</string>
+    <string name="call_passenger_message">هل ترغب في الاتصال بالراكب؟</string>
+    <string name="outdated_app">هذه النسخة لم تعد مدعومة، يرجى تحميل أحدث نسخة من play store لمواصلة استخدام التطبيق</string>
+    <string name="new_request_price">%s جنيه سوداني</string>
+    <string name="new_request_distance">يجري حساب المسافة</string>
+    <string name="history_price">%s جنيه سوداني</string>
+    <string name="ride_info">تفاصيل الرحلة</string>
+    <string name="location_permission_denied">You can\'t receive requests unless you enable this permission\nif you want to receive requests, press the \'Go active\' button below</string>
+    <string name="missed">لم تقبل</string>
 </resources>

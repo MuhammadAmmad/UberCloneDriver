@@ -38,7 +38,7 @@
     <string name="about_driver">About Driver</string>
     <string name="about_driver_content">Create your account with us , you will find at the driver app if this is the first time try it, this sentence ( Don\'t have an account yet? Register ) , and fill the gaps with your correct info.\nThe payment will be cash at the end of the trip.\nPayment cash Sudanese currency (SD) or the equivalent in foreign currencies will be reimbursed. After your trip, we will email you a receipt.</string>
     <string name="developed_by">Driver is developed by Favicon</string>
-    <string name="contact_us_content">Phone: 0232\nEmail: wisam.app.temp@gmail.com</string>
+    <string name="contact_us_content">Phone: +249917255444\nEmail: drivertaxisudan2017@gmail.com</string>
     <string name="contact_us">Contact us</string>
     <string name="FCM_accepted_new_request">You have accepted this request.\nYou can now view it in the ongoing requests tab</string>
     <string name="FCM_another_driver_accepted">Another driver has alread accepted this request</string>
@@ -108,4 +108,11 @@
     <string name="upcoming_requests">Incoming Requests</string>
     <string name="no_incoming_requests">You have no Incoming requests</string>
     <string name="no_previous_requests">You have no Previous requests</string>
+    <string name="outdated_app">Your app version is outdated, please get the latest version from play store to continue using this applicatoin</string>
+    <string name="new_request_price">%s  SDG</string>
+    <string name="new_request_distance">calculating distance ...</string>
+    <string name="history_price">%s SDG</string>
+    <string name="ride_info">Ride info</string>
+    <string name="location_permission_denied">You can\'t receive requests unless you enable this permission\nif you want to receive requests, press the \'Go active\' button below</string>
+    <string name="missed">Missed</string>
 </resources>

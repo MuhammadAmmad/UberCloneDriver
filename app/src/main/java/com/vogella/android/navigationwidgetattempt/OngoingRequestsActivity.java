@@ -130,9 +130,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         //showProgress()
 
         String email = prefManager.pref.getString("UserEmail","");
-//        String email = prefManager.pref.getString("USER_EMAIL","");
         String password = prefManager.pref.getString("UserPassword","");
-//        String password = prefManager.pref.getString("USER_PASSWORD","");
 
         progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
