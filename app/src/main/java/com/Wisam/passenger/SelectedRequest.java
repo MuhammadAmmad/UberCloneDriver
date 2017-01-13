@@ -40,6 +40,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class SelectedRequest extends AppCompatActivity {
 
     private static final String TAG = "Selected Request";
+    private static final int FINISH_PARENT = 7;
     private Intent intent;
     private PrefManager prefManager;
     private ProgressDialog progress;
@@ -70,9 +71,6 @@ public class SelectedRequest extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.request_details_toolbar);
         toolbar.setBackgroundColor(getResources().getColor(R.color.white));
         ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.white));
-//        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-//        toolbar.setTitle(R.string.driver_active);
-//        toolbar.setContentInsetsAbsolute(0,0);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
@@ -86,14 +84,10 @@ public class SelectedRequest extends AppCompatActivity {
                 ImageView icon = (ImageView) findViewById(R.id.derails_icon);
                 ((TextView) findViewById(R.id.request_details_toolbar_title)).setTextColor(getResources().getColor(R.color.white));
                 if (intent.getStringExtra("status").equals("completed")) {
-//                    getTheme().applyStyle(R.style.AppTheme_details_completed,true);
                     toolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
                     icon.setImageDrawable(getResources().getDrawable(R.drawable.ic_request_completed));
                     ((TextView) findViewById(R.id.request_details_toolbar_title)).setText(getResources().getText(R.string.completed));
-
-//                    icon.setBackground(getResources().getDrawable(R.drawable.ic_request_completed));
                 } else if (intent.getStringExtra("status").equals("canceled")) {
-//                    getTheme().applyStyle(R.style.AppTheme_details_canceled,true);
                     toolbar.setBackgroundColor(getResources().getColor(R.color.red2));
                     icon.setImageDrawable(getResources().getDrawable(R.drawable.ic_request_canceled));
                     ((TextView) findViewById(R.id.request_details_toolbar_title)).setText(getResources().getText(R.string.canceled));
@@ -141,6 +135,8 @@ public class SelectedRequest extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent2 = new Intent(SelectedRequest.this, MainActivity.class);
                 intent2.putExtras(intent);
+                intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                setResult(FINISH_PARENT);
                 startActivity(intent2);
                 finish();
             }
@@ -153,7 +149,6 @@ public class SelectedRequest extends AppCompatActivity {
 
             }
         });
-
 
     }
 
@@ -182,7 +177,6 @@ public class SelectedRequest extends AppCompatActivity {
         progress.setIndeterminate(true);
         progress.show();
 
-
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.cancel("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
                 request_id);
@@ -192,8 +186,6 @@ public class SelectedRequest extends AppCompatActivity {
                 if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
-//                    endRequest(REQUEST_CANCELLED);
-//                    setUI(MainActivity.UI_STATE.SIMPLE);
                     Toast.makeText(SelectedRequest.this, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
                     Intent temp = new Intent();
@@ -204,13 +196,7 @@ public class SelectedRequest extends AppCompatActivity {
                     Toast.makeText(SelectedRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
                     logout();
-
-//                    prefManager.setIsLoggedIn(false);
-//                    Intent intent = new Intent(SelectedRequest.this, LoginActivity.class);
-//                    startActivity(intent);
-//                    finish();
                 } else {
-//                    clearHistoryEntries();
                     Toast.makeText(SelectedRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Unknown error occurred");
                 }
@@ -285,12 +271,6 @@ public class SelectedRequest extends AppCompatActivity {
 
     private void calculate_distance()
     {
-//        progress = new ProgressDialog(this);
-//        progress.setMessage("Calculating distance..");
-//        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-//        progress.setIndeterminate(true);
-//        progress.show();
-
         GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
                 .from(pickupPoint)
                 .to(destPoint)
@@ -298,39 +278,12 @@ public class SelectedRequest extends AppCompatActivity {
                     @Override
                     public void onDirectionSuccess(Direction direction, String rawBody) {
                         // Do something here
-//                        Toast.makeText(MapsActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
-//                        toast.setText("Route successfully computed ");
-//                        toast.show();
-//                        Log.d(TAG, "showRoute: Route successfully computed ");
-//
-//                        if(!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
 
                         if(direction.isOK()) {
-//                            // Check if user hasn't cancelled:
-//                            if (UIState != UI_STATE.DETAILED){
-//                                return;
-//                            }
-
-                            // Do
                             Route route = direction.getRouteList().get(0);
                             Leg leg = route.getLegList().get(0);
-
-
-//                            Double priceValue = (double) (Integer.valueOf(distance) *  Integer.valueOf(duration) / 3/60/1000);
-//                            ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-//                            PolylineOptions polylineOptions = DirectionConverter.createPolyline(MapsActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
-//                            if (routePolyline != null) {
-//                                routePolyline.remove();
-//                            }
-//                            routePolyline = mMap.addPolyline(polylineOptions);
-//
-//
-                            // Distance info
                             Info distanceInfo = leg.getDistance();
-//                            Info durationInfo = leg.getDuration();
                             float distance = Float.valueOf(distanceInfo.getValue()) / 1000;
-//                            String duration = durationInfo.getValue();
-//                            calculatePrice(Integer.valueOf(duration), Integer.valueOf(distance));
                             ((TextView) findViewById(R.id.request_details_distance)).setText(String.format("%s Km", String.valueOf(distance)));
 
                         }
@@ -339,13 +292,6 @@ public class SelectedRequest extends AppCompatActivity {
                     @Override
                     public void onDirectionFailure(Throwable t) {
                         // Do something here
-//                        toast.setText( "Route Failed ");
-//                        toast.show();
-//                        showRoute();
-//                        Log.d(TAG, "showRoute: Route Failed ");
-
-//                        if(!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
-
                     }
                 });
     }
@@ -363,7 +309,6 @@ public class SelectedRequest extends AppCompatActivity {
         prefManager.setLastPassword(lastPassword);
         prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-//        prefManager.setExternalLogout(false);
         EventBus.getDefault().post(new UnbindBackgroundLocationService());
 
         Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);

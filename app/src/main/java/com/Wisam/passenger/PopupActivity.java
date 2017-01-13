@@ -45,25 +45,8 @@ public class PopupActivity extends AppCompatActivity {
         toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
         toolbar.setBackgroundColor(getResources().getColor(R.color.white));
         toolbar.setTitle("Passenger");
-//        toolbar.setNavigationIcon(R.drawable.mini_logo);
         setSupportActionBar(toolbar);
-//        getSupportActionBar().setIcon(R.drawable.mini_logo);
 
-
-        // This is called when the connection with the service has been
-// established, giving us the service object we can use to
-// interact with the service.  Because we have bound to a explicit
-// service that we know is running in our own process, we can
-// cast its IBinder to a concrete class and directly access it.
-// Tell the user about this for our demo.
-//            Toast.makeText(Binding.this, R.string.local_service_connected,
-//                    Toast.LENGTH_SHORT).show();
-// This is called when the connection with the service has been
-// unexpectedly disconnected -- that is, its process crashed.
-// Because it is running in our same process, we should never
-// see this happen.
-//            Toast.makeText(Binding.this, R.string.local_service_disconnected,
-//                    Toast.LENGTH_SHORT).show();
         prefManager.setActive(false);
 
         mConnection = new ServiceConnection() {
@@ -77,10 +60,6 @@ public class PopupActivity extends AppCompatActivity {
                 Log.d(TAG, "onServiceConnected");
                 backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
                 mIsBound = true;
-
-                // Tell the user about this for our demo.
-                //            Toast.makeText(Binding.this, R.string.local_service_connected,
-                //                    Toast.LENGTH_SHORT).show();
             }
 
             public void onServiceDisconnected(ComponentName className) {
@@ -91,13 +70,9 @@ public class PopupActivity extends AppCompatActivity {
                 Log.d(TAG, "onServiceDisconnected");
                 backgroundLocationService = null;
                 mIsBound = false;
-
-                //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
-                //                    Toast.LENGTH_SHORT).show();
             }
         };
         blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
-
 
         ((TextView) findViewById(R.id.enable_location)).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -115,7 +90,6 @@ public class PopupActivity extends AppCompatActivity {
                     public void run() {
                         if(mRequestingLocationUpdates){
                             if (!PopupActivity.this.isFinishing() && progress.isShowing()) progress.dismiss();
-//                            setAlarms();
                             EventBus.getDefault().post(new ChangeActiveUpdateInterval());
                             backgroundLocationService.checkLocation();
                             finish();
@@ -151,13 +125,10 @@ public class PopupActivity extends AppCompatActivity {
             }
         });
 
-
-
     }
 
     @Override
     protected void onDestroy() {
-//        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
         Log.d(TAG,"onDestroy");
         if(enablingLocation) {
             Log.d(TAG,"Decided to enable location");
@@ -173,8 +144,6 @@ public class PopupActivity extends AppCompatActivity {
                 mIsBound = false;
             }
             prefManager.setActive(false);
-//            Log.d(TAG,"Posting new UnbindBackgroundLocationService");
-//            EventBus.getDefault().post(new UnbindBackgroundLocationService());
             final Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
@@ -229,7 +198,6 @@ public class PopupActivity extends AppCompatActivity {
         prefManager.setLastPassword(lastPassword);
         prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-//        prefManager.setExternalLogout(false);
         if(mIsBound) {
             getApplicationContext().unbindService(mConnection);
             mIsBound = false;
@@ -250,7 +218,6 @@ public class PopupActivity extends AppCompatActivity {
             logout();
         }
     }
-
 
 }
 

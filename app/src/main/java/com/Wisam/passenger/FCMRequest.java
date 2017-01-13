@@ -84,29 +84,16 @@ public class FCMRequest extends AppCompatActivity {
         request.setRequest_id(data.getExtras().getString("request_id"));
         request.setPickupText(data.getStringExtra("pickup_text"));
         request.setPickupString(data.getStringExtra("pickup"));
-//                request.pickup[0] = Double.parseDouble(data.getStringExtra("pickup").split(",")[0]);
-//                request.pickup[1] = Double.parseDouble(data.getStringExtra("pickup").split(",")[1]);
-//        request.pickup = data.getStringExtra("pickup");
         request.setDestText(data.getStringExtra("dest_text"));
         request.setDestString(data.getStringExtra("dest"));
-//                request.dest[0] = Double.parseDouble(data.getStringExtra("dest").split(",")[0]);
-//                request.dest[1] = Double.parseDouble(data.getStringExtra("dest").split(",")[1]);
         long unixTime;
         if(request.getTime().equals("now")) {
             unixTime = System.currentTimeMillis();
-//            request.setTime("Now");
         }
         else {
             Log.d(TAG, "Time is :" + request.getTime());
             unixTime = Long.valueOf(request.getTime()); // In this case, the server sends the time in milliseconds just as expected from unixTime.
-
-//            Date df = new java.util.Date(unixTime);
-//            SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
-//            sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
-//            request.setTime(sdf.format(df));
-
             request.setTime(String.valueOf(DateUtils.getRelativeTimeSpanString(unixTime, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)));
-
         }
 
         pickupPoint = new LatLng(request.getPickup()[0],request.getPickup()[1]);
@@ -143,16 +130,12 @@ public class FCMRequest extends AppCompatActivity {
             }
         }.start();
 
-//        progressBar.setOnClickListener(new View.OnClickListener() {
         ((LinearLayout) findViewById(R.id.activity_fcmrequest)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 r.stop();
                 countDownTimer.cancel();
                 serverAccept(request.getRequest_id(), 1);
-        //                        FCMRequest.super.finish();
-        //                Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                //              startActivity(intent);
             }
         });
 
@@ -162,7 +145,6 @@ public class FCMRequest extends AppCompatActivity {
                 r.stop();
                 countDownTimer.cancel();
                 serverAccept(request.getRequest_id(), 0);
-//                        FCMRequest.super.finish();
             }
         });
     }
@@ -195,7 +177,6 @@ public class FCMRequest extends AppCompatActivity {
                         if(response.body().getStatus() == 0) {
                             Toast.makeText(getBaseContext(), R.string.FCM_accepted_new_request, Toast.LENGTH_LONG).show();
                             Log.d(TAG, "You have accepted the request");
-//                            OngoingRequestsActivity.addRequest(request);
                             if(data.getStringExtra("time").equals("now")) {
                                 Intent intent = new Intent(FCMRequest.this, SelectedRequest.class);
                                 intent.putExtras(data);
@@ -221,16 +202,9 @@ public class FCMRequest extends AppCompatActivity {
                     Toast.makeText(FCMRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Accept request onResponse: User not logged in");
                     logout();
-
-//                    prefManager.setIsLoggedIn(false);
-//                    Intent intent = new Intent(FCMRequest.this, LoginActivity.class);
-//                    FCMRequest.this.startActivity(intent);
-//                    FCMRequest.super.finish();
                 } else {
-//                    clearHistoryEntries();
                     Toast.makeText(FCMRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
-//                FCMRequest.super.finish();
             }
 
             @Override
@@ -238,75 +212,31 @@ public class FCMRequest extends AppCompatActivity {
                 if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
                 Log.d(TAG, "The response is onFailure");
                 Toast.makeText(FCMRequest.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
-//                FCMRequest.super.finish();
-
             }
         });
     }
 
     private void calculate_distance()
     {
-//        progress = new ProgressDialog(this);
-//        progress.setMessage("Calculating distance..");
-//        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-//        progress.setIndeterminate(true);
-//        progress.show();
-
         GoogleDirection.withServerKey(GOOGLE_DIRECTIONS_API)
                 .from(pickupPoint)
                 .to(driverLocation)
                 .execute(new DirectionCallback() {
                     @Override
                     public void onDirectionSuccess(Direction direction, String rawBody) {
-                        // Do something here
-//                        Toast.makeText(MapsActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
-//                        toast.setText("Route successfully computed ");
-//                        toast.show();
-//                        Log.d(TAG, "showRoute: Route successfully computed ");
-//
-//                        if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
-
                         if(direction.isOK()) {
-//                            // Check if user hasn't cancelled:
-//                            if (UIState != UI_STATE.DETAILED){
-//                                return;
-//                            }
-
-                            // Do
                             Route route = direction.getRouteList().get(0);
                             Leg leg = route.getLegList().get(0);
 
-
-//                            Double priceValue = (double) (Integer.valueOf(distance) *  Integer.valueOf(duration) / 3/60/1000);
-//                            ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-//                            PolylineOptions polylineOptions = DirectionConverter.createPolyline(MapsActivity.this, directionPositionList, 5, getResources().getColor(R.color.colorPrimary));
-//                            if (routePolyline != null) {
-//                                routePolyline.remove();
-//                            }
-//                            routePolyline = mMap.addPolyline(polylineOptions);
-//
-//
-                            // Distance info
                             Info distanceInfo = leg.getDistance();
-//                            Info durationInfo = leg.getDuration();
                             float distance = Float.valueOf(distanceInfo.getValue()) / 1000;
-//                            String duration = durationInfo.getValue();
-//                            calculatePrice(Integer.valueOf(duration), Integer.valueOf(distance));
                             ((TextView) findViewById(R.id.fcmrequest_distance)).setText(String.format("%s Km", String.valueOf(distance)));
-
                         }
                     }
 
                     @Override
                     public void onDirectionFailure(Throwable t) {
                         // Do something here
-//                        toast.setText( "Route Failed ");
-//                        toast.show();
-//                        showRoute();
-//                        Log.d(TAG, "showRoute: Route Failed ");
-
-//                        if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
-
                     }
                 });
     }
@@ -352,7 +282,7 @@ public class FCMRequest extends AppCompatActivity {
         prefManager.setLastPassword(lastPassword);
         prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-//        prefManager.setExternalLogout(false);
+
         EventBus.getDefault().post(new UnbindBackgroundLocationService());
 
         Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
@@ -361,6 +291,4 @@ public class FCMRequest extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
-
 }

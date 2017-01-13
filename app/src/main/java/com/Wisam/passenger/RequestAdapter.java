@@ -39,7 +39,6 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
         final request ci = RequestList.get(i);
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.date.setText(ci.getTime());
-//        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
         switch (ci.getStatus()){
             case "completed":
                 RequestViewHolder.status.setBackgroundColor(context.getResources().getColor(R.color.colorPrimary));
@@ -48,17 +47,11 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
                 RequestViewHolder.status.setBackgroundColor(context.getResources().getColor(R.color.red));
                 break;
             case "missed":
-//                RequestViewHolder.status.setBackground(context.getResources().getColor(R.color.colorAccent));
                 RequestViewHolder.status.setBackgroundColor(context.getResources().getColor(R.color.colorAccent));
                 break;
 
         }
         RequestViewHolder.pickup.setText(ci.getPickupText().replaceAll("\n", " "));
-//        RequestViewHolder.dest.setText(ci.getDestText());
-//        RequestViewHolder.pickup.setText(String.valueOf(ci.getPickup()[0]) + "," + String.valueOf(ci.getPickup()[1]));
-//        RequestViewHolder.dest.setText(String.valueOf(ci.getDest()[0]) + "," + String.valueOf(ci.getDest()[1]));
-//        RequestViewHolder.request_time.setText(ci.time);
-
         RequestViewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -66,13 +59,7 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
                 intent.putExtra("passenger_name", ci.getPassenger_name());
                 intent.putExtra("passenger_phone", ci.getPassenger_phone());
                 intent.putExtra("status", ci.getStatus());
-//                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
-//                intent.putExtra("pickup_latitude", ci.getPickup()[0]);
-//                intent.putExtra("pickup_longitude", ci.getPickup()[1]);
                 intent.putExtra("pickup", ci.getPickupString());
-//                        temp = RequestViewHolder.dest.getText().toString().split(",");
-//                intent.putExtra("dest_latitude", ci.getDest()[0]);
-//                intent.putExtra("dest_longitude", ci.getDest()[1]);
                 intent.putExtra("dest", ci.getDestString());
                 intent.putExtra("time", ci.getTime());
                 intent.putExtra("price", ci.getPrice());
@@ -102,10 +89,8 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
     public static class RequestViewHolder extends RecyclerView.ViewHolder{
         protected TextView price;
         protected TextView date;
-//        protected TextView status;
         protected ImageView status;
         protected TextView pickup;
-//        protected TextView dest;
         protected LinearLayout linearLayout;
 
 
@@ -113,13 +98,10 @@ public class RequestAdapter extends RecyclerView.Adapter <RequestAdapter.Request
             super(v);
 
             date = (TextView) v.findViewById(R.id.entry_date);
-//            status = (TextView) v.findViewById(R.id.entry_status);
             status = (ImageView) v.findViewById(R.id.entry_status);
             pickup = (TextView) v.findViewById(R.id.entry_from);
-//            dest = (TextView) v.findViewById(R.id.entry_to);
             price = (TextView) v.findViewById(R.id.entry_price);
             linearLayout = (LinearLayout) itemView.findViewById(R.id.history_card_view);
-
         }
     }
 

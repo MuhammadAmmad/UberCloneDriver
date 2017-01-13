@@ -40,22 +40,6 @@
             android:orientation="vertical">
 
 
-<!--
-            <EditText
-                android:id="@+id/email"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/prompt_email"
-                android:textColor="@color/colorAccent"
-                android:textColorHighlight="@color/colorPrimary"
-                android:inputType="textEmailAddress"
-                android:maxLines="1"/>
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/colorAccent" />
--->
-
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
@@ -70,13 +54,6 @@
                     android:theme="@style/MyEditTextTheme"
                     android:textColor="@color/colorPrimary"
                     android:maxLines="1" />
-
-<!--
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/colorAccent"/>
--->
 
             </android.support.design.widget.TextInputLayout>
 

@@ -101,7 +101,6 @@ public class ProfileActivity extends AppCompatActivity {
         prefManager.setLastPassword(lastPassword);
         prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-//        prefManager.setExternalLogout(false);
         EventBus.getDefault().post(new UnbindBackgroundLocationService());
 
         Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);

@@ -25,12 +25,6 @@
             android:layout_marginRight="32dp"
             android:layout_width="90dp"
             android:layout_height="90dp" />
-            <!--<ImageView
-            android:id="@+id/derails_icon"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:background="@drawable/ic_request_completed"
-            />-->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

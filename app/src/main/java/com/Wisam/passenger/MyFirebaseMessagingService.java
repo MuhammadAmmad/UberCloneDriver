@@ -67,7 +67,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // messages. For more see: https://firebase.google.com/docs/cloud-messaging/concept-options
         // [END_EXCLUDE]
 
-        // TODO(developer): Handle FCM messages here.
         // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
 
         //data includes: request_id, price, pickup, time
@@ -124,10 +123,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         intent.putExtra("pickup_text", received.getPickupText());
                         Log.d(TAG, "time read from the first request object =" + received.getTime());
                         intent.putExtra("time", received.getTime());
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_HISTORY);
                         intent.putExtra("dest", dest);
                         intent.putExtra("dest_text", received.getDestText());
-    //                intent.putExtra("time", received.getTime());
                         intent.putExtra("passenger_name", received.getPassenger_name());
                         intent.putExtra("passenger_phone", received.getPassenger_phone());
                         intent.putExtra("notes", received.getNotes());
@@ -139,11 +137,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 } else if (status.equals("1")) { // Passenger Canceled
                     for (Map.Entry<String, String> field : request.entrySet()) {
                         if (field.getKey().equals("request_id")) {
-    //                        prefManager.setRequestStatus("canceled");
                             prefManager.setFcmrequestStatus("canceled");
                             prefManager.setFcmrequestId(field.getValue());
                             EventBus.getDefault().post(new PassengerCanceled(field.getValue()));
-    //                        OngoingRequestsActivity.removeRequest(field.getValue());
                             sendNotification(getString(R.string.passenger_cancelled_notification) + field.getValue());
                             break;
                         }
@@ -152,12 +148,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     for (Map.Entry<String, String> field : request.entrySet()) {
                         if (field.getKey().equals("request_id")) {
                             sendNotification(getString(R.string.passenger_completed_notification));
-    //                        prefManager.setRequestStatus("completed");
                             prefManager.setFcmrequestStatus("completed");
                             prefManager.setFcmrequestId(field.getValue());
                             EventBus.getDefault().post(new PassengerArrived(field.getValue()));
-    //                        OngoingRequestsActivity.removeRequest(field.getValue());
-                            // break;
                         }
                     }
                 } else if (status.equals("3")) { // Driver logged out
@@ -188,13 +181,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
-//        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_notification_logo)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(messageBody)
                 .setAutoCancel(true)
-//                .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager =
@@ -225,11 +216,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null){
                     Log.d(TAG, "You have rejected the request");
-//                        FCMRequest.super.finish();
-
                 } else if (response.code() == 401){
                     Log.i(TAG, "onCreate: User not logged in");
-//                    prefManager.setIsLoggedIn(false);
                     logout();
 
                 } else {

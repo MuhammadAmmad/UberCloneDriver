@@ -24,11 +24,6 @@
         app:layout_collapseMode="pin"/>
 
 
-    <!--<View-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="1dp"-->
-        <!--android:background="@color/sepGray"/>-->
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">

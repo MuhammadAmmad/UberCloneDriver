@@ -16,17 +16,13 @@ import retrofit2.http.Query;
  * Created by nezuma on 11/19/16.
  */
 public interface RestService {
-//    @GET("passenger_api/login")
-//    Call<LoginResponse> login(@Header("Authorization") String authorization );
     @FormUrlEncoded
     @POST("driver_api/login/")
     Call<LoginResponse> login(@Header("Authorization") String authorization, @Field("registration_token") String registration_token,@Field("version_code") int version_code);
 
-//    @FormUrlEncoded
     @POST("driver_api/requests/")
     Call<RequestsResponse> requests(@Header("Authorization") String authorization );
 
-//    @FormUrlEncoded
     @POST("driver_api/history/")
     Call<RequestsResponse> history(@Header("Authorization") String authorization );
 
@@ -42,7 +38,6 @@ public interface RestService {
     @POST("driver_api/status/")
     Call<StatusResponse> status(@Header("Authorization") String authorization, @Field("request_id")String request_id, @Field("status") String status);
 
-//    @FormUrlEncoded
     @GET("driver_api/cancel/")
     Call<StatusResponse> cancel(@Header("Authorization") String authorization, @Query("request_id") String request_id);
 

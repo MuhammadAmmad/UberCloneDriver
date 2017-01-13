@@ -124,20 +124,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
     }
-    @Override
-    public void finish(){
-//        Intent map = new Intent(this,MainActivity.class );
-////        userData.putExtra("email",driver.email);
-////        userData.putExtra("username",driver.username);
-////        userData.putExtra("phone",driver.phone);
-////        userData.putExtra("gender",driver.gender);
-//        //setResult(RESULT_OK, userData);
-//        prefManager.setDriver(driver);
-//        prefManager.setIsLoggedIn(true);
-//        startActivity(map);
-        super.finish();
-    }
-    
 
     private void populateAutoComplete() {
         if (!mayRequestContacts()) {
@@ -232,11 +218,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             loginRequest(email, password);
 
-//            showProgress(true);
-//            mAuthTask = new UserLoginTask(email, password);
-//            mAuthTask.execute((Void) null);
-
-
         }
     }
 
@@ -265,11 +246,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
-             //   if (response.isSuccessful()){
                 if (response.isSuccess()){
                     if(response.body().getStatus() == 0) {
                         driver driver = response.body().getdriver();
-                        //user.setPassword(password);
                         driver.setEmail(email);
                         driver.setPassword(password);
                         prefManager.setIsLoggedIn(true);
@@ -280,7 +259,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(intent);
-//                showProgress(false);
                         finish();
                     }
                     else if(response.body().getStatus() == 3){

@@ -89,22 +89,10 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
                 } else if (response.code() == 401){
                     Toast.makeText(getBaseContext(), R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
-//                    prefManager.setIsLoggedIn(false);
                     logout();
-
-//                    Intent intent = new Intent(SelectedRequest.this, LoginActivity.class);
-//                    startActivity(intent);
-//                    finish();
-
-
-//                    Intent intent = new Intent(getBaseContext(), LoginActivity.class);
-//                    getBaseContext().startActivity(intent);
-                    //getBaseContext().finish();
                 } else {
-//                    clearHistoryEntries();
                     Toast.makeText(getBaseContext(), R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
-
             }
 
             @Override
@@ -121,11 +109,9 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
         prefManager.setLastPassword(lastPassword);
         prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-//                    prefManager.setExternalLogout(false);
         EventBus.getDefault().post(new UnbindBackgroundLocationService());
         Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
         stopService(blsIntent);
-
         EventBus.getDefault().post(new DriverLoggedout());
     }
 

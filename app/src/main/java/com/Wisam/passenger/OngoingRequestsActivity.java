@@ -39,10 +39,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class OngoingRequestsActivity extends AppCompatActivity{
 
     private static final String DUMMY_REQUEST_ID = "1243";
-//    private static final double DUMMY_PICKUP[] = {15.6023428,32.5873593};
     private static final String DUMMY_PICKUP = "15.5838046,32.5543825";
     private static final String DUMMY_DEST = "15.8838046, 32.6543825";
-//    private static final double DUMMY_DEST[] = {15.5551185, 32.5543017};
     private static final String DUMMY_PASSENGER_NAME = "John Green";
     private static final String DUMMY_PASSENGER_PHONE = "0123456789";
     private static final String DUMMY_STATUS = "on_the_way";
@@ -52,9 +50,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     private static final String TAG = "OngoingRequestsActivity";
     private static final String DUMMY_DEST_TEXT = "My home";
     private static final String DUMMY_PICKUP_TEXT = "My workplace";
-    //    private static request current_request = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,
-//            DUMMY_PASSENGER_NAME, DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES,
-//            DUMMY_STATUS);
+    private static final int FINISH_PARENT = 7;
     private RecyclerView previous_requests;
     private RecyclerView.Adapter RVadapter;
     private RecyclerView.LayoutManager layoutManager;
@@ -65,11 +61,6 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
     private static final int SELECTED_REQUEST_CODE = 43542;
     private ProgressDialog progress;
-
-//    @Override
-//    public void recyclerViewListClicked(View v, int position){
-//        Toast.makeText(this,"Everything is awesome", Toast.LENGTH_SHORT).show();
-//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,36 +77,34 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         previous_requests.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         previous_requests.setLayoutManager(layoutManager);
-//        OngoingRequestAdapter ca = new OngoingRequestAdapter(this, recyclerViewListClicked, createList(5));
-//        if(!initialized) {
-//            requestList.addAll(createList(5));
         requestList = new ArrayList<request>(){
             {
             }
         };
-            ca = new OngoingRequestAdapter(requestList, this);
-//            initialized = true;
-//        }
+        ca = new OngoingRequestAdapter(requestList, this);
         previous_requests.setAdapter(ca);
-//        ca.setOnItemClickListener(this.setOnItemClick);
-
         prefManager = new PrefManager(this);
-
         // Server request
-        serverRequest();
+        getOngoingRequests();
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG,String.format("onActivityResult: requestCode = %d, resultCode = %d", requestCode, resultCode));
         if (requestCode == SELECTED_REQUEST_CODE && resultCode == RESULT_OK) {
                 if(data.hasExtra("request_id")) {
                     removeRequest(data.getStringExtra("request_id"));
                     ca.notifyDataSetChanged();
                 }
         }
-    }
+        if (requestCode == SELECTED_REQUEST_CODE && resultCode == FINISH_PARENT) {
+            setResult(FINISH_PARENT);
+            finish();
+        }
 
-    private void serverRequest() {
+        }
+
+    private void getOngoingRequests() {
         final OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .readTimeout(60, TimeUnit.SECONDS)
                 .connectTimeout(60, TimeUnit.SECONDS)
@@ -154,20 +143,12 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                         if (i.getStatus().equals("accepted")) {
                             long unixTime;
                             if(i.getTime().equals("now"))
-//                                unixTime = System.currentTimeMillis();
                                 i.setTime("Now");
                             else {
                                 Log.d(TAG, "Time is :" + i.getTime());
                                 unixTime = Long.valueOf(i.getTime()) * 1000; // In this case, the server sends the time in seconds while unix time needs milliseconds
-
                                 i.setTime(String.valueOf(DateUtils.getRelativeTimeSpanString(unixTime, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)));
-
-//                                Date df = new java.util.Date(unixTime);
-//                                SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
-//                                sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
-//                                i.setTime(sdf.format(df));
-
-                            i.setPrice(i.getPrice() + " SDG");
+                                i.setPrice(i.getPrice() + " SDG");
                             }
                             upcoming.add(upcoming.size(), i);
                         }
@@ -178,14 +159,12 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                 } else if (response.code() == 401){
                     Toast.makeText(OngoingRequestsActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onCreate: User not logged in");
-//                    prefManager.setIsLoggedIn(false);
                     String lastEmail = prefManager.getLastEmail();
                     String lastPassword = prefManager.getLastPassword();
                     prefManager.editor.clear().apply();
                     prefManager.setLastPassword(lastPassword);
                     prefManager.setLastEmail(lastEmail);
                     prefManager.setIsLoggedIn(false);
-//                    prefManager.setExternalLogout(false);
                     EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
                     stopService(blsIntent);
@@ -196,7 +175,6 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                     startActivity(intent);
                     finish();
                 } else {
-//                    clearHistoryEntries();
                     Toast.makeText(OngoingRequestsActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
 
@@ -213,44 +191,14 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     }
 
     private void setRequestsList(List<request> rides) {
-//        if (requestList.isEmpty()){
-            requestList = rides;
-            ca.updateRequestsList(requestList);
-            ca.notifyDataSetChanged();
-//        }
+        requestList = rides;
+        ca.updateRequestsList(requestList);
+        ca.notifyDataSetChanged();
     }
 
 
-
-//    private List<request> createList(int size) {
-//
-//        List<request> result = new ArrayList<request>();
-//        for (int i=1; i <= size; i++) {
-//            request ci = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,DUMMY_PASSENGER_NAME,
-//                    DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES, DUMMY_STATUS,
-//                    DUMMY_PICKUP_TEXT, DUMMY_DEST_TEXT);
-////            ci.passenger_name = DUMMY_PASSENGER_NAME + i;
-////            ci.passenger_phone = DUMMY_PASSENGER_PHONE + i;
-////            ci.status = DUMMY_STATUS;
-////            ci.time = DUMMY_TIME + i;
-////            ci.dest[0] = Double.parseDouble(DUMMY_DEST.split(",")[0]);
-////            ci.dest[1] = Double.parseDouble(DUMMY_DEST.split(",")[1]);
-////            ci.pickup[0] = Double.parseDouble(DUMMY_PICKUP.split(",")[0]);
-////            ci.pickup[1] = Double.parseDouble(DUMMY_PICKUP.split(",")[1]);
-//            result.add(ci);
-//
-//        }
-//
-//        return result;
-//    }
-
     public static boolean addRequest(request request){
         requestList.add(requestList.size(),request);
-//        if(!initialized) {
-//            ca = new OngoingRequestAdapter(this);
-//            initialized = true;
-//        }
-//        ca.addRequest(request);
         return true;
     }
     public boolean removeRequest(String request_id){
@@ -284,12 +232,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
-//        prefManager.setIsLoggedIn(false);
-//        Intent intent = new Intent(OngoingRequestsActivity.this, LoginActivity.class);
-//        OngoingRequestsActivity.this.startActivity(intent);
-//        OngoingRequestsActivity.super.finish();
         logout();
-
     }
 
     private void logout() {
@@ -299,7 +242,6 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         prefManager.setLastPassword(lastPassword);
         prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-//        prefManager.setExternalLogout(false);
         EventBus.getDefault().post(new UnbindBackgroundLocationService());
 
         Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);

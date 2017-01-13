@@ -85,12 +85,7 @@ public class BackgroundLocationService extends Service implements
 
     protected static Boolean mRequestingLocationUpdates;
 
-
     protected static boolean checkedLocation = false;
-
-
-//    private Looper mServiceLooper;
-//    private ServiceHandler mServiceHandler;
 
     protected static final int UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
     protected static final int UPDATE_WHILE_IDLE = 2 * 60 * 1000;
@@ -105,49 +100,6 @@ public class BackgroundLocationService extends Service implements
     private int resendActiveAttempts = 0;
     private int resendLocationAttempts = 0;
 
-    // Handler that receives messages from the thread
-/*
-    private final class ServiceHandler extends Handler {
-        public ServiceHandler(Looper looper) {
-            super(looper);
-        }
-        @Override
-        public void handleMessage(Message msg) {
-            Log.d(TAG,"handleMessage invoked");
-
-            mRequestingLocationUpdates = false;
-
-            mInProgress = false;
-            // Create the LocationRequest object
-            mLocationRequest = LocationRequest.create();
-            // Use high accuracy
-            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            // Set the update interval to 5 seconds
-            mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-            // Set the fastest update interval to 1 second
-            mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
-
-//        servicesAvailable = servicesConnected();
-
-        */
-/*
-         * Create a new location client, using the enclosing class to
-         * handle callbacks.
-         *//*
-
-            setUpLocationClientIfNeeded();
-
-            buildLocationSettingsRequest();
-
-            prefManager = new PrefManager(BackgroundLocationService.this);
-
-            sentInactiveSuccessfully = false;
-        }
-    }
-*/
-
-
-
     public class LocalBinder extends Binder {
         public BackgroundLocationService getServerInstance() {
             return BackgroundLocationService.this;
@@ -156,55 +108,33 @@ public class BackgroundLocationService extends Service implements
 
     @Override
     public void onCreate() {
-//        super.onCreate();
         Log.d(TAG,"onCreate()");
 
-//        // Start up the thread running the service.  Note that we create a
-//        // separate thread because the service normally runs in the process's
-//        // main thread, which we don't want to block.  We also make it
-//        // background priority so CPU-intensive work will not disrupt our UI.
-//        HandlerThread thread = new HandlerThread("ServiceStartArguments",
-//                Process.THREAD_PRIORITY_BACKGROUND);
-//        thread.start();
-//
-//        // Get the HandlerThread's Looper and use it for our Handler
-//        mServiceLooper = thread.getLooper();
-//        mServiceHandler = new ServiceHandler(mServiceLooper);
+        mRequestingLocationUpdates = false;
 
-//        Thread t = new Thread(){
-//            public void run(){
-                mRequestingLocationUpdates = false;
+        mInProgress = false;
+        // Create the LocationRequest object
+        mLocationRequest = LocationRequest.create();
+        // Use high accuracy
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        // Set the update interval to 5 seconds
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        // Set the fastest update interval to 1 second
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
-                mInProgress = false;
-                // Create the LocationRequest object
-                mLocationRequest = LocationRequest.create();
-                // Use high accuracy
-                mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                // Set the update interval to 5 seconds
-                mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-                // Set the fastest update interval to 1 second
-                mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        setUpLocationClientIfNeeded();
 
-//        servicesAvailable = servicesConnected();
+        buildLocationSettingsRequest();
 
-        /*
-         * Create a new location client, using the enclosing class to
-         * handle callbacks.
-         */
-                setUpLocationClientIfNeeded();
+        prefManager = new PrefManager(BackgroundLocationService.this);
 
-                buildLocationSettingsRequest();
-
-                prefManager = new PrefManager(BackgroundLocationService.this);
-
-                sentInactiveSuccessfully = false;
+        sentInactiveSuccessfully = false;
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-//        builder.setContentTitle(getText(R.string.app_name));
         builder.setContentTitle(prefManager.getDriverName());
         builder.setContentText("Active");
         builder.setSmallIcon(R.drawable.ic_notification_logo);
@@ -215,13 +145,6 @@ public class BackgroundLocationService extends Service implements
         startForeground(ACTIVE_NOTIFICATION_ID, notification);
 
         EventBus.getDefault().register(this);
-
-
-//            }
-//        };
-//        t.start();
-
-
     }
 
     /*
@@ -236,23 +159,6 @@ public class BackgroundLocationService extends Service implements
                 .addApi(LocationServices.API)
                 .build();
     }
-
-/*
-    private boolean servicesConnected() {
-
-        // Check that Google Play services is available
-        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-
-        // If Google Play services is available
-        if (ConnectionResult.SUCCESS == resultCode) {
-
-            return true;
-        } else {
-
-            return false;
-        }
-    }
-*/
 
     protected void buildLocationSettingsRequest() {
         Log.d(TAG, "buildLocationSettingsRequest");
@@ -273,7 +179,6 @@ public class BackgroundLocationService extends Service implements
                         mGoogleApiClient,
                         mLocationSettingsRequest
                 );
-//        result.setResultCallback(MainActivity.context);
         result.setResultCallback(this);
     }
 
@@ -307,10 +212,7 @@ public class BackgroundLocationService extends Service implements
                         try {
                             // Show the dialog by calling startResolutionForResult(), and check the result
                             // in onActivityResult().
-
-//                            status.startResolutionForResult(MainActivity.context, REQUEST_CHECK_SETTINGS);
                             status.startResolutionForResult(LocationSettingCallback.activity, REQUEST_CHECK_SETTINGS);
-//                    status.startResolutionForResult(MainActivity.class.newInstance(), REQUEST_CHECK_SETTINGS);
                         } catch (IntentSender.SendIntentException e) {
                             Log.i(TAG, "PendingIntent unable to execute request.");
                         }
@@ -348,13 +250,11 @@ public class BackgroundLocationService extends Service implements
             this.mWakeLock.acquire();
         }
 
-//        if (!servicesAvailable || mGoogleApiClient.isConnected() || mInProgress)
         if (mGoogleApiClient.isConnected() || mInProgress)
             return START_STICKY;
 
         setUpLocationClientIfNeeded();
         if (!mGoogleApiClient.isConnected() || !mGoogleApiClient.isConnecting() && !mInProgress) {
-//            appendLog(DateFormat.getDateTimeInstance().format(new Date()) + ": Started", Constants.LOG_FILE);
             mInProgress = true;
             mGoogleApiClient.connect();
         }
@@ -374,52 +274,7 @@ public class BackgroundLocationService extends Service implements
         Log.d(TAG, "onLocationChanged: mLocation: " + location.toString());
 
         EventBus.getDefault().post(new LocationUpdated(location));
-//        if(MainActivity.context.is)
-
-//        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-//        Log.d(TAG, "onLocationChanged: mLocation: " + location.toString());
-//        if (firstMove && mLastLocation != null) {
-//            Log.d(TAG, "onLocationChanged: Moving cam");
-//            Log.d(TAG, "onLocationChanged: mLocation: " + mLastLocation.toString());
-//            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 12.0f));
-//            firstMove = false;
-//        }
-
-//        Log.d(TAG, "onConnected: Moving cam");
         prefManager.setCurrentLocation(String.valueOf(location.getLatitude()) + "," + String.valueOf(location.getLongitude()));
-//        currentLocationPoint = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-//        if (prefManager.isDoingRequest()) if (firstLocationToDriverRouting) {
-//            showRoute();
-//            firstLocationToDriverRouting = false;
-//        }
-
-//        if (!mMap.isMyLocationEnabled()) {
-//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//                // TODO: Consider calling
-//                //    ActivityCompat#requestPermissions
-//                // here to request the missing permissions, and then overriding
-//                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//                //                                          int[] grantResults)
-//                // to handle the case where the user grants the permission. See the documentation
-//                // for ActivityCompat#requestPermissions for more details.
-//                return;
-//            }
-//            mMap.setMyLocationEnabled(true);
-//            // Get the button view
-//            View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
-//
-//            // and next place it, for exemple, on bottom right (as Google Maps app)
-//            RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-//            // position on right bottom
-//            rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
-//            rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-//            int bottom = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 100, getResources().getDisplayMetrics());
-//            int right = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
-//            rlp.setMargins(0, 0, right, bottom);
-//        }
-
-//        if(null!= mCurrentLocation)
-//        Toast.makeText(this, "Updated: "+mCurrentLocation.getLatitude()+" "+mCurrentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -427,53 +282,13 @@ public class BackgroundLocationService extends Service implements
         return mBinder;
     }
 
-/*
-    public String getTime() {
-        SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return mDateFormat.format(new Date());
-    }
-
-    public void appendLog(String text, String filename)
-    {
-        File logFile = new File(filename);
-        if (!logFile.exists())
-        {
-            try
-            {
-                logFile.createNewFile();
-            }
-            catch (IOException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-        try
-        {
-            //BufferedWriter for performance, true to set append to file flag
-            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true));
-            buf.append(text);
-            buf.newLine();
-            buf.close();
-        }
-        catch (IOException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-*/
-
     protected void startLocationUpdates() {
         Log.d(TAG, "startLocationUpdates");
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if(!permissionIsRequested){
                 ActivityCompat.requestPermissions(MainActivity.context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
-//                ActivityCompat.requestPermissions(LocationSettingCallback.activity, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
                 permissionIsRequested = true;
             }
-            // TODO: Consider using a notification so that the request isn't bound to a certain activity
-            //check
             return;
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(
@@ -495,11 +310,6 @@ public class BackgroundLocationService extends Service implements
                 activeUpdate();
 
                 EventBus.getDefault().post(new DriverActive(true));
-//                prefManager
-//                sendInactiveToLogout(1, prefManager.getCurrentLocation());
-//                prefManager.setActive(true);
-//                setUI();
-//                setButtonsEnabledState();
             }
         });
 
@@ -561,17 +371,6 @@ public class BackgroundLocationService extends Service implements
                     Intent intent1 = new Intent(BackgroundLocationService.this, PopupActivity.class);
                     intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent1);
-//                    prefManager.setActive(false);
-//                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
-//                    final Handler handler = new Handler();
-//                    handler.postDelayed(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            stopSelf();
-//                            handler.removeCallbacksAndMessages(null);
-//                        }
-//                    }, 2000);
-
                 }
                 else{
                     Log.d(TAG,"checkLocationHandler scheduled again");
@@ -681,17 +480,11 @@ public class BackgroundLocationService extends Service implements
                     if(resendActivehandler != null)
                         resendActivehandler.removeCallbacksAndMessages(null);
                 } else if (response.code() == 401) {
-//                    Toast.makeText(MainActivity.this, "Please login to continue", Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "sendActive User not logged in");
                     prefManager.setIsLoggedIn(false);
                     EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     stopSelf();
-//                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-//                    MainActivity.this.startActivity(intent);
-//                    MainActivity.super.finish();
                 } else {
-//                    clearHistoryEntries();
-//                    Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "sendActive: Unknown error occurred");
                 }
 
@@ -721,49 +514,10 @@ public class BackgroundLocationService extends Service implements
         });
     }
 
-
-    /*private void activeNotification(Boolean enable) {
-
-        if (enable) {
-
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 *//* Request code *//*, intent,
-                    PendingIntent.FLAG_ONE_SHOT);
-
-//            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_notification_logo)
-                    .setContentTitle(getString(R.string.app_name))
-                    .setContentText("Active")
-//                .setAutoCancel(true)
-//                    .setSound(defaultSoundUri)
-                    .setContentIntent(pendingIntent)
-                    .setOngoing(true);
-
-            NotificationManager notificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-            notificationManager.notify(ACTIVE_NOTIFICATION_ID *//* ID of notification *//*, notificationBuilder.build());
-        }
-        else
-        {
-            NotificationManager notificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-            notificationManager.cancel(ACTIVE_NOTIFICATION_ID *//* ID of notification *//*);
-
-        }
-    }*/
     @Override
     public void onDestroy() {
         // Turn off the request flag
         Log.d(TAG, "onDestroy");
-
-//        if(!prefManager.isLoggedIn())
-//            if(!prefManager.isExternalLogout()) {
-//                sendInactiveToLogout(prefManager.getCurrentLocation());
-//            }
 
         //stop handlers' runnables
         if(checkLocationHandler != null)
@@ -776,11 +530,8 @@ public class BackgroundLocationService extends Service implements
             updateActiveHandler.removeCallbacksAndMessages(null);
         Log.d(TAG,"Handlers runnables were removed");
 
-//        prefManager.setExternalLogout(false);
-
         this.mInProgress = false;
 
-//        if (this.servicesAvailable && this.mGoogleApiClient != null) {
         if (this.mGoogleApiClient != null) {
             this.mGoogleApiClient.unregisterConnectionCallbacks(this);
             this.mGoogleApiClient.unregisterConnectionFailedListener(this);
@@ -826,16 +577,10 @@ public class BackgroundLocationService extends Service implements
                     prefManager.setDriver(new driver());
                     inactiveAttempts = 0;
                     sentInactiveSuccessfully = true;
-//                    prefManager.setActive(false);
-
-                    //TODO: ensure the service is stopped so that the active notification is removed.
-//                    activeNotification(false);
-
                 } else if (response.code() == 401) {
                     Log.i(TAG, "onResponse: User not logged in");
                     prefManager.setIsLoggedIn(false);
                 } else {
-//                    clearHistoryEntries();
                     Log.i(TAG, "Unknown error occurred");
                 }
             }
@@ -843,16 +588,6 @@ public class BackgroundLocationService extends Service implements
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 Log.i(TAG, getString(R.string.server_timeout));
-//                while(inactiveAttempts < 50 || !sentInactiveSuccessfully) {
-//                    try {
-//                        Thread.sleep(1000);
-//                    } catch (InterruptedException e) {
-//                        // TODO Auto-generated catch block
-//                        e.printStackTrace();
-//                    }
-//                    sendInactiveToLogout(location);
-//                    inactiveAttempts++;
-//                }
             }
         });
     }
@@ -868,22 +603,13 @@ public class BackgroundLocationService extends Service implements
         Log.d(TAG, "onConnected: Connected");
 
         // Request location updates using static settings
-//        Intent intent = new Intent(this, LocationReceiver.class);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            if(!permissionIsRequested) {
-//                ActivityCompat.requestPermissions(MainActivity.context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_CODE);
-//                permissionIsRequested = true;
-//            }
             return;
         }
         if(!checkedLocation) {
             checkLocationSettings();
             checkedLocation = true;
         }
-//        LocationServices.FusedLocationApi.requestLocationUpdates(this.mGoogleApiClient,
-//                mLocationRequest, this); // This is the changed line.
-//        appendLog(DateFormat.getDateTimeInstance().format(new Date()) + ": Connected", Constants.LOG_FILE);
-
     }
 
     /*
@@ -892,17 +618,8 @@ public class BackgroundLocationService extends Service implements
  */
     @Override
     public void onConnectionSuspended(int i) {
-        // Turn off the request flag
-//        mInProgress = false;
-//         Destroy the current location client
-//        mGoogleApiClient = null;
-
         Log.d(TAG, "onConnectionSuspended");
         mGoogleApiClient.connect();
-
-        // Display the connection status
-        // Toast.makeText(this, DateFormat.getDateTimeInstance().format(new Date()) + ": Disconnected. Please re-connect.", Toast.LENGTH_SHORT).show();
-//        appendLog(DateFormat.getDateTimeInstance().format(new Date()) + ": Disconnected", Constants.LOG_FILE);
     }
 
     /*

@@ -44,6 +44,8 @@ public class HistoryActivity extends AppCompatActivity {
     private static final String DUMMY_PRICE = "43";
     private static final String DUMMY_TIME = "06/11/2016 - 15:45";
     private static final String TAG = "UbDriver";
+    private static final int FROM_HISTORY_CODE = 899;
+    private static final int FINISH_PARENT = 7;
     private PrefManager prefManager;
     private RequestAdapter ca;
 
@@ -51,9 +53,6 @@ public class HistoryActivity extends AppCompatActivity {
         {
         }
     };
-//    private static request current_request = new request(DUMMY_REQUEST_ID, DUMMY_PICKUP, DUMMY_DEST,
-//            DUMMY_PASSENGER_NAME, DUMMY_PASSENGER_PHONE, DUMMY_TIME, DUMMY_PRICE, DUMMY_NOTES,
-//            DUMMY_STATUS);
     private RecyclerView previous_requests;
     private RecyclerView.Adapter RVadapter;
     private RecyclerView.LayoutManager layoutManager;
@@ -68,28 +67,17 @@ public class HistoryActivity extends AppCompatActivity {
             findViewById(R.id.HistoryActivityGradientShadow).setVisibility(View.GONE);
         }
         Toolbar toolbar = (Toolbar) findViewById(R.id.history_toolbar);
-//        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
-//        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
-//        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
-//        toolbar.setTitleTextColor(getResources().getColor(R.color.white));
         toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-//        toolbar.setTitle(R.string.history);
         setSupportActionBar(toolbar);
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         previous_requests = (RecyclerView) findViewById(R.id.past_requests);
         previous_requests.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         previous_requests.setLayoutManager(layoutManager);
-//        RequestAdapter ca = new RequestAdapter(createList(30));
         ca = new RequestAdapter(History, this);
         previous_requests.setAdapter(ca);
         serverRequest();
-//        RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.ongoing_request);
-//        relativeLayout.setVisibility(View.INVISIBLE);
-
-
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
@@ -112,14 +100,8 @@ public class HistoryActivity extends AppCompatActivity {
             ci.setStatus(DUMMY_STATUS);
             ci.setTime(DUMMY_TIME);
             ci.setDestString(DUMMY_DEST);
-//            ci.dest[0] = Double.parseDouble(DUMMY_DEST.split(",")[0]);
-//            ci.dest[1] = Double.parseDouble(DUMMY_DEST.split(",")[1]);
             ci.setPickupString(DUMMY_PICKUP);
-//            ci.pickup[0] = Double.parseDouble(DUMMY_PICKUP.split(",")[0]);
-//            ci.pickup[1] = Double.parseDouble(DUMMY_PICKUP.split(",")[1]);
-//            ci.pickup = DUMMY_PICKUP;
             ci.setPrice(DUMMY_PRICE + i);
-
             result.add(ci);
 
         }
@@ -127,8 +109,14 @@ public class HistoryActivity extends AppCompatActivity {
         return result;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FROM_HISTORY_CODE && resultCode == FINISH_PARENT) {
+            finish();
+        }
+    }
 
-    private void serverRequest() {
+        private void serverRequest() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -163,11 +151,6 @@ public class HistoryActivity extends AppCompatActivity {
                                 unixTime = Long.valueOf(i.getTime()) * 1000; // In this case, the server sends the time in seconds while unix time needs milliseconds
                             }
                             i.setTime(String.valueOf(DateUtils.getRelativeTimeSpanString(unixTime, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)));
-//                            Date df = new java.util.Date(unixTime);
-//                            SimpleDateFormat sdf = new SimpleDateFormat("dd MM, yyyy hh:mma");
-//                            sdf.setTimeZone(TimeZone.getTimeZone("Africa/Khartoum"));
-//                            i.setTime(sdf.format(df));
-
                             i.setPrice(String.format(getString(R.string.history_price), i.getPrice()));
                             history.add(0, i);
                         }
@@ -179,13 +162,7 @@ public class HistoryActivity extends AppCompatActivity {
                     Toast.makeText(HistoryActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
                    logout();
-
-//                    prefManager.setIsLoggedIn(false);
-//                    Intent intent = new Intent(HistoryActivity.this, LoginActivity.class);
-//                    startActivity(intent);
-//                    finish();
                 } else {
-//                    clearHistoryEntries();
                     Toast.makeText(HistoryActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
 
@@ -228,7 +205,6 @@ public class HistoryActivity extends AppCompatActivity {
         prefManager.setLastPassword(lastPassword);
         prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-//        prefManager.setExternalLogout(false);
         EventBus.getDefault().post(new UnbindBackgroundLocationService());
 
         Intent blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);

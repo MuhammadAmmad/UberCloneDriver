@@ -41,7 +41,6 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
     private PrefManager prefManager;
 
     public OngoingRequestAdapter(List<request> RequestList, Activity context) {
-//    public OngoingRequestAdapter(Context context) {
         this.requestList = RequestList;
         this.context = context;
     }
@@ -62,25 +61,8 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
         RequestViewHolder.price.setText(ci.getPrice());
         RequestViewHolder.price.setTextColor(context.getResources().getColor(R.color.colorPrimary));
         RequestViewHolder.date.setText(ci.getTime());
-//        RequestViewHolder.status.setText(ci.getDisplayStatus(ci.getStatus(), context));
         RequestViewHolder.status.setBackgroundColor(context.getResources().getColor(R.color.white));
-//        RequestViewHolder.status.setVisibility(View.INVISIBLE);
         RequestViewHolder.pickup.setText(ci.getPickupText());
-
-//        RequestViewHolder.pickup.setText(ci.getPickupString());
-//        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
-//        RequestViewHolder.dest.setText(ci.getDestText());
-//        RequestViewHolder.dest.setText(ci.getDestString());
-//        RequestViewHolder.dest.setText(String.valueOf(ci.dest[0]) + "," + String.valueOf(ci.dest[1]));
-
-/*
-        RequestViewHolder.passenger_name.setText(ci.passenger_name);
-        RequestViewHolder.passenger_phone.setText(ci.passenger_phone);
-        RequestViewHolder.status.setText(ci.status);
-        RequestViewHolder.pickup.setText(String.valueOf(ci.pickup[0]) + "," + String.valueOf(ci.pickup[1]));
-        RequestViewHolder.dest.setText(String.valueOf(ci.dest[0]) + "," + String.valueOf(ci.dest[1]));
-        RequestViewHolder.request_time.setText(ci.time);
-*/
 
         prefManager = new PrefManager(context);
 
@@ -91,16 +73,8 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
                 intent.putExtra("passenger_name", ci.getPassenger_name());
                 intent.putExtra("passenger_phone", ci.getPassenger_phone());
                 intent.putExtra("status", "on_the_way");
-//                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
-//                intent.putExtra("pickup_longitude", ci.getPickup()[0]);
-//                intent.putExtra("pickup_latitude", ci.getPickup()[1]);
-//                        temp = RequestViewHolder.dest.getText().toString().split(",");
-//                intent.putExtra("dest_longitude", ci.getDest()[0]);
-//                intent.putExtra("dest_latitude", ci.getDest()[1]);
-
                 intent.putExtra("pickup", ci.getPickupString());
                 intent.putExtra("dest", ci.getDestString());
-
                 intent.putExtra("time", ci.getTime());
                 intent.putExtra("price", ci.getPrice());
                 intent.putExtra("notes", ci.getNotes());
@@ -110,58 +84,8 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
 
                 intent.putExtra("source", "incoming");
 
-
                 ((Activity) context).startActivityForResult(intent,SELECTED_REQUEST_CODE);
-
-
-//
-//                    AlertDialog.Builder alerBuilder = new AlertDialog.Builder(context);
-//                    alerBuilder.setMessage(context.getString(R.string.upcoming_request_options));
-//                    alerBuilder.setPositiveButton(context.getString(R.string.start_upcoming_request), new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            if (prefManager.isDoingRequest())
-//                                Toast.makeText(context, R.string.already_doing_request, Toast.LENGTH_LONG).show();
-//                            else {
-//                                Intent intent = new Intent();
-//                                intent.putExtra("passenger_name", ci.getPassenger_name());
-//                                intent.putExtra("passenger_phone", ci.getPassenger_phone());
-//                                intent.putExtra("status", "on_the_way");
-////                        String temp[] = RequestViewHolder.pickup.getText().toString().split(",");
-//                                intent.putExtra("pickup_longitude", ci.getPickup()[0]);
-//                                intent.putExtra("pickup_latitude", ci.getPickup()[1]);
-////                        temp = RequestViewHolder.dest.getText().toString().split(",");
-//                                intent.putExtra("dest_longitude", ci.getDest()[0]);
-//                                intent.putExtra("dest_latitude", ci.getDest()[1]);
-//                                intent.putExtra("time", ci.getTime());
-//                                intent.putExtra("price", ci.getPrice());
-//                                intent.putExtra("notes", ci.getNotes());
-//                                intent.putExtra("request_id", ci.getRequest_id());
-//                                intent.putExtra("pickup_text", ci.getPickupText());
-//                                intent.putExtra("dest_text", ci.getDestText());
-//
-//                                ((Activity) context).setResult(Activity.RESULT_OK, intent);
-//                                ((Activity) context).finish();
-//
-//                            }
-//                        }
-//                    });
-//                    alerBuilder.setNegativeButton(context.getString(R.string.cancel_upcoming_request), new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            EventBus.getDefault().post(new PassengerCanceled(ci.getRequest_id()));
-//                            sendCancel(ci.getRequest_id());
-//                        }
-//                    });
-//                    alerBuilder.setNeutralButton(context.getString(R.string.upcoming_request_do_nothing), new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialogInterface, int i) {
-//
-//                        }
-//                    });
-//                    alerBuilder.show();
-//
-                }
+             }
         });
     }
 
@@ -182,42 +106,17 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
 
         protected TextView price;
         protected TextView date;
-//        protected TextView status;
         protected ImageView status;
         protected TextView pickup;
-//        protected TextView dest;
         protected LinearLayout linearLayout;
-
-
-/*
-        protected TextView passenger_name;
-        protected TextView passenger_phone;
-        protected TextView request_time;
-        protected TextView status;
-        protected TextView pickup;
-        protected TextView dest;
-        RelativeLayout linearLayout;
-*/
 
         public OngoingRequestViewHolder(View v){
             super(v);
             date = (TextView) v.findViewById(R.id.entry_date);
             status = (ImageView) v.findViewById(R.id.entry_status);
             pickup = (TextView) v.findViewById(R.id.entry_from);
-//            dest = (TextView) v.findViewById(R.id.entry_to);
             price = (TextView) v.findViewById(R.id.entry_price);
             linearLayout = (LinearLayout) itemView.findViewById(R.id.history_card_view);
-
-
-/*
-            passenger_name = (TextView) v.findViewById(R.id.card_passenger_name);
-            passenger_phone = (TextView) v.findViewById(R.id.card_passenger_phone);
-            request_time = (TextView) v.findViewById(R.id.card_time);
-            status = (TextView) v.findViewById(R.id.card_status);
-            pickup = (TextView) v.findViewById(R.id.card_pickup);
-            dest = (TextView) v.findViewById(R.id.card_dest);
-            linearLayout = (RelativeLayout) itemView.findViewById(R.id.card_view);
-*/
         }
     }
 
@@ -245,8 +144,6 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
                 if(!context.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
-//                    endRequest(REQUEST_CANCELLED);
-//                    setUI(MainActivity.UI_STATE.SIMPLE);
                     removeRequest(request_id);
                     Toast.makeText(context, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
@@ -260,18 +157,12 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
                     prefManager.setLastPassword(lastPassword);
                     prefManager.setLastEmail(lastEmail);
                     prefManager.setIsLoggedIn(false);
-//                    prefManager.setExternalLogout(false);
                     EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     Intent blsIntent = new Intent(context.getApplicationContext(), BackgroundLocationService.class);
                     context.stopService(blsIntent);
 
                     EventBus.getDefault().post(new DriverLoggedout());
-
-//                    Intent intent = new Intent(context, LoginActivity.class);
-//                    context.startActivity(intent);
-//                    finish();
                 } else {
-//                    clearHistoryEntries();
                     Toast.makeText(context, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Unknown error occurred");
                 }
@@ -297,9 +188,6 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
                 break;
             }
         }
-
     }
-
-
 }
 

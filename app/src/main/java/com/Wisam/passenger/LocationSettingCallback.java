@@ -35,20 +35,6 @@ public class LocationSettingCallback extends Activity {
         prefManager = new PrefManager(this);
         Log.d(TAG, "onCreate");
 
-        // This is called when the connection with the service has been
-// established, giving us the service object we can use to
-// interact with the service.  Because we have bound to a explicit
-// service that we know is running in our own process, we can
-// cast its IBinder to a concrete class and directly access it.
-// Tell the user about this for our demo.
-//            Toast.makeText(Binding.this, R.string.local_service_connected,
-//                    Toast.LENGTH_SHORT).show();
-// This is called when the connection with the service has been
-// unexpectedly disconnected -- that is, its process crashed.
-// Because it is running in our same process, we should never
-// see this happen.
-//            Toast.makeText(Binding.this, R.string.local_service_disconnected,
-//                    Toast.LENGTH_SHORT).show();
         mConnection = new ServiceConnection() {
 
             public void onServiceConnected(ComponentName className, IBinder service) {
@@ -64,10 +50,6 @@ public class LocationSettingCallback extends Activity {
                     backgroundLocationService.startLocationUpdates();
                     finish();
                 }
-
-                // Tell the user about this for our demo.
-                //            Toast.makeText(Binding.this, R.string.local_service_connected,
-                //                    Toast.LENGTH_SHORT).show();
             }
 
             public void onServiceDisconnected(ComponentName className) {
@@ -78,14 +60,9 @@ public class LocationSettingCallback extends Activity {
                 Log.d(TAG, "onServiceDisconnected");
                 backgroundLocationService = null;
                 mIsBound = false;
-
-                //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
-                //                    Toast.LENGTH_SHORT).show();
             }
         };
         blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
-
-
     }
 
     @Override
@@ -119,34 +96,6 @@ public class LocationSettingCallback extends Activity {
 
     }
 
-/*
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if (requestCode == ACCESS_FINE_LOCATION_CODE) {
-            Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult:");
-            permissionIsRequested = false;
-            // If request is cancelled, the result arrays are empty.
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult: Granted");
-                if(!checkedLocation) {
-                    backgroundLocationService.checkLocationSettings();
-                    checkedLocation = true;
-                }
-            } else {
-                Toast.makeText(this, "You can't receive requests unless you enable this permission\n" +
-                                "if you want to receive requests, press the 'Go active' button below",
-                        Toast.LENGTH_LONG).show();
-                prefManager.setActive(false);
-//                setUI();
-                EventBus.getDefault().post(new DriverActive(false));
-                // permission denied, boo! Disable the
-                // functionality that depends on this permission.
-            }
-        }
-    }
-*/
-
     @Override
     public void onStart() {
         getApplicationContext().bindService(blsIntent, mConnection, BIND_IMPORTANT);
@@ -164,7 +113,6 @@ public class LocationSettingCallback extends Activity {
         super.onStop();
     }
 
-
     @Subscribe(threadMode = ThreadMode.ASYNC)
     public void onUnbindBackgroundLocationService(UnbindBackgroundLocationService event) {
         Log.d(TAG, "onUnbindBackgroundLocationService has been invoked");
@@ -173,7 +121,6 @@ public class LocationSettingCallback extends Activity {
             mIsBound = false;
         }
     }
-
 
     @Override
     protected void onDestroy() {
@@ -198,7 +145,6 @@ public class LocationSettingCallback extends Activity {
         prefManager.setLastPassword(lastPassword);
         prefManager.setLastEmail(lastEmail);
         prefManager.setIsLoggedIn(false);
-//        prefManager.setExternalLogout(false);
         if(mIsBound) {
             getApplicationContext().unbindService(mConnection);
             mIsBound = false;
@@ -218,6 +164,4 @@ public class LocationSettingCallback extends Activity {
             logout();
         }
     }
-
-
 }
