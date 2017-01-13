@@ -136,7 +136,6 @@ public class SelectedRequest extends AppCompatActivity {
                 Intent intent2 = new Intent(SelectedRequest.this, MainActivity.class);
                 intent2.putExtras(intent);
                 intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                setResult(FINISH_PARENT);
                 startActivity(intent2);
                 finish();
             }

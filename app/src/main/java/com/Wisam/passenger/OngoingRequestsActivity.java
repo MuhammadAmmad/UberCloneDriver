@@ -92,17 +92,12 @@ public class OngoingRequestsActivity extends AppCompatActivity{
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG,String.format("onActivityResult: requestCode = %d, resultCode = %d", requestCode, resultCode));
         if (requestCode == SELECTED_REQUEST_CODE && resultCode == RESULT_OK) {
-                if(data.hasExtra("request_id")) {
-                    removeRequest(data.getStringExtra("request_id"));
-                    ca.notifyDataSetChanged();
-                }
+            if(data.hasExtra("request_id")) {
+                removeRequest(data.getStringExtra("request_id"));
+                ca.notifyDataSetChanged();
+            }
         }
-        if (requestCode == SELECTED_REQUEST_CODE && resultCode == FINISH_PARENT) {
-            setResult(FINISH_PARENT);
-            finish();
-        }
-
-        }
+     }
 
     private void getOngoingRequests() {
         final OkHttpClient okHttpClient = new OkHttpClient.Builder()

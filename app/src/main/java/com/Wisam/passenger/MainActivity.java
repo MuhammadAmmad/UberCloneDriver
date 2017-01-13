@@ -712,10 +712,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG,String.format("onActivityResult: requestCode = %d, resultCode = %d", requestCode, resultCode));
-        if (requestCode == ONGOING_REQUESTS_CODE && resultCode == FINISH_PARENT) {
-            finish();
-        }
-
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             switch (resultCode) {
                 case RESULT_OK:
@@ -1306,8 +1302,10 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onDirectionFailure(Throwable t) {
                                 // Do something here
-                                Toast.makeText(MainActivity.this, R.string.driver_to_pickup_route_failed, Toast.LENGTH_SHORT).show();
                                 Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
+                                if (routeCancelled)
+                                    return;
+                                Toast.makeText(MainActivity.this, R.string.driver_to_pickup_route_failed, Toast.LENGTH_SHORT).show();
                             }
                         });
             }
@@ -1352,8 +1350,10 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void onDirectionFailure(Throwable t) {
                             // Do something here
-                            Toast.makeText(MainActivity.this, R.string.pickup_to_dest_route_failed, Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "showRoute:Pickup to Destination Route Failed ");
+                            if (routeCancelled)
+                                return;
+                            Toast.makeText(MainActivity.this, R.string.pickup_to_dest_route_failed, Toast.LENGTH_SHORT).show();
                         }
                     });
             if (currentLocationPoint != null) {
@@ -1392,8 +1392,10 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onDirectionFailure(Throwable t) {
                                 // Do something here
-                                Toast.makeText(MainActivity.this, R.string.driver_to_pickup_route_failed, Toast.LENGTH_SHORT).show();
                                 Log.d(TAG, "showRoute:Driver to Pickup Route Failed ");
+                                if (routeCancelled)
+                                    return;
+                                Toast.makeText(MainActivity.this, R.string.driver_to_pickup_route_failed, Toast.LENGTH_SHORT).show();
                             }
                         });
             }

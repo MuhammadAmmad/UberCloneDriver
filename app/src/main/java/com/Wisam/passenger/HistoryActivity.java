@@ -109,13 +109,6 @@ public class HistoryActivity extends AppCompatActivity {
         return result;
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == FROM_HISTORY_CODE && resultCode == FINISH_PARENT) {
-            finish();
-        }
-    }
-
         private void serverRequest() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RestServiceConstants.BASE_URL)
