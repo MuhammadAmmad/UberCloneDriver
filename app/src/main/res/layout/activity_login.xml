@@ -8,7 +8,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="80dp"
-    tools:context="com.vogella.android.navigationwidgetattempt.LoginActivity"
+    tools:context="com.Wisam.passenger.LoginActivity"
     android:background="@color/white">
 
     <ImageView

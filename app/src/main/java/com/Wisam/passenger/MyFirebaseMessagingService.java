@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
         import android.app.NotificationManager;
         import android.app.PendingIntent;
         import android.content.Context;
         import android.content.Intent;
-        import android.media.RingtoneManager;
-        import android.net.Uri;
         import android.support.v4.app.NotificationCompat;
         import android.util.Base64;
         import android.util.Log;
@@ -37,7 +35,6 @@ package com.vogella.android.navigationwidgetattempt;
         import org.greenrobot.eventbus.EventBus;
 
         import java.util.Map;
-        import java.util.Objects;
 
         import retrofit2.Call;
         import retrofit2.Callback;

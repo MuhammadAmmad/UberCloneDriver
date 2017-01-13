@@ -1,4 +1,4 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 import android.content.Intent;
 import android.os.Build;

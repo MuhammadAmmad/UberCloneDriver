@@ -1,7 +1,7 @@
 package com.Wisam.POJO;
 
 import com.google.gson.annotations.SerializedName;
-import com.vogella.android.navigationwidgetattempt.driver;
+import com.Wisam.passenger.driver;
 
 /**
  * Created by nezuma on 11/19/16.
@@ -25,7 +25,7 @@ public class LoginResponse {
         return status;
     }
 
-    public com.vogella.android.navigationwidgetattempt.driver getdriver() {
+    public com.Wisam.passenger.driver getdriver() {
         return driver;
     }
 }

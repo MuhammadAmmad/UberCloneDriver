@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.vogella.android.navigationwidgetattempt.OngoingRequestsActivity">
+    tools:context="com.Wisam.passenger.OngoingRequestsActivity">
     <android.support.v7.widget.Toolbar
         android:id="@+id/incoming_toolbar"
         android:background="@color/white"

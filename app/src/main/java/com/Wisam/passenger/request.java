@@ -1,11 +1,8 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.google.gson.annotations.SerializedName;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by nezuma on 10/22/16.

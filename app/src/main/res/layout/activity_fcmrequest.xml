@@ -4,7 +4,7 @@
     android:id="@+id/activity_fcmrequest"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.vogella.android.navigationwidgetattempt.FCMRequest"
+    tools:context="com.Wisam.passenger.FCMRequest"
     android:orientation="vertical">
     <LinearLayout
         android:background="@color/colorPrimary"

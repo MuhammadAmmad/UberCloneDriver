@@ -1,4 +1,4 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 import android.Manifest;
 import android.app.AlarmManager;
@@ -87,12 +87,12 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.ACCESS_FINE_LOCATION_CODE;
-import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.checkedLocation;
-import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.permissionIsRequested;
+import static com.Wisam.passenger.BackgroundLocationService.ACCESS_FINE_LOCATION_CODE;
+import static com.Wisam.passenger.BackgroundLocationService.checkedLocation;
+import static com.Wisam.passenger.BackgroundLocationService.permissionIsRequested;
 
-//import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mGoogleApiClient;
-//import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mLocationRequest;
+//import static com.vogella.android.passenger.BackgroundLocationService.mGoogleApiClient;
+//import static com.vogella.android.passenger.BackgroundLocationService.mLocationRequest;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -201,6 +201,7 @@ public class MainActivity extends AppCompatActivity
     private boolean shownActiveProgress = false;
     private Handler resendStatusHandler;
     private int resendStatusAttempts = 0;
+    private boolean routeCancelled;
 
 
     @Override
@@ -1144,6 +1145,7 @@ public class MainActivity extends AppCompatActivity
             case SIMPLE:
                 if (routingHandler != null) {
                     Log.d(TAG,"setUI Simple: removing routing runnable");
+                    routeCancelled = true;
                     routingHandler.removeCallbacksAndMessages(null);
                 }
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
@@ -1268,6 +1270,8 @@ public class MainActivity extends AppCompatActivity
                 //
                 // Do the stuff
                 //
+
+                routeCancelled = false;
                 try {
                     showRoute();
 //                    updateStatus(); //this function can change value of mInterval.
@@ -1314,6 +1318,7 @@ public class MainActivity extends AppCompatActivity
         checkedLocation = false;
         if (routingHandler != null) {
             Log.d(TAG,"onPause: removing routing runnable");
+            routeCancelled = true;
             routingHandler.removeCallbacksAndMessages(null);
         }
         wasActive = prefManager.isActive();
@@ -1462,6 +1467,7 @@ public class MainActivity extends AppCompatActivity
 //        prefManager.setCurrentLocation(String.valueOf(mCurrentLocation.getLatitude()) + "," + String.valueOf(mCurrentLocation.getLongitude()));
         currentLocationPoint = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
         if (prefManager.isDoingRequest()) if (firstLocationToDriverRouting) {
+            routeCancelled = false;
             showRoute();
             firstLocationToDriverRouting = false;
         }
@@ -1608,19 +1614,23 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.history) {
             Intent intent = new Intent(this, HistoryActivity.class);
             startActivity(intent);
+//            finish();
 
         } else if (id == R.id.current_requests) {
             Intent intent = new Intent(this, OngoingRequestsActivity.class);
 //            startActivityForResult(intent, ONGOING_REQUESTS_CODE);
             startActivity(intent);
+//            finish();
 
         } else if (id == R.id.profile) {
             Intent intent = new Intent(this, ProfileActivity.class);
             startActivity(intent);
+//            finish();
 
         } else if (id == R.id.about) {
             Intent intent = new Intent(this, AboutActivity.class);
             startActivity(intent);
+//            finish();
 
         } else if (id == R.id.sign_out) {
             logout();
@@ -1995,6 +2005,8 @@ public class MainActivity extends AppCompatActivity
                                 // Do something here
 //                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
                                 Log.d(TAG, "showRoute:Driver to Pickup Route successfully computed ");
+                                if (routeCancelled)
+                                    return;
 
                                 if (direction.isOK()) {
                                     // Do
@@ -2062,6 +2074,8 @@ public class MainActivity extends AppCompatActivity
 
                                     driverToPickupRoute = mMap.addPolyline(polylineOptions);
 
+                                } else {
+                                    //TODO
                                 }
 
                             }
@@ -2085,6 +2099,9 @@ public class MainActivity extends AppCompatActivity
                             // Do something here
 //                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "showRoute:Pickup to Destination Route successfully computed ");
+
+                            if (routeCancelled)
+                                return;
 
                             if (direction.isOK()) {
                                 // Do
@@ -2128,6 +2145,8 @@ public class MainActivity extends AppCompatActivity
                                 // Do something here
 //                        Toast.makeText(MainActivity.this, "Route successfully computed ", Toast.LENGTH_SHORT).show();
                                 Log.d(TAG, "showRoute:Driver to Pickup Route successfully computed ");
+                                if (routeCancelled)
+                                    return;
 
                                 if (direction.isOK()) {
                                     // Do

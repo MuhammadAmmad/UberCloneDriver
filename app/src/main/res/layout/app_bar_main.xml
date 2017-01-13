@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/com.vogella.android.navigationwidgetattempt"
+    xmlns:app="http://schemas.android.com/apk/com.Wisam.passenger"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.vogella.android.navigationwidgetattempt.MainActivity">
+    tools:context="com.Wisam.passenger.MainActivity">
 
     <include layout="@layout/content_main" />
 

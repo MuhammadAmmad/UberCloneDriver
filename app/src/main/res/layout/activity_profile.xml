@@ -6,7 +6,7 @@
     android:orientation="vertical"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fitsSystemWindows="true"
-    tools:context="com.vogella.android.navigationwidgetattempt.ProfileActivity">
+    tools:context="com.Wisam.passenger.ProfileActivity">
     <android.support.v7.widget.Toolbar
         android:id="@+id/profile_toolbar"
         android:background="@color/white"

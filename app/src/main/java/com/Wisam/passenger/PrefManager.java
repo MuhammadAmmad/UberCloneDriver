@@ -1,4 +1,4 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 
 import android.content.Context;
@@ -6,9 +6,6 @@ import android.content.SharedPreferences;
 
 
 import com.Wisam.POJO.User;
-import com.google.gson.Gson;
-
-import java.util.ArrayList;
 
 /**
  * Created by islam on 9/27/16.

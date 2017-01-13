@@ -1,26 +1,13 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Handler;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.Wisam.Events.ChangeActiveUpdateInterval;
 import com.Wisam.Events.DriverLoggedout;
 import com.Wisam.Events.UnbindBackgroundLocationService;
 
@@ -28,34 +15,25 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import static com.vogella.android.navigationwidgetattempt.BackgroundLocationService.mRequestingLocationUpdates;
-import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
-
-public class PopupActivity extends AppCompatActivity {
-    private BackgroundLocationService backgroundLocationService;
+public class LocationSettingCallback extends Activity {
+    private static final String TAG = LocationSettingCallback.class.getSimpleName();
+    protected static Activity activity;
+    protected static final int REQUEST_CHECK_SETTINGS = 21314;
     private Boolean mIsBound = false;
+    private BackgroundLocationService backgroundLocationService;
     private PrefManager prefManager;
-    protected static final int UPDATE_DURING_REQUEST = 10 * 1000; //10 seconds
-    protected static final int UPDATE_WHILE_IDLE = 5 * 1000;//2 * 60 * 1000;
     private ServiceConnection mConnection;
-    private static final String TAG = PopupActivity.class.getSimpleName();
-    private boolean enablingLocation = false;
     private Intent blsIntent;
+    private boolean handleWhenBound = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG,"onCreate");
-        setContentView(R.layout.activity_popup);
+        setContentView(R.layout.activity_location_setting_callback);
+        activity = this;
         prefManager = new PrefManager(this);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.popup_toolbar);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.colorPrimary));
-        toolbar.setBackgroundColor(getResources().getColor(R.color.white));
-        toolbar.setTitle("Passenger");
-//        toolbar.setNavigationIcon(R.drawable.mini_logo);
-        setSupportActionBar(toolbar);
-//        getSupportActionBar().setIcon(R.drawable.mini_logo);
-
+        Log.d(TAG, "onCreate");
 
         // This is called when the connection with the service has been
 // established, giving us the service object we can use to
@@ -71,8 +49,6 @@ public class PopupActivity extends AppCompatActivity {
 // see this happen.
 //            Toast.makeText(Binding.this, R.string.local_service_disconnected,
 //                    Toast.LENGTH_SHORT).show();
-        prefManager.setActive(false);
-
         mConnection = new ServiceConnection() {
 
             public void onServiceConnected(ComponentName className, IBinder service) {
@@ -84,6 +60,10 @@ public class PopupActivity extends AppCompatActivity {
                 Log.d(TAG, "onServiceConnected");
                 backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
                 mIsBound = true;
+                if(handleWhenBound){
+                    backgroundLocationService.startLocationUpdates();
+                    finish();
+                }
 
                 // Tell the user about this for our demo.
                 //            Toast.makeText(Binding.this, R.string.local_service_connected,
@@ -106,95 +86,66 @@ public class PopupActivity extends AppCompatActivity {
         blsIntent = new Intent(getApplicationContext(), BackgroundLocationService.class);
 
 
-        ((TextView) findViewById(R.id.enable_location)).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG,"enable location clicked");
-                enablingLocation = true;
-                backgroundLocationService.checkLocationSettings();
-                final ProgressDialog progress = new ProgressDialog(PopupActivity.this);
-                progress.setMessage(getString(R.string.updating_request_status));
-                progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                progress.setIndeterminate(true);
-                progress.show();
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    public void run() {
-                        if(mRequestingLocationUpdates){
-                            if (!PopupActivity.this.isFinishing() && progress.isShowing()) progress.dismiss();
-//                            setAlarms();
-                            EventBus.getDefault().post(new ChangeActiveUpdateInterval());
-                            backgroundLocationService.checkLocation();
-                            finish();
-                        }
-                        else{
-                            Toast.makeText(getApplicationContext(),"Couldn't get your location. Go to the app and try again",Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }, 4000);
-
-            }
-        });
-        ((TextView) findViewById(R.id.become_inactive)).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG,"become inactive clicked");
-                if(mIsBound) {
-                    getApplicationContext().unbindService(mConnection);
-                    mIsBound = false;
-                }
-                prefManager.setActive(false);
-                Log.d(TAG,"Posting new UnbindBackgroundLocationService");
-                EventBus.getDefault().post(new UnbindBackgroundLocationService());
-                final Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        stopService(blsIntent);
-                        handler.removeCallbacksAndMessages(null);
-                        finish();
-                    }
-                }, 200);
-            }
-        });
-
-
-
     }
 
     @Override
-    protected void onDestroy() {
-//        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
-        Log.d(TAG,"onDestroy");
-        if(enablingLocation) {
-            Log.d(TAG,"Decided to enable location");
-            if (mIsBound) {
-                getApplicationContext().unbindService(mConnection);
-                mIsBound = false;
-            }
-        }
-        else{
-            Log.d(TAG,"Decided not to enable location");
-            if(mIsBound) {
-                getApplicationContext().unbindService(mConnection);
-                mIsBound = false;
-            }
-            prefManager.setActive(false);
-//            Log.d(TAG,"Posting new UnbindBackgroundLocationService");
-//            EventBus.getDefault().post(new UnbindBackgroundLocationService());
-            final Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG,"onDestroy: stopping BackgroundLocationService");
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult");
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            switch (resultCode) {
+                case RESULT_OK:
+                    Log.i(TAG, "User agreed to make required location settings changes.");
+                    if(backgroundLocationService != null) {
+                        backgroundLocationService.startLocationUpdates();
+                        finish();
+                    }
+                    else {
+                        handleWhenBound = true;
+                    }
+                    break;
+                case RESULT_CANCELED:
+                    Log.i(TAG, "User chose not to make required location settings changes.");
+                    prefManager.setActive(false);
+                    if(mIsBound) {
+                        getApplicationContext().unbindService(mConnection);
+                        mIsBound = false;
+                    }
                     EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     stopService(blsIntent);
-                    handler.removeCallbacksAndMessages(null);
-                }
-            }, 200);
+                    finish();
+                    break;
+            }
         }
-        super.onDestroy();
+
     }
+
+/*
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        if (requestCode == ACCESS_FINE_LOCATION_CODE) {
+            Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult:");
+            permissionIsRequested = false;
+            // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult: Granted");
+                if(!checkedLocation) {
+                    backgroundLocationService.checkLocationSettings();
+                    checkedLocation = true;
+                }
+            } else {
+                Toast.makeText(this, "You can't receive requests unless you enable this permission\n" +
+                                "if you want to receive requests, press the 'Go active' button below",
+                        Toast.LENGTH_LONG).show();
+                prefManager.setActive(false);
+//                setUI();
+                EventBus.getDefault().post(new DriverActive(false));
+                // permission denied, boo! Disable the
+                // functionality that depends on this permission.
+            }
+        }
+    }
+*/
 
     @Override
     public void onStart() {
@@ -223,6 +174,17 @@ public class PopupActivity extends AppCompatActivity {
         }
     }
 
+
+    @Override
+    protected void onDestroy() {
+        Log.d(TAG, "onDestroy");
+        if(mIsBound) {
+            getApplicationContext().unbindService(mConnection);
+            mIsBound = false;
+        }
+        super.onDestroy();
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverLoggedout(DriverLoggedout event) {
         Log.d(TAG, "onDriverLoggedout has been invoked");
@@ -248,7 +210,6 @@ public class PopupActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
     @Override
     public void onResume() {
         Log.d(TAG,"onResume:");
@@ -260,4 +221,3 @@ public class PopupActivity extends AppCompatActivity {
 
 
 }
-

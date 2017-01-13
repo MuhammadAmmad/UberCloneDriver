@@ -1,4 +1,4 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 /**
  * Created by nezuma on 11/19/16.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.vogella.android.navigationwidgetattempt">
+    package="com.Wisam.passenger">
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -49,6 +49,7 @@
 
         <activity
             android:name=".LoginActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/LoginTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -59,27 +60,33 @@
         <activity
             android:name=".HistoryActivity"
             android:label="@string/history"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar2" />
         <activity
             android:name=".OngoingRequestsActivity"
             android:label="@string/Incoming_requests"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar2" />
         <activity
             android:name=".FCMRequest"
             android:label="@string/fcm_request"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.details.completed" />
 
         <activity
             android:name=".ProfileActivity"
             android:label="@string/profile"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar2" />
         <activity
             android:name=".AboutActivity"
             android:label="@string/about"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar2" />
         <activity
             android:name=".SelectedRequest"
             android:label="@string/request_details"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar2" />
 
         <service
@@ -92,11 +99,13 @@
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
             android:taskAffinity=""
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.MyDialog" />
         <activity android:name=".LocationSettingCallback"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
             android:taskAffinity=""
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Transparent"/>
     </application>
 

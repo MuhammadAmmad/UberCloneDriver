@@ -1,4 +1,4 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -35,10 +35,6 @@ import com.google.android.gms.maps.model.LatLng;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -234,14 +230,16 @@ public class FCMRequest extends AppCompatActivity {
 //                    clearHistoryEntries();
                     Toast.makeText(FCMRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                 }
-                FCMRequest.super.finish();
+//                FCMRequest.super.finish();
             }
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
                 Log.d(TAG, "The response is onFailure");
-                FCMRequest.super.finish();
+                Toast.makeText(FCMRequest.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+//                FCMRequest.super.finish();
+
             }
         });
     }

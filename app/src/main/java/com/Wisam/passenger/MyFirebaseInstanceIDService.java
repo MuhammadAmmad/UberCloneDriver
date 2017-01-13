@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 
         import android.content.Intent;

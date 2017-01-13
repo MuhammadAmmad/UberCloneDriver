@@ -1,7 +1,6 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -50,8 +49,8 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.vogella.android.navigationwidgetattempt.MainActivity.ACTIVE_NOTIFICATION_ID;
-import static com.vogella.android.navigationwidgetattempt.MainActivity.REQUEST_CHECK_SETTINGS;
+import static com.Wisam.passenger.MainActivity.ACTIVE_NOTIFICATION_ID;
+import static com.Wisam.passenger.MainActivity.REQUEST_CHECK_SETTINGS;
 
 /**
  *
@@ -80,7 +79,7 @@ public class BackgroundLocationService extends Service implements
 
     private static final String TAG = BackgroundLocationService.class.getSimpleName(); //"BackgroundLocationServ";
     private LocationSettingsRequest mLocationSettingsRequest;
-    private PrefManager prefManager;
+    private com.Wisam.passenger.PrefManager prefManager;
     private int inactiveAttempts = 0;
     private boolean sentInactiveSuccessfully;
 

@@ -1,8 +1,7 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
@@ -33,7 +32,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Created by nezuma on 10/27/16.
  */
 
-public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder> {
+public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passenger.OngoingRequestAdapter.OngoingRequestViewHolder> {
 
     private static final String TAG = "UbDriver";
     private static final int SELECTED_REQUEST_CODE = 43542;
@@ -57,7 +56,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
         requestList.add(getItemCount(), request); return true;}
 
     @Override
-    public void onBindViewHolder(final com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder RequestViewHolder, int i) {
+    public void onBindViewHolder(final com.Wisam.passenger.OngoingRequestAdapter.OngoingRequestViewHolder RequestViewHolder, int i) {
         final request ci = requestList.get(i);
 
         RequestViewHolder.price.setText(ci.getPrice());
@@ -167,12 +166,12 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.vogella.and
     }
 
     @Override
-    public com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public com.Wisam.passenger.OngoingRequestAdapter.OngoingRequestViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View itemView = LayoutInflater.
                 from(viewGroup.getContext()).
                 inflate(R.layout.history_entry_layout, viewGroup, false);
 
-        return new com.vogella.android.navigationwidgetattempt.OngoingRequestAdapter.OngoingRequestViewHolder(itemView);
+        return new com.Wisam.passenger.OngoingRequestAdapter.OngoingRequestViewHolder(itemView);
     }
 
     public void updateRequestsList(List<request> requestList) {

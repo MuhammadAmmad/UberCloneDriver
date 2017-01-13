@@ -1,7 +1,7 @@
 package com.Wisam.POJO;
 
 import com.google.gson.annotations.SerializedName;
-import com.vogella.android.navigationwidgetattempt.request;
+import com.Wisam.passenger.request;
 
 import java.util.List;
 

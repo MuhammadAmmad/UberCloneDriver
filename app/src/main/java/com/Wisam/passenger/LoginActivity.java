@@ -1,4 +1,4 @@
-package com.vogella.android.navigationwidgetattempt;
+package com.Wisam.passenger;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -34,7 +34,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.Wisam.POJO.LoginResponse;
-import com.Wisam.POJO.User;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;

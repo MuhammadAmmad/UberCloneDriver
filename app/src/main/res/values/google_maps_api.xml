@@ -4,7 +4,7 @@
 
     To get one, follow this link, follow the directions and press "Create" at the end:
 
-    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=98:D9:28:1C:90:A0:9F:40:88:71:A0:B5:FA:18:96:06:E1:AF:82:C1%3Bcom.vogella.android.navigationwidgetattempt
+    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=98:D9:28:1C:90:A0:9F:40:88:71:A0:B5:FA:18:96:06:E1:AF:82:C1%3Bcom.Wisam.passenger
 
     You can also add your credentials to an existing key, using this line:
     98:D9:28:1C:90:A0:9F:40:88:71:A0:B5:FA:18:96:06:E1:AF:82:C1;com.vogella.android.googlemapstry

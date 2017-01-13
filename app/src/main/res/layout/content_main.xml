@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/com.vogella.android.navigationwidgetattempt"
+    xmlns:app="http://schemas.android.com/apk/com.Wisam.passenger"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.vogella.android.navigationwidgetattempt.MainActivity"
+    tools:context="com.Wisam.passenger.MainActivity"
     tools:showIn="@layout/app_bar_main">
     <fragment
         android:id="@+id/map"
