@@ -304,6 +304,7 @@ public class MainActivity extends AppCompatActivity
                 // cast its IBinder to a concrete class and directly access it.
                 MainActivity.this.backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
                 if (!checkedLocation) {
+                    MainActivity.this.backgroundLocationService.setActivityWeakReference(MainActivity.this);
                     MainActivity.this.backgroundLocationService.checkLocationSettings();
                     checkedLocation = true;
                 }
@@ -464,8 +465,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void sendStatus(final String request_id, final String status) {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(MainActivity.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         String email = prefManager.pref.getString("UserEmail", "");
@@ -560,8 +562,9 @@ public class MainActivity extends AppCompatActivity
 
     private void sendActive(final int active, final String location) {
         Log.d(TAG, "sendActive");
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(MainActivity.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         String email = prefManager.pref.getString("UserEmail", "");
@@ -660,8 +663,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void sendCancel(final String request_id) {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(MainActivity.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         String email = prefManager.pref.getString("UserEmail", "");

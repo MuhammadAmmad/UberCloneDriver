@@ -1,5 +1,6 @@
 package com.Wisam.passenger;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -42,6 +43,8 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.lang.ref.WeakReference;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -99,6 +102,9 @@ public class BackgroundLocationService extends Service implements
     private Runnable checkLocationRunnable;
     private int resendActiveAttempts = 0;
     private int resendLocationAttempts = 0;
+
+    WeakReference<Activity> activityWeakReference;
+
 
     public class LocalBinder extends Binder {
         public BackgroundLocationService getServerInstance() {
@@ -172,6 +178,10 @@ public class BackgroundLocationService extends Service implements
      * {@link com.google.android.gms.location.SettingsApi#checkLocationSettings(GoogleApiClient,
      * LocationSettingsRequest)} method, with the results provided through a {@code PendingResult}.
      */
+    protected void setActivityWeakReference(Activity activity){
+        activityWeakReference =  new WeakReference<>(activity);
+    }
+
     protected void checkLocationSettings() {
         Log.d(TAG, "checkLocationSettings");
         PendingResult<LocationSettingsResult> result =
@@ -203,21 +213,28 @@ public class BackgroundLocationService extends Service implements
             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                 Log.i(TAG, "Location settings are not satisfied. Show the user a dialog to" +
                         "upgrade location settings");
-                Intent intent = new Intent(BackgroundLocationService.this, LocationSettingCallback.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    public void run() {
-                        try {
+//                Intent intent = new Intent(BackgroundLocationService.this, LocationSettingCallback.class);
+//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                startActivity(intent);
+//                Handler handler = new Handler();
+//                handler.postDelayed(new Runnable() {
+//                    public void run() {
+//                        try {
                             // Show the dialog by calling startResolutionForResult(), and check the result
                             // in onActivityResult().
-                            status.startResolutionForResult(LocationSettingCallback.activity, REQUEST_CHECK_SETTINGS);
-                        } catch (IntentSender.SendIntentException e) {
-                            Log.i(TAG, "PendingIntent unable to execute request.");
-                        }
+//                            status.startResolutionForResult(LocationSettingCallback.activity, REQUEST_CHECK_SETTINGS);
+//                        } catch (IntentSender.SendIntentException e) {
+//                            Log.i(TAG, "PendingIntent unable to execute request.");
+//                        }
+//                    }
+//                }, 20000);
+                if(activityWeakReference != null) {
+                    try {
+                        status.startResolutionForResult(activityWeakReference.get(), REQUEST_CHECK_SETTINGS);
+                    } catch (IntentSender.SendIntentException e) {
+                        e.printStackTrace();
                     }
-                }, 1000);
+                }
                 break;
             case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                 Log.i(TAG, "Location settings are inadequate, and cannot be fixed here. Dialog " +
@@ -291,6 +308,7 @@ public class BackgroundLocationService extends Service implements
             }
             return;
         }
+        Log.i(TAG,"requestLocationUpdates");
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient,
                 mLocationRequest,
@@ -383,6 +401,7 @@ public class BackgroundLocationService extends Service implements
 
 
     public static boolean isLocationEnabled(Context context) {
+        Log.d(TAG,"isLocationEnabled");
         int locationMode = 0;
         String locationProviders;
 
@@ -406,8 +425,9 @@ public class BackgroundLocationService extends Service implements
 
 
     private void sendLocation(final String request_id, final String location ) {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(BackgroundLocationService.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         String email = prefManager.pref.getString("UserEmail","");
@@ -459,8 +479,9 @@ public class BackgroundLocationService extends Service implements
 
 
     private void sendActive(final int active, final String location) {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(BackgroundLocationService.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         String email = prefManager.pref.getString("UserEmail", "");
@@ -557,8 +578,9 @@ public class BackgroundLocationService extends Service implements
     private void sendInactiveToLogout(final String location) {
         final int active = 0;
         Log.d(TAG, "sendInactiveToLogout");
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(BackgroundLocationService.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         String email = prefManager.pref.getString("UserEmail", "");

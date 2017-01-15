@@ -70,6 +70,8 @@ public class PrefManager {
 
     private static final String FCMREQUEST_ID = "FCMRrequestID";
 
+    private static final String BASE_URL = "BaseURL";
+
     public void setFcmrequestStatus(String status) {
         editor.putString(FCMREQUEST_STATUS, status);
         editor.apply();
@@ -77,6 +79,15 @@ public class PrefManager {
 
     public String getFcmrequestStatus() {
         return pref.getString(FCMREQUEST_STATUS, "No data");
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        editor.putString(BASE_URL, baseUrl);
+        editor.apply();
+    }
+
+    public String getBaseUrl() {
+        return pref.getString(BASE_URL, "http://wissamapps.esy.es/public/");
     }
 
 
@@ -136,7 +147,7 @@ public class PrefManager {
     }
 
     public boolean isActive() {
-        return pref.getBoolean(ACTIVE, true);
+        return pref.getBoolean(ACTIVE, false);
     }
 
     public void setOtherLanguage(boolean otherLanguage) {

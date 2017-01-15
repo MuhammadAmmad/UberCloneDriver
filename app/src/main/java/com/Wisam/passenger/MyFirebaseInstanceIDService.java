@@ -71,8 +71,9 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
      * @param token The new token.
      */
     private void sendRegistrationToServer(String token) {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(MyFirebaseInstanceIDService.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
               String email = prefManager.pref.getString("UserEmail","");

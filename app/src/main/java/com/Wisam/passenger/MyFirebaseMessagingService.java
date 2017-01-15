@@ -157,6 +157,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     sendNotification(getString(R.string.logged_elsewhere));
 
                     logout();
+                }else if(status.equals("10")){//Update BASEURL
+                    String baseURL = request.get("base_url");
+                    if(baseURL != null) {
+                        PrefManager prefManager;
+                        prefManager = new PrefManager(MyFirebaseMessagingService.this);
+                        prefManager.setBaseUrl(baseURL);
+                    }
                 }
             }
         }
@@ -196,8 +203,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
 
     private void serverAccept(String request_id, final int accepted ) {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(MyFirebaseMessagingService.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         String email = prefManager.pref.getString("UserEmail","");

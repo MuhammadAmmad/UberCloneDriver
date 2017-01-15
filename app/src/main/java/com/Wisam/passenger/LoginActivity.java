@@ -3,10 +3,12 @@ package com.Wisam.passenger;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -184,7 +186,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
+        String email = mEmailView.getText().toString().toLowerCase();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -224,9 +226,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private void loginRequest(final String email, final String password) {
         showProgress(true);
-
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(LoginActivity.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         int versionCode = 1;
@@ -262,8 +264,30 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         finish();
                     }
                     else if(response.body().getStatus() == 3){
-                        Toast.makeText(LoginActivity.this, R.string.outdated_app, Toast.LENGTH_LONG).show();
-                        finish();
+                        showProgress(false);
+                        AlertDialog.Builder alertBuilder = new AlertDialog.Builder(LoginActivity.this);
+                        alertBuilder.setTitle(getString(R.string.outdated_app_message));
+                        alertBuilder.setMessage(getString(R.string.outdated_app_message_body));
+                        alertBuilder.setPositiveButton(getString(R.string.update), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
+                                try {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                                } catch (android.content.ActivityNotFoundException anfe) {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                                }
+                            }
+                        });
+                        alertBuilder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                            }
+                        });
+                        alertBuilder.show();
+
+//                        finish();
                     }
                 } else if (response.code() == 401){
                     mPasswordView.setError(getString(R.string.error_incorrect_password));

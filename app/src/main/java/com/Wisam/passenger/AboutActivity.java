@@ -1,6 +1,7 @@
 package com.Wisam.passenger;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import com.Wisam.Events.DriverLoggedout;
 import com.Wisam.Events.UnbindBackgroundLocationService;
@@ -33,6 +35,13 @@ public class AboutActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         prefManager = new PrefManager(this);
+        String versionName = "Unable to get version";
+        try {
+            versionName = String.format("Driver v%s",getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        ((TextView)(findViewById(R.id.versionName))).setText(versionName);
     }
 
     @Override

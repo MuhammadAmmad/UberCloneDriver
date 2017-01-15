@@ -115,4 +115,7 @@
     <string name="ride_info">Ride info</string>
     <string name="location_permission_denied">You can\'t receive requests unless you enable this permission\nif you want to receive requests, press the \'Go active\' button below</string>
     <string name="missed">Missed</string>
+    <string name="outdated_app_message">Your app is outdated!</string>
+    <string name="outdated_app_message_body">Please update your application to continue using this app</string>
+    <string name="update">Update</string>
 </resources>

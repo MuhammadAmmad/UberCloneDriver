@@ -109,12 +109,13 @@ public class HistoryActivity extends AppCompatActivity {
         return result;
     }
 
-        private void serverRequest() {
+    private void serverRequest() {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-              String email = prefManager.pref.getString("UserEmail","");
+            .baseUrl(constants.getBaseUrl(HistoryActivity.this))
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
+        String email = prefManager.pref.getString("UserEmail","");
         String password = prefManager.pref.getString("UserPassword","");
 
         progress = new ProgressDialog(this);

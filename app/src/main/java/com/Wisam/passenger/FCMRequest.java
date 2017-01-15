@@ -150,8 +150,9 @@ public class FCMRequest extends AppCompatActivity {
     }
 
     private void serverAccept(String request_id, final int accepted ) {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(FCMRequest.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
               String email = prefManager.pref.getString("UserEmail","");

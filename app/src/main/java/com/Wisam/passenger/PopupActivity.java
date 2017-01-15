@@ -1,5 +1,6 @@
 package com.Wisam.passenger;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -79,6 +80,7 @@ public class PopupActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Log.d(TAG,"enable location clicked");
                 enablingLocation = true;
+                backgroundLocationService.setActivityWeakReference((Activity) (PopupActivity.this));
                 backgroundLocationService.checkLocationSettings();
                 final ProgressDialog progress = new ProgressDialog(PopupActivity.this);
                 progress.setMessage(getString(R.string.updating_request_status));

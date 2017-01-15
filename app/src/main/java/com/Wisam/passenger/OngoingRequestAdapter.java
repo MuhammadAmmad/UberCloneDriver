@@ -121,8 +121,9 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
     }
 
     private void sendCancel(final String request_id) {
+        RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(RestServiceConstants.BASE_URL)
+                .baseUrl(constants.getBaseUrl(context))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         String email = prefManager.pref.getString("UserEmail", "");
