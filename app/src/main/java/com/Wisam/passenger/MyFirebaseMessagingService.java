@@ -123,7 +123,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         intent.putExtra("pickup_text", received.getPickupText());
                         Log.d(TAG, "time read from the first request object =" + received.getTime());
                         intent.putExtra("time", received.getTime());
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         intent.putExtra("dest", dest);
                         intent.putExtra("dest_text", received.getDestText());
                         intent.putExtra("passenger_name", received.getPassenger_name());

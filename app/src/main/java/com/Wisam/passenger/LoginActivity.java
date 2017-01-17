@@ -290,9 +290,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 //                        finish();
                     }
                 } else if (response.code() == 401){
-                    mPasswordView.setError(getString(R.string.error_incorrect_password));
-                    mPasswordView.requestFocus();
-                    Toast.makeText(LoginActivity.this, R.string.authentication_failure, Toast.LENGTH_SHORT).show();
+                    mEmailView.setError(getString(R.string.user_password_incorrect));
+//                    mPasswordView.setError(getString(R.string.error_incorrect_password));
+                    mPasswordView.setText("");
+                    mEmailView.requestFocus();
+                    Toast.makeText(LoginActivity.this, getString(R.string.authentication_failure), Toast.LENGTH_SHORT).show();
                     showProgress(false);
                 } else {
                     Toast.makeText(LoginActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();

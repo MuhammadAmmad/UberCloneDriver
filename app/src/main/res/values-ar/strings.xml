@@ -62,7 +62,7 @@
     <string name="reject">رفض</string>
     <string name="request_cancelled_successfully">تم إلغاء الرحلة بنجاح</string>
     <string name="sdg">جنيه سوداني</string>
-    <string name="server_timeout">فشل الاتصال بالسيرفر</string>
+    <string name="server_timeout">الرجاء التأكد من اتصالك بالانترنت</string>
     <string name="server_unknown_error">حصل خطأ مجهول</string>
     <string name="start_upcoming_request">ابدأ</string>
     <string name="title_activity_login">تسجيل الدخول</string>
@@ -101,4 +101,8 @@
     <string name="ride_info">تفاصيل الرحلة</string>
     <string name="location_permission_denied">You can\'t receive requests unless you enable this permission\nif you want to receive requests, press the \'Go active\' button below</string>
     <string name="missed">لم تقبل</string>
+    <string name="outdated_app_message">نسخة تطبيقك قديمة!</string>
+    <string name="outdated_app_message_body">يرجى تحديث التطبيق لتتمكن من مواصلة استخدامه</string>
+    <string name="update">تحديث</string>
+    <string name="OK">موافق</string>
 </resources>

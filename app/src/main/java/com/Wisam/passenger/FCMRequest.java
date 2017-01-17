@@ -2,12 +2,14 @@ package com.Wisam.passenger;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.PowerManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.DateUtils;
@@ -58,6 +60,8 @@ public class FCMRequest extends AppCompatActivity {
     private Ringtone r;
     private ProgressDialog progress;
     private static final String GOOGLE_DIRECTIONS_API = "AIzaSyDpJmpRN0BxJ76X27K0NLTGs-gDHQtoxXQ";
+    private boolean waitForResopnse = false;
+    private boolean finishOnResponse = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,11 +126,24 @@ public class FCMRequest extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                if(reason == TIMEOUT) {
-                    Toast.makeText(getBaseContext(), R.string.fcm_ignored, Toast.LENGTH_LONG).show();
+                if (!FCMRequest.this.isFinishing()) {
+                    if (!waitForResopnse) {
+                        r.stop();
+                        AlertDialog.Builder alertBuilder = new AlertDialog.Builder(FCMRequest.this);
+                        alertBuilder.setCancelable(false);
+                        alertBuilder.setMessage(getString(R.string.fcm_ignored));
+                        alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                FCMRequest.super.finish();
+                            }
+                        });
+                        alertBuilder.show();
+//                    Toast.makeText(getBaseContext(), R.string.fcm_ignored, Toast.LENGTH_LONG).show();
+                    } else {
+                        finishOnResponse = true;
+                    }
                 }
-                r.stop();
-                FCMRequest.super.finish();
             }
         }.start();
 
@@ -134,7 +151,7 @@ public class FCMRequest extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 r.stop();
-                countDownTimer.cancel();
+//                countDownTimer.cancel();
                 serverAccept(request.getRequest_id(), 1);
             }
         });
@@ -143,7 +160,7 @@ public class FCMRequest extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 r.stop();
-                countDownTimer.cancel();
+//                countDownTimer.cancel();
                 serverAccept(request.getRequest_id(), 0);
             }
         });
@@ -157,6 +174,8 @@ public class FCMRequest extends AppCompatActivity {
                 .build();
               String email = prefManager.pref.getString("UserEmail","");
         String password = prefManager.pref.getString("UserPassword","");
+
+        waitForResopnse = true;
 
         progress = new ProgressDialog(this);
         progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
@@ -176,43 +195,106 @@ public class FCMRequest extends AppCompatActivity {
                 if (response.isSuccess() && response.body() != null){
                     if(accepted == 1) {
                         if(response.body().getStatus() == 0) {
-                            Toast.makeText(getBaseContext(), R.string.FCM_accepted_new_request, Toast.LENGTH_LONG).show();
                             Log.d(TAG, "You have accepted the request");
-                            if(data.getStringExtra("time").equals("now")) {
-                                Intent intent = new Intent(FCMRequest.this, SelectedRequest.class);
-                                intent.putExtras(data);
-                                intent.putExtra("status", "on_the_way");
-                                intent.putExtra("source", "FCMRequest");
-                                startActivity(intent);
-                            }
-                            FCMRequest.super.finish();
+//                            Toast.makeText(getBaseContext(), R.string.FCM_accepted_new_request, Toast.LENGTH_LONG).show();
+                            AlertDialog.Builder alertBuilder = new AlertDialog.Builder(FCMRequest.this);
+                            alertBuilder.setMessage(getString(R.string.FCM_accepted_new_request));
+                            alertBuilder.setCancelable(false);
+                            alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if(data.getStringExtra("time").equals("now")) {
+                                        Intent intent = new Intent(FCMRequest.this, SelectedRequest.class);
+                                        intent.putExtras(data);
+                                        intent.putExtra("status", "on_the_way");
+                                        intent.putExtra("source", "FCMRequest");
+                                        startActivity(intent);
+                                        waitForResopnse = false;
+                                    }
+                                    FCMRequest.super.finish();}
+                            });
+                            alertBuilder.show();
                         }
                         else if(response.body().getStatus() == 3){
-                             Toast.makeText(getBaseContext(), R.string.FCM_another_driver_accepted,
-                                     Toast.LENGTH_LONG).show();
-                            FCMRequest.super.finish();
+                            AlertDialog.Builder alertBuilder = new AlertDialog.Builder(FCMRequest.this);
+                            alertBuilder.setCancelable(false);
+                            alertBuilder.setMessage(getString(R.string.FCM_another_driver_accepted));
+                            alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    waitForResopnse = false;
+                                    FCMRequest.super.finish();
+                                }
+                            });
+                            alertBuilder.show();
                         }
                     }
                     else {
                         Log.d(TAG, "You have rejected the request");
-                        Toast.makeText(getBaseContext(), R.string.FCM_rejected_request,
-                                Toast.LENGTH_LONG).show();
-                        FCMRequest.super.finish();
+//                        Toast.makeText(getBaseContext(), R.string.FCM_rejected_request, Toast.LENGTH_LONG).show();
+                        AlertDialog.Builder alertBuilder = new AlertDialog.Builder(FCMRequest.this);
+                        alertBuilder.setMessage(getString(R.string.FCM_rejected_request));
+                        alertBuilder.setCancelable(false);
+                        alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                waitForResopnse = false;
+                                FCMRequest.super.finish();
+                            }
+                        });
+                        alertBuilder.show();
                     }
                 } else if (response.code() == 401){
-                    Toast.makeText(FCMRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(FCMRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Accept request onResponse: User not logged in");
-                    logout();
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(FCMRequest.this);
+                    alertBuilder.setMessage(getString(R.string.authorization_error));
+                    alertBuilder.setCancelable(false);
+                    alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            waitForResopnse = false;
+                            logout();
+                        }
+                    });
+                    alertBuilder.show();
                 } else {
-                    Toast.makeText(FCMRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(FCMRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(FCMRequest.this);
+                    alertBuilder.setMessage(getString(R.string.server_unknown_error));
+                    alertBuilder.setCancelable(false);
+                    alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            waitForResopnse = false;
+                            if(finishOnResponse){
+                                finishOnResponse = false;
+                                FCMRequest.super.finish();
+                            }
+                        }
+                    });
+                    alertBuilder.show();
                 }
             }
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
                 Log.d(TAG, "The response is onFailure");
-                Toast.makeText(FCMRequest.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+                if(!FCMRequest.this.isFinishing() && progress != null && progress.isShowing())progress.dismiss();
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(FCMRequest.this);
+                alertBuilder.setMessage(getString(R.string.server_timeout));
+                alertBuilder.setCancelable(false);
+                alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        waitForResopnse = false;
+                        if(finishOnResponse){
+                            finishOnResponse = false;
+                            FCMRequest.super.finish();
+                        }
+                    }
+                });
+                alertBuilder.show();
             }
         });
     }
@@ -268,6 +350,7 @@ public class FCMRequest extends AppCompatActivity {
     public void onStop() {
         EventBus.getDefault().unregister(this);
         super.onStop();
+//        onDestroy();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

@@ -514,6 +514,7 @@ public class MainActivity extends AppCompatActivity
                 } else {
                     Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "Unknown error occurred");
+/*
                     if (status.equals("on_the_way")) {
                         if (resendStatusHandler == null)
                             resendStatusHandler = new Handler();
@@ -529,6 +530,7 @@ public class MainActivity extends AppCompatActivity
                             Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
                         }
                     }
+*/
                 }
 
             }
@@ -540,6 +542,7 @@ public class MainActivity extends AppCompatActivity
                         progress.dismiss();
                 Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, getString(R.string.server_timeout));
+/*
                 if (status.equals("on_the_way")) {
                     if (resendStatusHandler == null)
                         resendStatusHandler = new Handler();
@@ -556,6 +559,7 @@ public class MainActivity extends AppCompatActivity
                     }
 
                 }
+*/
             }
         });
     }
@@ -756,7 +760,7 @@ public class MainActivity extends AppCompatActivity
         current_request = prefManager.getRequest();
         prefManager.setDoingRequest(true);
         EventBus.getDefault().post(new ChangeActiveUpdateInterval());
-        sendStatus(current_request.getRequest_id(), current_request.getStatus());
+//        sendStatus(current_request.getRequest_id(), current_request.getStatus());
     }
 
     public enum UI_STATE {

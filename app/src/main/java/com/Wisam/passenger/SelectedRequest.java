@@ -1,8 +1,10 @@
 package com.Wisam.passenger;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -133,19 +135,14 @@ public class SelectedRequest extends AppCompatActivity {
         ((TextView) findViewById(R.id.request_details_start)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent2 = new Intent(SelectedRequest.this, MainActivity.class);
-                intent2.putExtras(intent);
-                intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent2);
-                finish();
+                sendStatus(intent.getStringExtra("request_id"),"on_the_way");
             }
         });
         ((TextView) findViewById(R.id.request_details_cancel)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EventBus.getDefault().post(new PassengerCanceled(intent.getStringExtra("request_id")));
+//                EventBus.getDefault().post(new PassengerCanceled(intent.getStringExtra("request_id")));
                 sendCancel(intent.getStringExtra("request_id"));
-
             }
         });
 
@@ -186,19 +183,46 @@ public class SelectedRequest extends AppCompatActivity {
                 if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
-                    Toast.makeText(SelectedRequest.this, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(SelectedRequest.this, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
-                    Intent temp = new Intent();
-                    temp.putExtra("request_id", request_id);
-                    SelectedRequest.this.setResult(RESULT_OK, temp);
-                    SelectedRequest.this.finish();
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
+                    alertBuilder.setMessage(getString(R.string.request_cancelled_successfully));
+                    alertBuilder.setCancelable(false);
+                    alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent temp = new Intent();
+                            temp.putExtra("request_id", request_id);
+                            SelectedRequest.this.setResult(RESULT_OK, temp);
+                            SelectedRequest.this.finish();
+                        }
+                    });
+                    alertBuilder.show();
                 } else if (response.code() == 401) {
-                    Toast.makeText(SelectedRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(SelectedRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
-                    logout();
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
+                    alertBuilder.setMessage(getString(R.string.authorization_error));
+                    alertBuilder.setCancelable(false);
+                    alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            logout();
+                        }
+                    });
+                    alertBuilder.show();
                 } else {
-                    Toast.makeText(SelectedRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(SelectedRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Unknown error occurred");
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
+                    alertBuilder.setMessage(getString(R.string.server_unknown_error));
+                    alertBuilder.setCancelable(false);
+                    alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+                    alertBuilder.show();
                 }
 
             }
@@ -206,8 +230,17 @@ public class SelectedRequest extends AppCompatActivity {
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
-                Toast.makeText(SelectedRequest.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(SelectedRequest.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, "Couldn't connect to the server");
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
+                alertBuilder.setMessage(getString(R.string.server_timeout));
+                alertBuilder.setCancelable(false);
+                alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+                alertBuilder.show();
             }
         });
     }
@@ -318,5 +351,94 @@ public class SelectedRequest extends AppCompatActivity {
         finish();
     }
 
+    private void sendStatus(final String request_id, final String status) {
+        RestServiceConstants constants = new RestServiceConstants();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(constants.getBaseUrl(SelectedRequest.this))
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String email = prefManager.pref.getString("UserEmail", "");
+        String password = prefManager.pref.getString("UserPassword", "");
+
+        progress = new ProgressDialog(this);
+        progress.setMessage(getString(R.string.updating_request_status));
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
+        RestService service = retrofit.create(RestService.class);
+        Call<StatusResponse> call = service.status("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
+                request_id, status);
+        call.enqueue(new Callback<StatusResponse>() {
+            @Override
+            public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
+                if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
+                Log.d(TAG, "onResponse: raw: " + response.body());
+                if (response.isSuccess() && response.body() != null) {
+                    Log.d(TAG, "The status has been sent successfully");
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
+                    alertBuilder.setMessage("The request status has been updated successfully");
+                    alertBuilder.setCancelable(false);
+                    alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent intent2 = new Intent(SelectedRequest.this, MainActivity.class);
+                            intent2.putExtras(intent);
+                            intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent2);
+                            SelectedRequest.this.finish();
+                        }
+                    });
+                    alertBuilder.show();
+
+//                    Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
+                } else if (response.code() == 401) {
+//                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "sendStatus: User not logged in");
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
+                    alertBuilder.setMessage(getString(R.string.authorization_error));
+                    alertBuilder.setCancelable(false);
+                    alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            logout();
+                        }
+                    });
+                    alertBuilder.show();
+                } else {
+                    Log.d(TAG, "Unknown error occurred");
+//                    Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
+                    alertBuilder.setMessage(getString(R.string.server_unknown_error));
+                    alertBuilder.setCancelable(false);
+                    alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+                    alertBuilder.show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+                Log.d(TAG, getString(R.string.server_timeout));
+                if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
+                alertBuilder.setMessage(getString(R.string.server_timeout));
+                alertBuilder.setCancelable(false);
+                alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+                alertBuilder.show();
+//                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
 }

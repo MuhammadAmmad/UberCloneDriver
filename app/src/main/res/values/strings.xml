@@ -49,7 +49,7 @@
     <string name="logged_elsewhere">You are logged out of this device. Note that you can be loggedin on one device only</string>
     <string name="fcm_ignored">You didn\'t accept</string>
     <string name="request_cancelled_successfully">The request has been cancelled successfully</string>
-    <string name="server_timeout">Couldn\'t connect to the server</string>
+    <string name="server_timeout">Bad connection. Please check your internet connection</string>
     <string name="already_doing_request">You are already doing a request. Cancel it first and then start this one</string>
     <string name="upcoming_request_options">Do you want to start or cancel this request?</string>
     <string name="start_upcoming_request">Start</string>
@@ -118,4 +118,6 @@
     <string name="outdated_app_message">Your app is outdated!</string>
     <string name="outdated_app_message_body">Please update your application to continue using this app</string>
     <string name="update">Update</string>
+    <string name="OK">OK</string>
+    <string name="user_password_incorrect">Email or password are incorrect</string>
 </resources>
