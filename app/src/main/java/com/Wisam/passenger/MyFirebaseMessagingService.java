@@ -225,7 +225,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 if (response.isSuccess() && response.body() != null){
                     Log.d(TAG, "You have rejected the request");
                 } else if (response.code() == 401){
-                    Log.i(TAG, "onCreate: User not logged in");
+                    Log.i(TAG, "onResponse: User not logged in");
                     logout();
 
                 } else {

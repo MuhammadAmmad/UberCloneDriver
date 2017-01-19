@@ -170,11 +170,10 @@ public class MainActivity extends AppCompatActivity
 
     protected static MainActivity context;
 
-    private BackgroundLocationService backgroundLocationService;
+    private static BackgroundLocationService backgroundLocationService;
     protected static ServiceConnection mConnection;
 
 
-    private boolean goActive;
 
     protected static Intent blsIntent;
     protected static boolean mIsBound = false;
@@ -204,7 +203,7 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        goActive = false;
+//        goActive = false;
         DataHolder.save(goActiveID, MainActivity.this);
 
         final TextView changeDriverStatus = (TextView) findViewById(R.id.change_driver_status);
@@ -214,20 +213,29 @@ public class MainActivity extends AppCompatActivity
                 if (changeDriverStatus.getText().toString().equals(getString(R.string.go_inactive))) {
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from avaialble to away");
                     prefManager.setActive(false);
+                    prefManager.setGoActive(false);
                     EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     if (mIsBound) {
+//                        backgroundLocationService.setGoActive(false);
                         getApplicationContext().unbindService(mConnection);
                         mIsBound = false;
                     }
                     if (blsIntent != null)
                         stopService(blsIntent);
-                    if(goActive)
-                        goActive = false;
+//                    if(goActive)
+//                        goActive = false;
                     sendActive(0, prefManager.getCurrentLocation());
                     setUI();
                 } else if (changeDriverStatus.getText().toString().equals(getString(R.string.go_active))) {
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from away to available");
-                    goActive = true;
+//                    goActive = true;
+//                    if(mIsBound){
+//                        backgroundLocationService.setGoActive(true);
+//                    })
+                    if(resendActiveHandler != null)
+                        resendActiveHandler.removeCallbacksAndMessages(null);
+                    resendActiveAttempts = 0;
+                    prefManager.setGoActive(true);
                     startAndBindLocationService();
                     setUI();
                 }
@@ -274,7 +282,7 @@ public class MainActivity extends AppCompatActivity
         res.updateConfiguration(conf, null);
 
         if (prefManager.usingOtherLanguage())
-            ((MenuItem) navigationView.getMenu().getItem(5)).setTitle(otherLanguage);
+            navigationView.getMenu().getItem(5).setTitle(otherLanguage);
 
 
         createdFromNewRequest = false;
@@ -306,13 +314,15 @@ public class MainActivity extends AppCompatActivity
                 // interact with the service.  Because we have bound to a explicit
                 // service that we know is running in our own process, we can
                 // cast its IBinder to a concrete class and directly access it.
-                MainActivity.this.backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
+                backgroundLocationService = ((BackgroundLocationService.LocalBinder) service).getServerInstance();
                 if (!checkedLocation) {
-                    MainActivity.this.backgroundLocationService.setActivityWeakReference(MainActivity.this);
-                    MainActivity.this.backgroundLocationService.checkLocationSettings();
+                    backgroundLocationService.setActivityWeakReference(MainActivity.this);
+                    backgroundLocationService.checkLocationSettings();
                     checkedLocation = true;
                 }
                 mIsBound = true;
+
+                setUI();
 
                 // Tell the user about this for our demo.
                 //            Toast.makeText(Binding.this, R.string.local_service_connected,
@@ -324,7 +334,7 @@ public class MainActivity extends AppCompatActivity
                 // unexpectedly disconnected -- that is, its process crashed.
                 // Because it is running in our same process, we should never
                 // see this happen.
-                MainActivity.this.backgroundLocationService = null;
+                backgroundLocationService = null;
                 mIsBound = false;
 
             }
@@ -587,10 +597,14 @@ public class MainActivity extends AppCompatActivity
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
-                    Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The driver status has been set successfully");
-                    if (active == 1) {
-                        prefManager.setActive(true);
+                    if (prefManager.isActive() || prefManager.getGoActive()) {
+                        if(prefManager.isActive()){
+                            if(mIsBound){
+                                backgroundLocationService.sendActive(1, prefManager.getCurrentLocation());
+                            }
+                        }
                     } else {
                         prefManager.setActive(false);
                         resendActiveAttempts = 0;
@@ -600,12 +614,46 @@ public class MainActivity extends AppCompatActivity
                     setUI();
                 } else if (response.code() == 401) {
                     Log.i(TAG, "onResponse: User not logged in");
-                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     logout();
                 } else {
                     Log.i(TAG, "Unknown error occurred");
-                    Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
-                    if(active == 0) {
+//                    Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
+                    if (prefManager.isActive() || prefManager.getGoActive()){
+                        if(resendActiveHandler != null) resendActiveHandler.removeCallbacksAndMessages(null);
+                        resendActiveAttempts = 0;
+                    }
+                    else{
+                        if(active == 0) {
+                            if (resendActiveHandler == null)
+                                resendActiveHandler = new Handler();
+                            if (resendActiveAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
+                                resendActiveAttempts++;
+                                resendActiveHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        sendActive(active, location);
+                                    }
+                                }, resendFailedRequestDelay);
+                            } else {
+                                Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusResponse> call, Throwable t) {
+//                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
+                Log.i(TAG, getString(R.string.server_timeout));
+                if (prefManager.isActive() || prefManager.getGoActive()) {
+                    if (resendActiveHandler != null)
+                        resendActiveHandler.removeCallbacksAndMessages(null);
+                    resendActiveAttempts = 0;
+                } else {
+                    if (active == 0) {
                         if (resendActiveHandler == null)
                             resendActiveHandler = new Handler();
                         if (resendActiveAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
@@ -621,29 +669,6 @@ public class MainActivity extends AppCompatActivity
                         }
                     }
                 }
-
-            }
-
-            @Override
-            public void onFailure(Call<StatusResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
-                if(active == 0) {
-                    if (resendActiveHandler == null)
-                        resendActiveHandler = new Handler();
-                    if (resendActiveAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
-                        resendActiveAttempts++;
-                        resendActiveHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                sendActive(active, location);
-                            }
-                        }, resendFailedRequestDelay);
-                    }
-                    else {
-                        Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
-                    }
-                }
-                Log.i(TAG, getString(R.string.server_timeout));
             }
         });
     }
@@ -712,9 +737,10 @@ public class MainActivity extends AppCompatActivity
                 case RESULT_CANCELED:
                     Log.i(TAG, "User chose not to make required location settings changes.");
                     prefManager.setActive(false);
-                    goActive = false;
+                    prefManager.setGoActive(false);
                     EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     if (mIsBound) {
+//                        backgroundLocationService.setGoActive(false);
                         getApplicationContext().unbindService(mConnection);
                         mIsBound = false;
                     }
@@ -759,13 +785,6 @@ public class MainActivity extends AppCompatActivity
         DOINGREQUEST
     }
 
-    boolean getGoActive(){
-        return this.goActive;
-    }
-    void setGoActive(boolean goActive){
-        this.goActive = goActive;
-    }
-
     void setUI() {
         if (prefManager.isDoingRequest())
             setUI(UI_STATE.DOINGREQUEST);
@@ -783,7 +802,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.ongoing_request);
                 linearLayout.setVisibility(View.INVISIBLE);
-                ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.VISIBLE);
+                findViewById(R.id.change_driver_status).setVisibility(View.VISIBLE);
                 if (pickupMarker != null) {
                     pickupMarker.remove();
                 }
@@ -800,30 +819,42 @@ public class MainActivity extends AppCompatActivity
                     driverToPickupRoute.remove();
                 }
 
-                ((LinearLayout) findViewById(R.id.nav_button)).setVisibility(View.GONE);
+                findViewById(R.id.nav_button).setVisibility(View.GONE);
 
                 if (prefManager.isActive()) {
 
                     ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
                     ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
-                    ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
+                    findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.white));
                     ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
                     ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
 
                 } else {
-                    if(!goActive) {
+//                    if(mIsBound){
+//                        if(backgroundLocationService.getGoActive()) {
+                        if(prefManager.getGoActive()) {
+                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
+                        findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.white));
+                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
+                        ((TextView) findViewById(R.id.toolbar_title)).setText("Going Active..");
+                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+                    }
+/*
+                        else {
                         ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
-                        ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                        findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
                         ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
                         ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
                         ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
                     }
+*/
+//                    }
                     else {
-                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
-                        ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
-                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
-                        ((TextView) findViewById(R.id.toolbar_title)).setText("Going Active..");
-                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
+                        findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
+                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
+                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
                     }
                 }
                 break;
@@ -843,18 +874,18 @@ public class MainActivity extends AppCompatActivity
                 nextState.setText(current_request.getDisplayStatus(current_request.getNextStatus(), MainActivity.this));
                 linearLayout.setVisibility(View.VISIBLE);
 
-                ((LinearLayout) findViewById(R.id.nav_button)).setVisibility(View.VISIBLE);
+                findViewById(R.id.nav_button).setVisibility(View.VISIBLE);
                 ((TextView) findViewById(R.id.cr_passenger_name)).setText(current_request.getPassenger_name());
 
-                ((TextView) findViewById(R.id.change_driver_status)).setVisibility(View.INVISIBLE);
+                findViewById(R.id.change_driver_status).setVisibility(View.INVISIBLE);
                 if (current_request.getStatus().equals("passenger_onboard") ||
                         current_request.getStatus().equals("arrived_dest") ||
                         current_request.getStatus().equals("completed")) {
-                    ((LinearLayout) findViewById(R.id.request_view_top)).setVisibility(View.GONE);
+                    findViewById(R.id.request_view_top).setVisibility(View.GONE);
                     ((TextView) findViewById(R.id.cancel_request)).setText(R.string.ride_info);
                     ((TextView) findViewById(R.id.cancel_request)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 } else {
-                    ((LinearLayout) findViewById(R.id.request_view_top)).setVisibility(View.VISIBLE);
+                    findViewById(R.id.request_view_top).setVisibility(View.VISIBLE);
                     ((TextView) findViewById(R.id.cancel_request)).setText(getString(R.string.cancel));
                     ((TextView) findViewById(R.id.cancel_request)).setTextColor(getResources().getColor(R.color.red2));
                 }
@@ -955,7 +986,7 @@ public class MainActivity extends AppCompatActivity
         else {
             //get the driver information
             driver = prefManager.getDriver();
-            if (prefManager.isActive()) {
+            if (prefManager.isActive() || prefManager.getGoActive()) {
                 if (backgroundLocationService != null)
                     if (!checkedLocation) {
                         backgroundLocationService.checkLocationSettings();
@@ -1044,18 +1075,24 @@ public class MainActivity extends AppCompatActivity
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDriverActive(DriverActive event) {
         Log.d(TAG, "onDriverActive has been invoked");
-        if (goActive) { //if the user changed his status to active
-            goActive = false;
-        }
+//        if(mIsBound){
+//            backgroundLocationService.setGoActive(false);
+//        }
+//        if (goActive) { //if the user changed his status to active
+//            goActive = false;
+//        }
+        prefManager.setGoActive(false);
         setUI();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onUnbindBackgroundLocationService(UnbindBackgroundLocationService event) {
         Log.d(TAG, "onUnbindBackgroundLocationService has been invoked");
+        prefManager.setGoActive(false);
         if (mIsBound) {
+//            backgroundLocationService.setGoActive(false);
             getApplicationContext().unbindService(mConnection);
-            goActive = false;
+//            goActive = false;
             mIsBound = false;
             setUI();
         }

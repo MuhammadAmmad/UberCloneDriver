@@ -108,7 +108,9 @@ public class BackgroundLocationService extends Service implements
     private boolean FIRST_LOCATION_UPDATE;
     private boolean FIRST_SERVER_ACTIVE;
     private boolean destroying = false;
+    private int updateInterval;
 
+//    private boolean goActive;
 
     public class LocalBinder extends Binder {
         public BackgroundLocationService getServerInstance() {
@@ -142,6 +144,8 @@ public class BackgroundLocationService extends Service implements
 
         FIRST_LOCATION_UPDATE = true;
         FIRST_SERVER_ACTIVE = true;
+
+//        goActive = true;
 
         startForeground(ACTIVE_NOTIFICATION_ID, getMyActivityNotification("Going Active.."));
 
@@ -285,6 +289,19 @@ public class BackgroundLocationService extends Service implements
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(ACTIVE_NOTIFICATION_ID, notification);
     }
+
+/*
+    boolean getGoActive(){
+        return this.goActive;
+    }
+
+    void setGoActive(boolean goActive){
+        this.goActive = goActive;
+    }
+*/
+
+
+
     // Define the callback method that receives location updates
     @Override
     public void onLocationChanged(Location location) {
@@ -346,29 +363,28 @@ public class BackgroundLocationService extends Service implements
         updateActiveRunnable = new Runnable() {
             @Override
             public void run() {
-                    Log.d(TAG,"updateActiveHandler running");
-                    int intervalTimeMillis;
-                    if (prefManager.isDoingRequest())
-                        intervalTimeMillis = UPDATE_DURING_REQUEST;  // 10 seconds
-                    else
-                        intervalTimeMillis = UPDATE_WHILE_IDLE;//5 * 60 * 1000; // 5 minutes
-                    String location = prefManager.getCurrentLocation();
-                    String request_id;
-                    if (prefManager.isDoingRequest())
-                        request_id = prefManager.getRequestId();
-                    else
-                        request_id = "-1";
-                    resendLocationAttempts = 0;
-                    sendLocation(request_id, location);
-                    int active;
-                    if (prefManager.isActive())
-                        active = 1;
-                    else
-                        active = 0;
-                    resendActiveAttempts = 0;
-                    sendActive(active, location);
-                    updateActiveHandler.postDelayed(updateActiveRunnable, intervalTimeMillis);
-                }
+                Log.d(TAG,"updateActiveHandler running");
+                if (prefManager.isDoingRequest())
+                    updateInterval = UPDATE_DURING_REQUEST;  // 10 seconds
+                else
+                    updateInterval = UPDATE_WHILE_IDLE;//5 * 60 * 1000; // 5 minutes
+                String location = prefManager.getCurrentLocation();
+                String request_id;
+                if (prefManager.isDoingRequest())
+                    request_id = prefManager.getRequestId();
+                else
+                    request_id = "-1";
+                resendLocationAttempts = 0;
+                sendLocation(request_id, location);
+                int active;
+                if (prefManager.isActive() || prefManager.getGoActive())
+                    active = 1;
+                else
+                    active = 0;
+                resendActiveAttempts = 0;
+                sendActive(active, location);
+                updateActiveHandler.postDelayed(updateActiveRunnable, updateInterval);
+            }
         };
         updateActiveRunnable.run();
     }
@@ -461,7 +477,7 @@ public class BackgroundLocationService extends Service implements
                 Log.i(TAG, "sendActive call data was: " + call.toString());
                 if(resendLocationHandler == null)
                     resendLocationHandler = new Handler();
-                if(resendLocationAttempts < RESENDING_ATTEMPTS) {
+                if(resendLocationAttempts * resendFailedRequestDelay < updateInterval) {
                     resendLocationAttempts++;
                     resendLocationHandler.postDelayed(new Runnable() {
                         @Override
@@ -476,7 +492,7 @@ public class BackgroundLocationService extends Service implements
     }
 
 
-    private void sendActive(final int active, final String location) {
+    void sendActive(final int active, final String location) {
         RestServiceConstants constants = new RestServiceConstants();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(constants.getBaseUrl(BackgroundLocationService.this))
@@ -498,9 +514,11 @@ public class BackgroundLocationService extends Service implements
                     Log.d(TAG, "The driver status has been changed successfully");
                     if(resendActivehandler != null)
                         resendActivehandler.removeCallbacksAndMessages(null);
-                    if(FIRST_SERVER_ACTIVE) {
+//                    if(FIRST_SERVER_ACTIVE) {
+                    if(!prefManager.isActive() && active == 1){
                         if(!destroying) {
-                            FIRST_SERVER_ACTIVE = false;
+//                            FIRST_SERVER_ACTIVE = false;
+                            prefManager.setGoActive(false);
                             prefManager.setActive(true);
                             updateNotification("Active");
                             EventBus.getDefault().post(new DriverActive(true));
@@ -514,6 +532,21 @@ public class BackgroundLocationService extends Service implements
                     stopSelf();
                 } else {
                     Log.i(TAG, "sendActive: Unknown error occurred");
+                    if(resendActivehandler == null)
+                        resendActivehandler = new Handler();
+                    if(resendActiveAttempts * resendFailedRequestDelay < updateInterval
+                            && ((active == 0 && prefManager.isActive() || (active == 1 && !prefManager.isActive())))) {
+                        resendActiveAttempts++;
+                        resendActivehandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendActive(active, location);
+                            }
+                        }, resendFailedRequestDelay);
+                    }
+                    else{
+                        Log.d(TAG,String.format("Couldn't connect to the server after %d attempts... Stopping now.", RESENDING_ATTEMPTS));
+                    }
                 }
 
             }
@@ -524,7 +557,8 @@ public class BackgroundLocationService extends Service implements
                 Log.i(TAG, "sendActive call data was: " + call.toString());
                 if(resendActivehandler == null)
                     resendActivehandler = new Handler();
-                if(resendActiveAttempts < RESENDING_ATTEMPTS) {
+                if(resendActiveAttempts * resendFailedRequestDelay < updateInterval
+                        && ((active == 0 && prefManager.isActive() || (active == 1 && !prefManager.isActive())))) {
                     resendActiveAttempts++;
                     resendActivehandler.postDelayed(new Runnable() {
                         @Override

@@ -72,6 +72,8 @@ public class PrefManager {
 
     private static final String BASE_URL = "BaseURL";
 
+    private static final String GO_ACTIVE = "GoActive";
+
     public void setFcmrequestStatus(String status) {
         editor.putString(FCMREQUEST_STATUS, status);
         editor.apply();
@@ -88,6 +90,16 @@ public class PrefManager {
 
     public String getBaseUrl() {
         return pref.getString(BASE_URL, "http://wissamapps.esy.es/public/");
+    }
+
+
+    public void setGoActive(Boolean goActive) {
+        editor.putBoolean(GO_ACTIVE, goActive);
+        editor.apply();
+    }
+
+    public Boolean getGoActive() {
+        return pref.getBoolean(GO_ACTIVE, false);
     }
 
 

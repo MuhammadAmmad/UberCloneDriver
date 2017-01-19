@@ -54,8 +54,6 @@ public class PopupActivity extends AppCompatActivity {
         toolbar.setTitle("Passenger");
         setSupportActionBar(toolbar);
 
-//        prefManager.setActive(false);
-
         MainActivity = (MainActivity) DataHolder.retrieve(goActiveID);
 
 
@@ -96,20 +94,6 @@ public class PopupActivity extends AppCompatActivity {
                 progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progress.setIndeterminate(true);
                 progress.show();
-//                Handler handler = new Handler();
-//                handler.postDelayed(new Runnable() {
-//                    public void run() {
-//                        if(mRequestingLocationUpdates){
-//                            if (!PopupActivity.this.isFinishing() && progress.isShowing()) progress.dismiss();
-//                            EventBus.getDefault().post(new ChangeActiveUpdateInterval());
-//                            backgroundLocationService.checkLocation();
-//                            finish();
-//                        }
-//                        else{
-//                            Toast.makeText(getApplicationContext(),"Couldn't get your location. Go to the app and try again",Toast.LENGTH_LONG).show();
-//                        }
-//                    }
-//                }, 4000);
 
             }
         });
@@ -117,13 +101,14 @@ public class PopupActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.d(TAG,"become inactive clicked");
+                prefManager.setGoActive(false);
                 if(mIsBound) {
+//                    backgroundLocationService.setGoActive(false);
+                    backgroundLocationService.sendActive(0, prefManager.getCurrentLocation());
                     getApplicationContext().unbindService(mConnection);
                     mIsBound = false;
                 }
                 prefManager.setActive(false);
-                if(MainActivity != null)
-                    MainActivity.setGoActive(false);
                 Log.d(TAG,"Posting new UnbindBackgroundLocationService");
                 EventBus.getDefault().post(new UnbindBackgroundLocationService());
                 final Handler handler = new Handler();
@@ -155,10 +140,11 @@ public class PopupActivity extends AppCompatActivity {
                 case RESULT_CANCELED:
                     Log.i(TAG, "User chose not to make required location settings changes.");
                     prefManager.setActive(false);
-                    if(MainActivity != null)
-                        MainActivity.setGoActive(false);
+                    prefManager.setGoActive(false);
                     EventBus.getDefault().post(new UnbindBackgroundLocationService());
                     if (mIsBound) {
+//                        backgroundLocationService.setGoActive(false);
+                        backgroundLocationService.sendActive(0, prefManager.getCurrentLocation());
                         getApplicationContext().unbindService(mConnection);
                         mIsBound = false;
                     }
@@ -185,12 +171,13 @@ public class PopupActivity extends AppCompatActivity {
         else{
             Log.d(TAG,"Decided not to enable location");
             if(mIsBound) {
+//                backgroundLocationService.setGoActive(false);
+                backgroundLocationService.sendActive(0, prefManager.getCurrentLocation());
                 getApplicationContext().unbindService(mConnection);
                 mIsBound = false;
             }
             prefManager.setActive(false);
-            if(MainActivity != null)
-                MainActivity.setGoActive(false);
+            prefManager.setGoActive(false);
             final Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
