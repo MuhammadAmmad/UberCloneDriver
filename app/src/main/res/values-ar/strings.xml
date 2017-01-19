@@ -33,8 +33,8 @@
     <string name="developed_by">هذا التطبيق منتج من Favicon</string>
     <string name="dont_call">لا</string>
     <string name="dont_cancel_current_request">لا</string>
-    <string name="driver_active">متاح</string>
-    <string name="driver_inactive">غير متاح</string>
+    <string name="driver_active">Active</string>
+    <string name="driver_inactive">Inactive</string>
     <string name="driver_status_changed_successfully">تم تغيير حالتك بنجاح</string>
     <string name="driver_to_pickup_route_failed">فشل رسم المسار بين موقعك ونقطة ركوب الزبون</string>
     <string name="email">البريد الالكتروني</string>
@@ -105,4 +105,5 @@
     <string name="outdated_app_message_body">يرجى تحديث التطبيق لتتمكن من مواصلة استخدامه</string>
     <string name="update">تحديث</string>
     <string name="OK">موافق</string>
+    <string name="user_password_incorrect">البريد الالكتروني أو كلمة السر خطأ</string>
 </resources>

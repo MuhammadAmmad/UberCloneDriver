@@ -101,12 +101,6 @@
             android:taskAffinity=""
             android:screenOrientation="portrait"
             android:theme="@style/Theme.MyDialog" />
-        <activity android:name=".LocationSettingCallback"
-            android:excludeFromRecents="true"
-            android:launchMode="singleInstance"
-            android:taskAffinity=""
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.Transparent"/>
     </application>
 
 </manifest>

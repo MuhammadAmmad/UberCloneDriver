@@ -90,6 +90,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import static com.Wisam.passenger.BackgroundLocationService.ACCESS_FINE_LOCATION_CODE;
 import static com.Wisam.passenger.BackgroundLocationService.checkedLocation;
 import static com.Wisam.passenger.BackgroundLocationService.permissionIsRequested;
+import static com.Wisam.passenger.RestServiceConstants.REQUEST_CHECK_SETTINGS;
+import static com.Wisam.passenger.RestServiceConstants.goActiveID;
 
 
 public class MainActivity extends AppCompatActivity
@@ -102,7 +104,6 @@ public class MainActivity extends AppCompatActivity
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2445;
     private static final int PERMISSION_REQUEST_LOCATION = 1432;
     private static final int PERMISSION_REQUEST_CLIENT_CONNECT = 365;
-    protected static final int REQUEST_CHECK_SETTINGS = 21314;
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 2000;
     static final int ACTIVE_NOTIFICATION_ID = 1024;
@@ -173,7 +174,7 @@ public class MainActivity extends AppCompatActivity
     protected static ServiceConnection mConnection;
 
 
-    private boolean goActive = false;
+    private boolean goActive;
 
     protected static Intent blsIntent;
     protected static boolean mIsBound = false;
@@ -187,7 +188,6 @@ public class MainActivity extends AppCompatActivity
     private Handler resendActiveHandler;
     private long resendFailedRequestDelay = 10 * 1000;
     private int resendActiveAttempts = 0;
-    private boolean shownActiveProgress = false;
     private Handler resendStatusHandler;
     private int resendStatusAttempts = 0;
     private boolean routeCancelled;
@@ -204,12 +204,14 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
+        goActive = false;
+        DataHolder.save(goActiveID, MainActivity.this);
+
         final TextView changeDriverStatus = (TextView) findViewById(R.id.change_driver_status);
         changeDriverStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (changeDriverStatus.getText().toString().equals(getString(R.string.go_inactive))) {
-                    shownActiveProgress = false; // To display the progress bar again.
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from avaialble to away");
                     prefManager.setActive(false);
                     EventBus.getDefault().post(new UnbindBackgroundLocationService());
@@ -219,16 +221,18 @@ public class MainActivity extends AppCompatActivity
                     }
                     if (blsIntent != null)
                         stopService(blsIntent);
+                    if(goActive)
+                        goActive = false;
                     sendActive(0, prefManager.getCurrentLocation());
                     setUI();
                 } else if (changeDriverStatus.getText().toString().equals(getString(R.string.go_active))) {
                     Log.d(TAG, "changeDriverStatus button pressed. Attempting to change from away to available");
                     goActive = true;
                     startAndBindLocationService();
+                    setUI();
                 }
             }
         });
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -331,6 +335,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setOnClickListeners() {
+
         TextView cancelRequest = (TextView) findViewById(R.id.cancel_request);
         cancelRequest.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -574,22 +579,12 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
-        if(!shownActiveProgress) {
-            progress = new ProgressDialog(this);
-            progress.setMessage(getString(R.string.updating_driver_status));
-            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progress.setIndeterminate(true);
-            progress.show();
-        }
-
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.active("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
                 active, location);
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
-                    progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
                     Toast.makeText(MainActivity.this, R.string.driver_status_changed_successfully, Toast.LENGTH_SHORT).show();
@@ -604,19 +599,12 @@ public class MainActivity extends AppCompatActivity
                     }
                     setUI();
                 } else if (response.code() == 401) {
-                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
+                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     logout();
                 } else {
                     Log.i(TAG, "Unknown error occurred");
-                    if(shownActiveProgress) {
-                        if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
-                            progress.dismiss();
-                    }else
-                    {
-                        shownActiveProgress = true;
-                        Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
-                    }
+                    Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     if(active == 0) {
                         if (resendActiveHandler == null)
                             resendActiveHandler = new Handler();
@@ -638,14 +626,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if(shownActiveProgress) {
-                    if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
-                        progress.dismiss();
-                }
-                else{
-                    shownActiveProgress = true;
-                    Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
-                }
+                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 if(active == 0) {
                     if (resendActiveHandler == null)
                         resendActiveHandler = new Handler();
@@ -657,7 +638,8 @@ public class MainActivity extends AppCompatActivity
                                 sendActive(active, location);
                             }
                         }, resendFailedRequestDelay);
-                    } else {
+                    }
+                    else {
                         Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
                     }
                 }
@@ -724,11 +706,20 @@ public class MainActivity extends AppCompatActivity
             switch (resultCode) {
                 case RESULT_OK:
                     Log.i(TAG, "User agreed to make required location settings changes.");
-                    backgroundLocationService.startLocationUpdates();
+                    if(mIsBound)
+                        backgroundLocationService.startLocationUpdates();
                     break;
                 case RESULT_CANCELED:
                     Log.i(TAG, "User chose not to make required location settings changes.");
                     prefManager.setActive(false);
+                    goActive = false;
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    if (mIsBound) {
+                        getApplicationContext().unbindService(mConnection);
+                        mIsBound = false;
+                    }
+                    if (blsIntent != null)
+                        stopService(blsIntent);
                     setUI();
                     break;
             }
@@ -766,6 +757,13 @@ public class MainActivity extends AppCompatActivity
     public enum UI_STATE {
         SIMPLE,
         DOINGREQUEST
+    }
+
+    boolean getGoActive(){
+        return this.goActive;
+    }
+    void setGoActive(boolean goActive){
+        this.goActive = goActive;
     }
 
     void setUI() {
@@ -813,12 +811,20 @@ public class MainActivity extends AppCompatActivity
                     ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
 
                 } else {
-                    ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
-                    ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
-                    ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                    ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
-                    ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
-
+                    if(!goActive) {
+                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
+                        ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
+                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
+                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
+                    }
+                    else {
+                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
+                        ((TextView) findViewById(R.id.change_driver_status)).setBackgroundColor(getResources().getColor(R.color.white));
+                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
+                        ((TextView) findViewById(R.id.toolbar_title)).setText("Going Active..");
+                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+                    }
                 }
                 break;
 
@@ -1049,6 +1055,7 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "onUnbindBackgroundLocationService has been invoked");
         if (mIsBound) {
             getApplicationContext().unbindService(mConnection);
+            goActive = false;
             mIsBound = false;
             setUI();
         }

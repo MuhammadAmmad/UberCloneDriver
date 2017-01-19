@@ -261,7 +261,7 @@ public class FCMRequest extends AppCompatActivity {
                 } else {
 //                    Toast.makeText(FCMRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     AlertDialog.Builder alertBuilder = new AlertDialog.Builder(FCMRequest.this);
-                    alertBuilder.setMessage(getString(R.string.server_unknown_error));
+                    alertBuilder.setMessage("The user has already cancelled this request");
                     alertBuilder.setCancelable(false);
                     alertBuilder.setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
                         @Override

@@ -23,7 +23,11 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.ref.WeakReference;
+
 import static com.Wisam.passenger.BackgroundLocationService.mRequestingLocationUpdates;
+import static com.Wisam.passenger.RestServiceConstants.REQUEST_CHECK_SETTINGS;
+import static com.Wisam.passenger.RestServiceConstants.goActiveID;
 
 public class PopupActivity extends AppCompatActivity {
     private BackgroundLocationService backgroundLocationService;
@@ -35,6 +39,8 @@ public class PopupActivity extends AppCompatActivity {
     private static final String TAG = PopupActivity.class.getSimpleName();
     private boolean enablingLocation = false;
     private Intent blsIntent;
+    private ProgressDialog progress;
+    private MainActivity MainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +54,10 @@ public class PopupActivity extends AppCompatActivity {
         toolbar.setTitle("Passenger");
         setSupportActionBar(toolbar);
 
-        prefManager.setActive(false);
+//        prefManager.setActive(false);
+
+        MainActivity = (MainActivity) DataHolder.retrieve(goActiveID);
+
 
         mConnection = new ServiceConnection() {
 
@@ -82,25 +91,25 @@ public class PopupActivity extends AppCompatActivity {
                 enablingLocation = true;
                 backgroundLocationService.setActivityWeakReference((Activity) (PopupActivity.this));
                 backgroundLocationService.checkLocationSettings();
-                final ProgressDialog progress = new ProgressDialog(PopupActivity.this);
+                progress = new ProgressDialog(PopupActivity.this);
                 progress.setMessage(getString(R.string.updating_request_status));
                 progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progress.setIndeterminate(true);
                 progress.show();
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    public void run() {
-                        if(mRequestingLocationUpdates){
-                            if (!PopupActivity.this.isFinishing() && progress.isShowing()) progress.dismiss();
-                            EventBus.getDefault().post(new ChangeActiveUpdateInterval());
-                            backgroundLocationService.checkLocation();
-                            finish();
-                        }
-                        else{
-                            Toast.makeText(getApplicationContext(),"Couldn't get your location. Go to the app and try again",Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }, 4000);
+//                Handler handler = new Handler();
+//                handler.postDelayed(new Runnable() {
+//                    public void run() {
+//                        if(mRequestingLocationUpdates){
+//                            if (!PopupActivity.this.isFinishing() && progress.isShowing()) progress.dismiss();
+//                            EventBus.getDefault().post(new ChangeActiveUpdateInterval());
+//                            backgroundLocationService.checkLocation();
+//                            finish();
+//                        }
+//                        else{
+//                            Toast.makeText(getApplicationContext(),"Couldn't get your location. Go to the app and try again",Toast.LENGTH_LONG).show();
+//                        }
+//                    }
+//                }, 4000);
 
             }
         });
@@ -113,6 +122,8 @@ public class PopupActivity extends AppCompatActivity {
                     mIsBound = false;
                 }
                 prefManager.setActive(false);
+                if(MainActivity != null)
+                    MainActivity.setGoActive(false);
                 Log.d(TAG,"Posting new UnbindBackgroundLocationService");
                 EventBus.getDefault().post(new UnbindBackgroundLocationService());
                 final Handler handler = new Handler();
@@ -130,8 +141,40 @@ public class PopupActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG,String.format("onActivityResult: requestCode = %d, resultCode = %d", requestCode, resultCode));
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            if (!PopupActivity.this.isFinishing() && progress.isShowing()) progress.dismiss();
+            switch (resultCode) {
+                case RESULT_OK:
+                    Log.i(TAG, "User agreed to make required location settings changes.");
+                    if(mIsBound)
+                        backgroundLocationService.startLocationUpdates();
+                    finish();
+                    break;
+                case RESULT_CANCELED:
+                    Log.i(TAG, "User chose not to make required location settings changes.");
+                    prefManager.setActive(false);
+                    if(MainActivity != null)
+                        MainActivity.setGoActive(false);
+                    EventBus.getDefault().post(new UnbindBackgroundLocationService());
+                    if (mIsBound) {
+                        getApplicationContext().unbindService(mConnection);
+                        mIsBound = false;
+                    }
+                    if (blsIntent != null)
+                        stopService(blsIntent);
+                    finish();
+                    break;
+            }
+        }
+    }
+
+
+    @Override
     protected void onDestroy() {
         Log.d(TAG,"onDestroy");
+        if (!PopupActivity.this.isFinishing() && progress.isShowing()) progress.dismiss();
         if(enablingLocation) {
             Log.d(TAG,"Decided to enable location");
             if (mIsBound) {
@@ -146,6 +189,8 @@ public class PopupActivity extends AppCompatActivity {
                 mIsBound = false;
             }
             prefManager.setActive(false);
+            if(MainActivity != null)
+                MainActivity.setGoActive(false);
             final Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override

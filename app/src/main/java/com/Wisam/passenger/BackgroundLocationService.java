@@ -2,6 +2,7 @@ package com.Wisam.passenger;
 
 import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -53,7 +54,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.Wisam.passenger.MainActivity.ACTIVE_NOTIFICATION_ID;
-import static com.Wisam.passenger.MainActivity.REQUEST_CHECK_SETTINGS;
+import static com.Wisam.passenger.RestServiceConstants.REQUEST_CHECK_SETTINGS;
 
 /**
  *
@@ -104,6 +105,9 @@ public class BackgroundLocationService extends Service implements
     private int resendLocationAttempts = 0;
 
     WeakReference<Activity> activityWeakReference;
+    private boolean FIRST_LOCATION_UPDATE;
+    private boolean FIRST_SERVER_ACTIVE;
+    private boolean destroying = false;
 
 
     public class LocalBinder extends Binder {
@@ -136,19 +140,10 @@ public class BackgroundLocationService extends Service implements
 
         sentInactiveSuccessfully = false;
 
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        FIRST_LOCATION_UPDATE = true;
+        FIRST_SERVER_ACTIVE = true;
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        builder.setContentTitle(prefManager.getDriverName());
-        builder.setContentText("Active");
-        builder.setSmallIcon(R.drawable.ic_notification_logo);
-        builder.setContentIntent(pendingIntent);
-        Notification notification = builder.build();
-
-
-        startForeground(ACTIVE_NOTIFICATION_ID, notification);
+        startForeground(ACTIVE_NOTIFICATION_ID, getMyActivityNotification("Going Active.."));
 
         EventBus.getDefault().register(this);
     }
@@ -213,21 +208,6 @@ public class BackgroundLocationService extends Service implements
             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                 Log.i(TAG, "Location settings are not satisfied. Show the user a dialog to" +
                         "upgrade location settings");
-//                Intent intent = new Intent(BackgroundLocationService.this, LocationSettingCallback.class);
-//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                startActivity(intent);
-//                Handler handler = new Handler();
-//                handler.postDelayed(new Runnable() {
-//                    public void run() {
-//                        try {
-                            // Show the dialog by calling startResolutionForResult(), and check the result
-                            // in onActivityResult().
-//                            status.startResolutionForResult(LocationSettingCallback.activity, REQUEST_CHECK_SETTINGS);
-//                        } catch (IntentSender.SendIntentException e) {
-//                            Log.i(TAG, "PendingIntent unable to execute request.");
-//                        }
-//                    }
-//                }, 20000);
                 if(activityWeakReference != null) {
                     try {
                         status.startResolutionForResult(activityWeakReference.get(), REQUEST_CHECK_SETTINGS);
@@ -285,13 +265,36 @@ public class BackgroundLocationService extends Service implements
             buildGoogleApiClient();
     }
 
+    private Notification getMyActivityNotification(String text){
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setContentTitle(prefManager.getDriverName());
+        builder.setContentText(text);
+        builder.setSmallIcon(R.drawable.ic_notification_logo);
+        builder.setContentIntent(pendingIntent);
+        Notification notification = builder.build();
+        return notification;
+    }
+
+    private void updateNotification(String text) {
+        Notification notification = getMyActivityNotification(text);
+
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.notify(ACTIVE_NOTIFICATION_ID, notification);
+    }
     // Define the callback method that receives location updates
     @Override
     public void onLocationChanged(Location location) {
         Log.d(TAG, "onLocationChanged: mLocation: " + location.toString());
-
-        EventBus.getDefault().post(new LocationUpdated(location));
         prefManager.setCurrentLocation(String.valueOf(location.getLatitude()) + "," + String.valueOf(location.getLongitude()));
+        EventBus.getDefault().post(new LocationUpdated(location));
+        if(FIRST_LOCATION_UPDATE){
+            FIRST_LOCATION_UPDATE = false;
+            activeUpdate();
+        }
     }
 
     @Override
@@ -321,13 +324,8 @@ public class BackgroundLocationService extends Service implements
 
                 mRequestingLocationUpdates = true;
 
-                prefManager.setActive(true);
-
                 checkLocation();
 
-                activeUpdate();
-
-                EventBus.getDefault().post(new DriverActive(true));
             }
         });
 
@@ -500,6 +498,15 @@ public class BackgroundLocationService extends Service implements
                     Log.d(TAG, "The driver status has been changed successfully");
                     if(resendActivehandler != null)
                         resendActivehandler.removeCallbacksAndMessages(null);
+                    if(FIRST_SERVER_ACTIVE) {
+                        if(!destroying) {
+                            FIRST_SERVER_ACTIVE = false;
+                            prefManager.setActive(true);
+                            updateNotification("Active");
+                            EventBus.getDefault().post(new DriverActive(true));
+                        }
+                    }
+
                 } else if (response.code() == 401) {
                     Log.i(TAG, "sendActive User not logged in");
                     prefManager.setIsLoggedIn(false);
@@ -539,6 +546,8 @@ public class BackgroundLocationService extends Service implements
     public void onDestroy() {
         // Turn off the request flag
         Log.d(TAG, "onDestroy");
+
+        destroying = true;
 
         //stop handlers' runnables
         if(checkLocationHandler != null)
