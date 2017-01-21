@@ -101,6 +101,12 @@
             android:taskAffinity=""
             android:screenOrientation="portrait"
             android:theme="@style/Theme.MyDialog" />
+       <receiver
+        android:name=".LocationProviderChangedReceiver">
+        <intent-filter>
+            <action android:name="android.location.PROVIDERS_CHANGED" />
+        </intent-filter>
+    </receiver>
     </application>
 
 </manifest>

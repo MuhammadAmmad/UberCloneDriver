@@ -26,6 +26,7 @@ import android.util.Log;
 
 import com.Wisam.Events.ChangeActiveUpdateInterval;
 import com.Wisam.Events.DriverActive;
+import com.Wisam.Events.LocationDisabled;
 import com.Wisam.Events.LocationUpdated;
 import com.Wisam.Events.UnbindBackgroundLocationService;
 import com.Wisam.POJO.StatusResponse;
@@ -341,12 +342,46 @@ public class BackgroundLocationService extends Service implements
 
                 mRequestingLocationUpdates = true;
 
-                checkLocation();
+//                checkLocation();
 
             }
         });
 
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onLocationDisabled(LocationDisabled event) {
+        Log.d(TAG,"LocationDisabled event received");
+        if(!isLocationEnabled(this)) {
+            Intent intent1 = new Intent(BackgroundLocationService.this, PopupActivity.class);
+            intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent1);
+        }
+    }
+
+    public static boolean isLocationEnabled(Context context) {
+        Log.d(TAG,"isLocationEnabled");
+        int locationMode = 0;
+        String locationProviders;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            try {
+                locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+
+        }else{
+            locationProviders = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            return !TextUtils.isEmpty(locationProviders);
+        }
+
+    }
+
 
     @Subscribe(threadMode = ThreadMode.ASYNC)
     public void ChangeActiveUpdateInterval(ChangeActiveUpdateInterval event) {
@@ -389,7 +424,7 @@ public class BackgroundLocationService extends Service implements
         updateActiveRunnable.run();
     }
 
-    protected void checkLocation() {
+    /*protected void checkLocation() {
         Log.d(TAG,"checkLocation called");
         if(checkLocationHandler == null)
             checkLocationHandler = new Handler();
@@ -411,31 +446,7 @@ public class BackgroundLocationService extends Service implements
             }
         };
         checkLocationHandler.postDelayed(checkLocationRunnable,10 * 1000);
-    }
-
-
-    public static boolean isLocationEnabled(Context context) {
-        Log.d(TAG,"isLocationEnabled");
-        int locationMode = 0;
-        String locationProviders;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
-            try {
-                locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
-
-            } catch (Settings.SettingNotFoundException e) {
-                e.printStackTrace();
-                return false;
-            }
-
-            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
-
-        }else{
-            locationProviders = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-            return !TextUtils.isEmpty(locationProviders);
-        }
-
-    }
+    }*/
 
 
     private void sendLocation(final String request_id, final String location ) {
@@ -582,6 +593,8 @@ public class BackgroundLocationService extends Service implements
         Log.d(TAG, "onDestroy");
 
         destroying = true;
+
+        EventBus.getDefault().unregister(this);
 
         //stop handlers' runnables
         if(checkLocationHandler != null)

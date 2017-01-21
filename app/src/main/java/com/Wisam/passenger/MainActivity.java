@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setBackgroundColor(getResources().getColor(R.color.white));
-        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+        ((TextView) findViewById(R.id.toolbar_title)).setText("Going Active..");
         ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -786,6 +786,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     void setUI() {
+        Log.d(TAG,"setUI called");
         if (prefManager.isDoingRequest())
             setUI(UI_STATE.DOINGREQUEST);
         else
@@ -822,16 +823,12 @@ public class MainActivity extends AppCompatActivity
                 findViewById(R.id.nav_button).setVisibility(View.GONE);
 
                 if (prefManager.isActive()) {
-
-                    ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
-                    ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
-                    findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.white));
-                    ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
-                    ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
-
+                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
+                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
+                        findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.white));
+                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 } else {
-//                    if(mIsBound){
-//                        if(backgroundLocationService.getGoActive()) {
                         if(prefManager.getGoActive()) {
                         ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
                         findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.white));
@@ -839,16 +836,6 @@ public class MainActivity extends AppCompatActivity
                         ((TextView) findViewById(R.id.toolbar_title)).setText("Going Active..");
                         ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
                     }
-/*
-                        else {
-                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
-                        findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorAccent));
-                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_inactive));
-                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_active);
-                    }
-*/
-//                    }
                     else {
                         ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.white));
                         findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
@@ -989,6 +976,7 @@ public class MainActivity extends AppCompatActivity
             if (prefManager.isActive() || prefManager.getGoActive()) {
                 if (backgroundLocationService != null)
                     if (!checkedLocation) {
+                        backgroundLocationService.setActivityWeakReference(MainActivity.this);
                         backgroundLocationService.checkLocationSettings();
                         checkedLocation = true;
                     }
@@ -1285,6 +1273,7 @@ public class MainActivity extends AppCompatActivity
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "ACCESS_FINE_LOCATION_CODE onRequestPermissionsResult: Granted");
                 if (!checkedLocation) {
+                    backgroundLocationService.setActivityWeakReference(MainActivity.this);
                     backgroundLocationService.checkLocationSettings();
                     checkedLocation = true;
                 }
