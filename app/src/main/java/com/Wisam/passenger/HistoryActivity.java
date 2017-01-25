@@ -122,6 +122,7 @@ public class HistoryActivity extends AppCompatActivity {
         progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
+        progress.setCancelable(false);
         progress.show();
 
         RestService service = retrofit.create(RestService.class);

@@ -133,6 +133,7 @@ public class OngoingRequestAdapter extends RecyclerView.Adapter <com.Wisam.passe
         progress.setMessage(context.getString(R.string.cancelling_request));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
+        progress.setCancelable(false);
         progress.show();
 
 

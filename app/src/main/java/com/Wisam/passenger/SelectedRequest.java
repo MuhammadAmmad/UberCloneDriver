@@ -50,7 +50,6 @@ public class SelectedRequest extends AppCompatActivity {
     private LatLng pickupPoint;
     private LatLng destPoint;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         intent = getIntent();
@@ -172,6 +171,7 @@ public class SelectedRequest extends AppCompatActivity {
         progress.setMessage(getString(R.string.cancelling_request));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
+        progress.setCancelable(false);
         progress.show();
 
         RestService service = retrofit.create(RestService.class);
@@ -183,7 +183,6 @@ public class SelectedRequest extends AppCompatActivity {
                 if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
                 Log.d(TAG, "onResponse: raw: " + response.body());
                 if (response.isSuccess() && response.body() != null) {
-//                    Toast.makeText(SelectedRequest.this, R.string.request_cancelled_successfully, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "The request has been cancelled successfully");
                     AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
                     alertBuilder.setMessage(getString(R.string.request_cancelled_successfully));
@@ -199,7 +198,6 @@ public class SelectedRequest extends AppCompatActivity {
                     });
                     alertBuilder.show();
                 } else if (response.code() == 401) {
-//                    Toast.makeText(SelectedRequest.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "onResponse: User not logged in");
                     AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
                     alertBuilder.setMessage(getString(R.string.authorization_error));
@@ -212,7 +210,6 @@ public class SelectedRequest extends AppCompatActivity {
                     });
                     alertBuilder.show();
                 } else {
-//                    Toast.makeText(SelectedRequest.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "Unknown error occurred");
                     AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
                     alertBuilder.setMessage(getString(R.string.server_unknown_error));
@@ -230,7 +227,6 @@ public class SelectedRequest extends AppCompatActivity {
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
                 if (!SelectedRequest.this.isFinishing() && progress != null && progress.isShowing()) progress.dismiss();
-//                Toast.makeText(SelectedRequest.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.i(TAG, "Couldn't connect to the server");
                 AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
                 alertBuilder.setMessage(getString(R.string.server_timeout));
@@ -310,18 +306,14 @@ public class SelectedRequest extends AppCompatActivity {
                 .execute(new DirectionCallback() {
                     @Override
                     public void onDirectionSuccess(Direction direction, String rawBody) {
-                        // Do something here
-
                         if(direction.isOK()) {
                             Route route = direction.getRouteList().get(0);
                             Leg leg = route.getLegList().get(0);
                             Info distanceInfo = leg.getDistance();
                             float distance = Float.valueOf(distanceInfo.getValue()) / 1000;
                             ((TextView) findViewById(R.id.request_details_distance)).setText(String.format("%s Km", String.valueOf(distance)));
-
                         }
                     }
-
                     @Override
                     public void onDirectionFailure(Throwable t) {
                         // Do something here
@@ -364,6 +356,7 @@ public class SelectedRequest extends AppCompatActivity {
         progress.setMessage(getString(R.string.updating_request_status));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
+        progress.setCancelable(false);
         progress.show();
 
         RestService service = retrofit.create(RestService.class);
@@ -391,10 +384,7 @@ public class SelectedRequest extends AppCompatActivity {
                         }
                     });
                     alertBuilder.show();
-
-//                    Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                 } else if (response.code() == 401) {
-//                    Toast.makeText(MainActivity.this, R.string.authorization_error, Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "sendStatus: User not logged in");
                     AlertDialog.Builder alertBuilder = new AlertDialog.Builder(SelectedRequest.this);
                     alertBuilder.setMessage(getString(R.string.authorization_error));
@@ -436,7 +426,6 @@ public class SelectedRequest extends AppCompatActivity {
                     }
                 });
                 alertBuilder.show();
-//                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
             }
         });
     }

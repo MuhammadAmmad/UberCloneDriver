@@ -93,6 +93,7 @@ public class PopupActivity extends AppCompatActivity {
                 progress.setMessage(getString(R.string.updating_request_status));
                 progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progress.setIndeterminate(true);
+                progress.setCancelable(false);
                 progress.show();
 
             }

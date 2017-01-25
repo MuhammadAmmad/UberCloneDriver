@@ -392,6 +392,7 @@ public class MainActivity extends AppCompatActivity
         nextState.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG,String.format("nextState Button pressed. nextState = %s", current_request.getNextStatus()));
                 sendStatus(current_request.getRequest_id(), current_request.getNextStatus());
             }
         });
@@ -472,8 +473,8 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(MainActivity.this, R.string.current_request_cancelled,
                     Toast.LENGTH_LONG).show();
         prefManager.setDoingRequest(false);
-
-
+        current_request = new request();
+        prefManager.setRequest(current_request);
         EventBus.getDefault().post(new ChangeActiveUpdateInterval());
 
 
@@ -488,14 +489,12 @@ public class MainActivity extends AppCompatActivity
         String email = prefManager.pref.getString("UserEmail", "");
         String password = prefManager.pref.getString("UserPassword", "");
 
-        if (!status.equals("on_the_way")) {
-
-            progress = new ProgressDialog(this);
-            progress.setMessage(getString(R.string.updating_request_status));
-            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progress.setIndeterminate(true);
-            progress.show();
-        }
+        progress = new ProgressDialog(this);
+        progress.setMessage(getString(R.string.updating_request_status));
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.setCancelable(false);
+        progress.show();
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.status("Basic " + Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP),
@@ -503,22 +502,18 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
-                if (!status.equals("on_the_way"))
-                    if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
-                        progress.dismiss();
-                Log.d(TAG, "onResponse: raw: " + response.body());
+                Log.d(TAG, "onResponse: status: " + status);
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
+                if(!status.equals(current_request.getNextStatus())) return;
                 if (response.isSuccess() && response.body() != null) {
                     Log.d(TAG, "The status has been sent successfully");
-                    if (status.equals("on_the_way")) {
-                        if(resendStatusHandler != null)
-                            resendStatusHandler.removeCallbacksAndMessages(null);
-                        resendStatusAttempts = 0;
-                    } else {
+                    if (status.equals("completed")) {
+                        endRequest(REQUEST_SUCCESS);
+                    }
+                    else {
                         Toast.makeText(MainActivity.this, "The request status has been updated successfully", Toast.LENGTH_SHORT).show();
                         current_request.nextStatus();
-                        if (status.equals("completed")) {
-                            endRequest(REQUEST_SUCCESS);
-                        }
                     }
                     setUI();
 
@@ -529,52 +524,17 @@ public class MainActivity extends AppCompatActivity
                 } else {
                     Toast.makeText(MainActivity.this, R.string.server_unknown_error, Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "Unknown error occurred");
-/*
-                    if (status.equals("on_the_way")) {
-                        if (resendStatusHandler == null)
-                            resendStatusHandler = new Handler();
-                        if (resendStatusAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
-                            resendStatusAttempts++;
-                            resendStatusHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    sendStatus(request_id, status);
-                                }
-                            }, resendFailedRequestDelay);
-                        } else {
-                            Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
-                        }
-                    }
-*/
                 }
 
             }
 
             @Override
             public void onFailure(Call<StatusResponse> call, Throwable t) {
-                if (!status.equals("on_the_way"))
-                    if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
-                        progress.dismiss();
-                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, getString(R.string.server_timeout));
-/*
-                if (status.equals("on_the_way")) {
-                    if (resendStatusHandler == null)
-                        resendStatusHandler = new Handler();
-                    if (resendStatusAttempts * resendFailedRequestDelay < RESENDING_ATTEMPTS_OVERALL_DELAY) {
-                        resendStatusAttempts++;
-                        resendStatusHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                sendStatus(request_id, status);
-                            }
-                        }, resendFailedRequestDelay);
-                    } else {
-                        Log.d(TAG, String.format("Couldn't connect to the server after %d minutes... Stopping now.", RESENDING_ATTEMPTS_OVERALL_DELAY / 60 / 1000));
-                    }
-
-                }
-*/
+                if (!MainActivity.this.isFinishing() && progress != null && progress.isShowing())
+                    progress.dismiss();
+                if(!status.equals(current_request.getNextStatus())) return;
+                Toast.makeText(MainActivity.this, R.string.server_timeout, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -686,6 +646,7 @@ public class MainActivity extends AppCompatActivity
         progress.setMessage(getString(R.string.cancelling_request));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
+        progress.setCancelable(false);
         progress.show();
 
 
@@ -823,13 +784,13 @@ public class MainActivity extends AppCompatActivity
                 findViewById(R.id.nav_button).setVisibility(View.GONE);
 
                 if (prefManager.isActive()) {
-                        ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
-                        ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
-                        findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.white));
-                        ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
-                        ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
+                    ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);
+                    ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
+                    findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.white));
+                    ((TextView) findViewById(R.id.toolbar_title)).setText(getString(R.string.driver_active));
+                    ((TextView) findViewById(R.id.toolbar_title)).setTextColor(getResources().getColor(R.color.colorPrimary));
                 } else {
-                        if(prefManager.getGoActive()) {
+                    if(prefManager.getGoActive()) {
                         ((TextView) findViewById(R.id.change_driver_status)).setTextColor(getResources().getColor(R.color.colorAccent));
                         findViewById(R.id.change_driver_status).setBackgroundColor(getResources().getColor(R.color.white));
                         ((TextView) findViewById(R.id.change_driver_status)).setText(R.string.go_inactive);

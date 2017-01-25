@@ -172,7 +172,7 @@ public class FCMRequest extends AppCompatActivity {
                 .baseUrl(constants.getBaseUrl(FCMRequest.this))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-              String email = prefManager.pref.getString("UserEmail","");
+        String email = prefManager.pref.getString("UserEmail","");
         String password = prefManager.pref.getString("UserPassword","");
 
         waitForResopnse = true;
@@ -181,12 +181,13 @@ public class FCMRequest extends AppCompatActivity {
         progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
+        progress.setCancelable(false);
         progress.show();
 
 
         RestService service = retrofit.create(RestService.class);
         Call<StatusResponse> call = service.accept("Basic "+ Base64.encodeToString((email + ":" + password).getBytes(),Base64.NO_WRAP),
-                                                    request_id,accepted);
+                request_id,accepted);
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
@@ -267,10 +268,8 @@ public class FCMRequest extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             waitForResopnse = false;
-                            if(finishOnResponse){
                                 finishOnResponse = false;
                                 FCMRequest.super.finish();
-                            }
                         }
                     });
                     alertBuilder.show();

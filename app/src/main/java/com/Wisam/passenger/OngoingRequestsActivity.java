@@ -120,6 +120,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
         progress.setMessage(getString(R.string.FCMRequest_waiting_for_server));
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
+        progress.setCancelable(false);
         progress.show();
 
 
@@ -146,7 +147,7 @@ public class OngoingRequestsActivity extends AppCompatActivity{
                                 i.setTime(String.valueOf(DateUtils.getRelativeTimeSpanString(unixTime, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)));
                                 i.setPrice(i.getPrice() + " SDG");
                             }
-                            upcoming.add(upcoming.size(), i);
+                            upcoming.add(0, i);
                         }
                     }
                     OngoingRequestsActivity.this.setRequestsList(upcoming);
